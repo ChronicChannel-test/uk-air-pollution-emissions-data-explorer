@@ -139,48 +139,44 @@ function detectMobileExperience() {
 const IS_MOBILE_EXPERIENCE = detectMobileExperience();
 window.__NAEI_DISABLE_BUBBLE_TUTORIAL__ = IS_MOBILE_EXPERIENCE;
 
-  const DEFAULT_COMPARISON_DEBUG = true;
-  const COMPARISON_DEBUG_PREFIX = '[comparison-debug]';
-  const HAS_OWN = Object.prototype.hasOwnProperty;
+const DEFAULT_COMPARISON_DEBUG = true;
+const COMPARISON_DEBUG_PREFIX = '[comparison-debug]';
+const HAS_OWN = Object.prototype.hasOwnProperty;
 
-  function isComparisonDebugEnabled() {
-    if (typeof window !== 'undefined' && window && HAS_OWN.call(window, '__NAEI_COMPARISON_DEBUG__')) {
-      return Boolean(window.__NAEI_COMPARISON_DEBUG__);
-    }
-    return DEFAULT_COMPARISON_DEBUG;
+function isComparisonDebugEnabled() {
+  if (typeof window !== 'undefined'
+    && window
+    && HAS_OWN.call(window, '__NAEI_COMPARISON_DEBUG__')) {
+    return Boolean(window.__NAEI_COMPARISON_DEBUG__);
   }
+  return DEFAULT_COMPARISON_DEBUG;
+}
 
-  function comparisonDebugLog(message, payload) {
-    if (!isComparisonDebugEnabled()) {
-      return;
-    }
-    const timestamp = new Date().toISOString();
-    if (payload !== undefined) {
-      console.log(COMPARISON_DEBUG_PREFIX, timestamp, message, payload);
-      return;
-    }
-    console.log(COMPARISON_DEBUG_PREFIX, timestamp, message);
+function comparisonDebugLog(message, payload) {
+  if (!isComparisonDebugEnabled()) {
+    return;
   }
-
-  window.__bubbleComparisonDebugLog = comparisonDebugLog;
-
-// Application state
-let selectedYear = null;
-let selectedPollutantId = null;
-let chartRenderCallback = null; // Callback for when chart finishes rendering
-let selectedCategoryIds = [];
-let initialComparisonFlags = []; // Store comparison flags from URL for initial checkbox state
+  try {
+    if (typeof payload !== 'undefined') {
+      console.log(COMPARISON_DEBUG_PREFIX, message, payload);
+    } else {
+      console.log(COMPARISON_DEBUG_PREFIX, message);
+    }
+  } catch (error) {
+    console.error('Error logging comparison debug:', error);
+  }
+}
 let lastTrackedBubbleSelectionKey = null; // Prevent duplicate analytics events for unchanged selections
 let comparisonStatementVisible = false; // Track whether comparison cards are currently rendered
 let pendingComparisonChromeRefresh = null; // Debounce chart redraws triggered by comparison layout changes
 let pendingComparisonRedraw = null; // Collapse rapid comparison checkbox toggles into a single redraw
-  let pendingComparisonChromeHeight = false; // Indicates comparison chrome visibility changed and needs height sync
+let pendingComparisonChromeHeight = false; // Indicates comparison chrome visibility changed and needs height sync
+window.__bubblePendingComparisonChromeHeight = pendingComparisonChromeHeight;
+function setPendingComparisonChromeHeight(nextValue) {
+  pendingComparisonChromeHeight = Boolean(nextValue);
   window.__bubblePendingComparisonChromeHeight = pendingComparisonChromeHeight;
-  function setPendingComparisonChromeHeight(nextValue) {
-    pendingComparisonChromeHeight = Boolean(nextValue);
-    window.__bubblePendingComparisonChromeHeight = pendingComparisonChromeHeight;
-    return pendingComparisonChromeHeight;
-  }
+  return pendingComparisonChromeHeight;
+}
 let comparisonMeasurementDiv = null;
 let lastMeasuredComparisonChromeHeight = 0;
 window.__bubbleComparisonChromeHeight = 0;
@@ -791,7 +787,16 @@ function normalizeSelectorOptions(snapshotData) {
         category_title: item?.category_title || item?.group_name || item?.title || '',
         has_activity_data: item?.has_activity_data !== false
       }))
-      .filter(item => item.id != null && item.category_title && item.has_activity_data),
+      .filter(item => {
+        if (item.id == null || !item.category_title || !item.has_activity_data) {
+          return false;
+        }
+        const normalizedTitle = item.category_title.trim().toLowerCase();
+        if (!normalizedTitle || normalizedTitle === 'all') {
+          return false;
+        }
+        return true;
+      }),
     item => item.category_title.toLowerCase()
   ).sort((a, b) => sortCategoryTitles(a.category_title, b.category_title));
 
@@ -975,22 +980,6 @@ function setupTutorialOverlay() {
   const openBtn = document.getElementById('tutorialBtn');
   if (!overlay || !openBtn) {
     // Tutorial overlay markup missing; skipping tutorial setup
-    return;
-  }
-  if (window.__NAEI_DISABLE_BUBBLE_TUTORIAL__) {
-    openBtn.style.display = 'none';
-    openBtn.setAttribute('aria-hidden', 'true');
-    openBtn.setAttribute('tabindex', '-1');
-    openBtn.setAttribute('disabled', 'true');
-    if (typeof overlay.remove === 'function') {
-      overlay.remove();
-    } else if (overlay.parentNode) {
-      overlay.parentNode.removeChild(overlay);
-    }
-    tutorialOverlayApi.open = () => {};
-    tutorialOverlayApi.hide = () => {};
-    tutorialOverlayApi.isActive = () => false;
-    pendingTutorialOpenReason = null;
     return;
   }
   openBtn.setAttribute('aria-expanded', 'false');
@@ -1902,9 +1891,6 @@ function parseUrlParameters() {
       if (id) {
         const category = categories.find(g => g.id === id);
         if (category) {
-          if (activeCategoryIdSet.size && !activeCategoryIdSet.has(category.id)) {
-            return;
-          }
           categoryNames.push(getCategoryDisplayTitle(category));
           comparisonFlags.push(hasComparisonFlag);
         }
