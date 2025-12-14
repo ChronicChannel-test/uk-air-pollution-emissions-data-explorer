@@ -218,6 +218,7 @@ const BUBBLE_SUPABASE_DATA_SOURCES = new Set(['hero', 'shared-bootstrap', 'share
 const BUBBLE_FAILURE_EVENT_COOLDOWN_MS = 60000;
 const bubbleFailureEventScopes = new Map();
 let categoryMetadataCache = null;
+let categoryMetadataCacheHasSignals = false;
 let categoryMetadataPromise = null;
 let sharedLoaderReference = null;
 let bubbleInitialDatasetInfo = null;
@@ -678,16 +679,75 @@ function getCachedCategoryMetadata(sharedLoader) {
   return null;
 }
 
+function hasCategoryCompositionSignals(rows = []) {
+  if (!Array.isArray(rows) || !rows.length) {
+    return false;
+  }
+
+  const signalKeys = [
+    'source_name', 'source', 'Source', 'source_slug', 'primary_source',
+    'activity_name', 'activity', 'Activity', 'activity_slug', 'activity_group', 'activity_type',
+    'nfr_code', 'nfr_codes', 'fuel', 'fuel_name', 'fuel_type'
+  ];
+
+  return rows.some(row => {
+    if (!row || typeof row !== 'object') {
+      return false;
+    }
+
+    if (Array.isArray(row.source_activity_pairs) && row.source_activity_pairs.length) {
+      return true;
+    }
+    if (Array.isArray(row.activity_composition) && row.activity_composition.length) {
+      return true;
+    }
+    if (Array.isArray(row.included_categories) && row.included_categories.length) {
+      return true;
+    }
+    if (row.source_activity_map && typeof row.source_activity_map === 'object' && Object.keys(row.source_activity_map).length) {
+      return true;
+    }
+
+    return signalKeys.some(key => {
+      if (!(key in row)) {
+        return false;
+      }
+      const value = row[key];
+      if (value === null || value === undefined) {
+        return false;
+      }
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      if (typeof value === 'object') {
+        return Object.keys(value).length > 0;
+      }
+      if (typeof value === 'string') {
+        return Boolean(value.trim());
+      }
+      return true;
+    });
+  });
+}
+
 async function ensureAllCategoryMetadata(sharedLoader) {
   if (Array.isArray(categoryMetadataCache) && categoryMetadataCache.length) {
-    return categoryMetadataCache;
+    if (categoryMetadataCacheHasSignals) {
+      return categoryMetadataCache;
+    }
   }
 
   const cachedCategories = getCachedCategoryMetadata(sharedLoader);
   if (Array.isArray(cachedCategories) && cachedCategories.length) {
-    categoryMetadataCache = cachedCategories;
-    resetCategoryCompositionCache();
-    return categoryMetadataCache;
+    const cachedHasSignals = hasCategoryCompositionSignals(cachedCategories);
+    if (!Array.isArray(categoryMetadataCache) || !categoryMetadataCache.length || cachedHasSignals) {
+      categoryMetadataCache = cachedCategories;
+      categoryMetadataCacheHasSignals = cachedHasSignals;
+      resetCategoryCompositionCache();
+    }
+    if (categoryMetadataCacheHasSignals) {
+      return categoryMetadataCache;
+    }
   }
 
   if (!categoryMetadataPromise) {
@@ -701,6 +761,7 @@ async function ensureAllCategoryMetadata(sharedLoader) {
         throw response.error;
       }
       categoryMetadataCache = response.data || [];
+      categoryMetadataCacheHasSignals = hasCategoryCompositionSignals(categoryMetadataCache);
       resetCategoryCompositionCache();
       return categoryMetadataCache;
     })().catch(error => {
@@ -708,6 +769,10 @@ async function ensureAllCategoryMetadata(sharedLoader) {
       categoryMetadataPromise = null;
       throw error;
     });
+  }
+
+  if (Array.isArray(categoryMetadataCache) && categoryMetadataCache.length) {
+    return categoryMetadataCache;
   }
 
   return categoryMetadataPromise;
@@ -1553,8 +1618,9 @@ async function loadData(options = {}) {
           if (!Array.isArray(metadata) || !metadata.length) {
             return;
           }
-            categoryMetadataCache = mergeCategoryCollections(metadata, categoryMetadataCache || []);
-            resetCategoryCompositionCache();
+          categoryMetadataCache = mergeCategoryCollections(metadata, categoryMetadataCache || []);
+          categoryMetadataCacheHasSignals = hasCategoryCompositionSignals(categoryMetadataCache);
+          resetCategoryCompositionCache();
         })
         .catch(error => {
           supabaseDebugWarn('Unable to load full category metadata before hydration:', error.message || error);
@@ -1763,8 +1829,21 @@ function applyDataset({ pollutants = [], categories = [], rows = [] }, options =
   allPollutants = pollutants;
   allCategories = categories;
   if (Array.isArray(categories) && categories.length) {
-    if (!Array.isArray(categoryMetadataCache) || categories.length > categoryMetadataCache.length) {
+    const datasetHasSignals = hasCategoryCompositionSignals(categories);
+
+    if (!Array.isArray(categoryMetadataCache) || !categoryMetadataCache.length) {
       categoryMetadataCache = categories;
+      categoryMetadataCacheHasSignals = datasetHasSignals;
+      if (datasetHasSignals) {
+        resetCategoryCompositionCache();
+      }
+    } else if (datasetHasSignals) {
+      const shouldReplace = !categoryMetadataCacheHasSignals || categories.length > categoryMetadataCache.length;
+      if (shouldReplace) {
+        categoryMetadataCache = categories;
+        categoryMetadataCacheHasSignals = true;
+        resetCategoryCompositionCache();
+      }
     }
   }
   globalRows = rows;
