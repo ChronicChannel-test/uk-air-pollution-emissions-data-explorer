@@ -3146,10 +3146,20 @@ function scheduleComparisonChromeRefresh(reason = 'comparison-toggle') {
     if (Number.isFinite(latestEstimate)) {
       window.__BUBBLE_PRE_LEGEND_ESTIMATE = latestEstimate;
     }
+    let layoutRefreshResult = null;
+    const refreshLayout = window.ChartRenderer?.refreshLayoutBounds;
+    if (typeof refreshLayout === 'function') {
+      try {
+        layoutRefreshResult = refreshLayout({ reason });
+      } catch (error) {
+        console.warn('Chart wrapper refresh failed:', error);
+      }
+    }
       setPendingComparisonChromeHeight(false);
       comparisonDebugLog('comparison chrome refresh complete', {
         reason,
-        latestEstimate
+        latestEstimate,
+        layoutRefreshResult
       });
     if (typeof sendContentHeightToParent === 'function') {
       setTimeout(() => sendContentHeightToParent(true), 80);
@@ -3600,20 +3610,29 @@ function updateURL() {
 
   // Convert category names to IDs for URL
   const allCategories = window.supabaseModule.allCategories || [];
-  const categoryRows = document.querySelectorAll('.categoryRow');
-  
-  const categoryIdsWithFlags = selectedCategoryNames.map((name, index) => {
-    const category = allCategories.find(g => getCategoryDisplayTitle(g) === name);
-    if (!category) return null;
-    
-    // Check if the corresponding checkbox is checked
-    const row = categoryRows[index];
-    const checkbox = row?.querySelector('.comparison-checkbox');
+  const categoryRows = Array.from(document.querySelectorAll('.categoryRow'));
+
+  const categoryIdsWithFlags = categoryRows.reduce((acc, row) => {
+    const select = row.querySelector('select');
+    const value = select?.value;
+    if (!value) {
+      return acc;
+    }
+
+    const category = allCategories.find(g => getCategoryDisplayTitle(g) === value);
+    if (!category) {
+      return acc;
+    }
+
+    const checkbox = row.querySelector('.comparison-checkbox');
     const isChecked = checkbox?.checked || false;
-    
-    // Add 'c' suffix if checkbox is checked
-    return isChecked ? `${category.id}c` : `${category.id}`;
-  }).filter(id => id !== null);
+    acc.push(isChecked ? `${category.id}c` : `${category.id}`);
+    return acc;
+  }, []);
+
+  if (!categoryIdsWithFlags.length) {
+    return;
+  }
 
   // Build params array - use raw strings to avoid encoding commas
   const params = [

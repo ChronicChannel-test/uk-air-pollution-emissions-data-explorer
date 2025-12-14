@@ -956,6 +956,53 @@ function addBubbleExplanationOverlay() {
   chartDiv.appendChild(overlay);
 }
 
+function refreshChartLayoutBounds({ reason = 'comparison-change' } = {}) {
+  const chartDiv = document.getElementById('chart_div');
+  if (!chartDiv) {
+    return null;
+  }
+
+  const wrapper = chartDiv.closest('.chart-wrapper');
+  if (!wrapper) {
+    return null;
+  }
+
+  const wrapperRect = wrapper.getBoundingClientRect();
+  const chartRect = chartDiv.getBoundingClientRect();
+  const wrapperStyles = window.getComputedStyle(wrapper);
+  const paddingBottom = parseFloat(wrapperStyles.paddingBottom) || 0;
+  const chartTopOffset = wrapperRect ? Math.max(0, chartRect.top - wrapperRect.top) : 0;
+  const chartHeight = Math.max(
+    CHART_RENDERER_MIN_CANVAS_HEIGHT,
+    Math.round(chartRect.height || chartDiv.offsetHeight || CHART_RENDERER_MIN_CANVAS_HEIGHT)
+  );
+
+  const clampResult = window.__bubbleLayoutHeightManager?.ensureWrapperCapacity
+    ? window.__bubbleLayoutHeightManager.ensureWrapperCapacity({
+        wrapperElement: wrapper,
+        chartHeight,
+        chromeBeforeChart: chartTopOffset,
+        chromeAfterChart: paddingBottom
+      })
+    : enforceBubbleWrapperMinimumHeight({
+        wrapperElement: wrapper,
+        wrapperRect,
+        chartTopOffset,
+        paddingBottom,
+        appliedChartHeight: chartHeight
+      });
+
+  comparisonDebugLog('chart wrapper refresh', {
+    reason,
+    chartHeight,
+    chartTopOffset,
+    paddingBottom,
+    clampResult
+  });
+
+  return clampResult;
+}
+
 function enforceBubbleWrapperMinimumHeight(params) {
   if (!params?.wrapperElement) {
     return {
@@ -1024,5 +1071,6 @@ window.ChartRenderer = {
   clearMessage,
   getCurrentChartData,
   getChartInstance,
-  waitForStability: waitForChartStability
+  waitForStability: waitForChartStability,
+  refreshLayoutBounds: refreshChartLayoutBounds
 };
