@@ -1111,6 +1111,31 @@ body {
   font-size: clamp(11px, 0.8vw + 6px, 18px);
   font-weight: 700;
 }
+.comparison-warning-change {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: clamp(10px, 0.85vw + 5px, 16px);
+}
+.comparison-warning-direction {
+  font-weight: 600;
+}
+.comparison-warning-direction--increase {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.comparison-warning-direction--decrease {
+  font-weight: 600;
+  text-transform: none;
+}
+.comparison-warning-percent {
+  font-weight: 800;
+  font-size: clamp(13px, 1vw + 8px, 22px);
+  line-height: 1.1;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25em;
+  white-space: nowrap;
+}
 
 @media (max-width: 640px) {
   .comparison-tooltip {

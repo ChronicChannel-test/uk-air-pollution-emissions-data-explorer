@@ -1,9 +1,14 @@
 # Version History
 
-## v4.20
-- GH Test: 2025-12-12
+## v4.30
+- GH Test: 2025-12-14
 - GH Live: Not yet deployed
-- Notes: Adds redesigned comparison statement UI with selectable categories and richer ratio messaging, plus enables the Supabase-backed colour source rules pipeline.
+- Notes: Adds comparison awareness to export modules so downloaded charts, shared links, and social cards include the active comparison statement data.
+
+## v4.20
+- GH Test: 2025-12-14
+- GH Live: Not yet deployed
+- Notes: Adds comparison logic to the bubble chart, enabling selectable categories and richer ratio messaging powered by the Supabase colour rules pipeline.
 
 ## v4.11 - LIVE
 - GH Test: 2025-12-09

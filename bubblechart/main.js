@@ -177,6 +177,40 @@ function setPendingComparisonChromeHeight(nextValue) {
   window.__bubblePendingComparisonChromeHeight = pendingComparisonChromeHeight;
   return pendingComparisonChromeHeight;
 }
+const comparisonExportStore = {
+  visible: false,
+  cards: null,
+  warning: null,
+  metrics: null,
+  calcBlocks: null,
+  inclusionNote: null,
+  shouldReplaceEnergyCalc: false
+};
+window.__bubbleComparisonExport = comparisonExportStore;
+
+function setComparisonExportStore(payload) {
+  if (!payload) {
+    clearComparisonExportStore();
+    return;
+  }
+  comparisonExportStore.cards = payload.cards || null;
+  comparisonExportStore.warning = payload.warning || null;
+  comparisonExportStore.metrics = payload.metrics || null;
+  comparisonExportStore.calcBlocks = payload.calcBlocks || null;
+  comparisonExportStore.inclusionNote = payload.inclusionNote || null;
+  comparisonExportStore.shouldReplaceEnergyCalc = Boolean(payload.shouldReplaceEnergyCalc);
+  comparisonExportStore.visible = Boolean(payload.cards);
+}
+
+function clearComparisonExportStore() {
+  comparisonExportStore.cards = null;
+  comparisonExportStore.warning = null;
+  comparisonExportStore.metrics = null;
+  comparisonExportStore.calcBlocks = null;
+  comparisonExportStore.inclusionNote = null;
+  comparisonExportStore.shouldReplaceEnergyCalc = false;
+  comparisonExportStore.visible = false;
+}
 let comparisonMeasurementDiv = null;
 let lastMeasuredComparisonChromeHeight = 0;
 window.__bubbleComparisonChromeHeight = 0;
@@ -3158,6 +3192,11 @@ function setComparisonStatementVisibility(nextVisible, reason) {
     return;
   }
   comparisonStatementVisible = nextVisible;
+  if (!nextVisible) {
+    clearComparisonExportStore();
+  } else if (window.__bubbleComparisonExport?.cards) {
+    window.__bubbleComparisonExport.visible = true;
+  }
   setPendingComparisonChromeHeight(true);
   suppressWrapperHeightObserver();
     comparisonDebugLog('comparison visibility change', {
@@ -3295,6 +3334,23 @@ function updateComparisonStatement(statement) {
       return formatted ? `${formatted} g/GJ` : '—';
     };
 
+    const formatPercentChange = (value) => {
+      if (!Number.isFinite(value)) {
+        return null;
+      }
+      const absValue = Math.abs(value);
+      let fractionDigits = 2;
+      if (absValue >= 100) {
+        fractionDigits = 0;
+      } else if (absValue >= 10) {
+        fractionDigits = 1;
+      }
+      return `${absValue.toLocaleString(undefined, {
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits
+      })}%`;
+    };
+
     const getCategoryMetrics = (dataPoint) => {
       if (!dataPoint) {
         return null;
@@ -3417,18 +3473,27 @@ function updateComparisonStatement(statement) {
       : warningPolluterMetrics?.emissionFactor;
     const usesBaselineOnlyCalc = warningDetails?.calcSource === 'baseline-only';
 
-    const totalEnergySummary = (() => {
+    const energyDetailLines = (() => {
       if (!Number.isFinite(warningTotalEnergy)) {
-        return '—';
+        return ['Calculation unavailable for this selection'];
       }
+      const formattedTotalEnergy = formatDetailedEnergy(warningTotalEnergy, { useCalcUnit: true }) || '—';
       if (usesBaselineOnlyCalc && Number.isFinite(warningBaselineMetrics?.energy)) {
-        return `${formatDetailedEnergy(warningBaselineMetrics.energy, { useCalcUnit: true })} (baseline energy)`;
+        const baselineOnly = formatDetailedEnergy(warningBaselineMetrics.energy, { useCalcUnit: true }) || '—';
+        return [`${baselineOnly} (baseline energy)`];
       }
-      if (Number.isFinite(warningPolluterMetrics?.energy)
-        && Number.isFinite(warningBaselineMetrics?.energy)) {
-        return `${formatDetailedEnergy(warningPolluterMetrics.energy, { useCalcUnit: true })} + ${formatDetailedEnergy(warningBaselineMetrics.energy, { useCalcUnit: true })} = ${formatDetailedEnergy(warningTotalEnergy, { useCalcUnit: true })}`;
+      const formatEnergyOperand = (metrics) => {
+        if (!metrics || !Number.isFinite(metrics.energy)) {
+          return null;
+        }
+        return formatDetailedEnergy(metrics.energy, { useCalcUnit: true }) || '—';
+      };
+      const polluterOperand = formatEnergyOperand(warningPolluterMetrics);
+      const baselineOperand = formatEnergyOperand(warningBaselineMetrics);
+      if (polluterOperand && baselineOperand) {
+        return [`${polluterOperand} + ${baselineOperand} = ${formattedTotalEnergy}`];
       }
-      return formatDetailedEnergy(warningTotalEnergy, { useCalcUnit: true });
+      return [formattedTotalEnergy];
     })();
 
     const warningFormulaSummary = (Number.isFinite(warningTotalEnergy)
@@ -3437,17 +3502,17 @@ function updateComparisonStatement(statement) {
       ? `${formatDetailedEnergy(warningTotalEnergy, { useCalcUnit: true })} x ${formatEmissionFactorDetailed(warningEmissionFactor)} = ${formatDetailedPollution(replacementPollution, { context: 'calc' })}`
       : null;
 
+    const inclusionNoteText = typeof warningDetails?.inclusion?.text === 'string'
+      ? warningDetails.inclusion.text
+      : null;
+    const pollutionEstimateLines = warningFormulaSummary
+      ? [warningFormulaSummary]
+      : ['Calculation unavailable for this selection'];
+
     const buildWarningTooltip = () => {
       if (!warningPolluterMetrics || !warningBaselineMetrics) {
         return '';
       }
-      const inclusionNoteText = typeof warningDetails?.inclusion?.text === 'string'
-        ? warningDetails.inclusion.text
-        : null;
-      const energyDetailLines = totalEnergySummary ? [totalEnergySummary] : [];
-      const pollutionEstimateLines = warningFormulaSummary
-        ? [warningFormulaSummary]
-        : ['Calculation unavailable for this selection'];
       const warningCalcMarkup = [
           inclusionNoteText ? buildCalcNote(inclusionNoteText) : buildCalcRow('Energy', energyDetailLines),
           buildCalcRow('Pollution estimate', pollutionEstimateLines)
@@ -3473,6 +3538,38 @@ function updateComparisonStatement(statement) {
       ? '—'
       : `<span class="comparison-warning-value">${escapeHtml(warningValueParts.valueText)}${warningValueParts.unitText ? ` <span class="comparison-warning-unit">${escapeHtml(warningValueParts.unitText)}</span>` : ''}</span>`;
 
+    const baselinePollutionSource = warningDetails?.baseline || comparisonData?.leftSecondary || null;
+    const followerPollutionValue = normalizeNumber(baselinePollutionSource?.pollutantValue);
+    const percentChangeValue = (Number.isFinite(followerPollutionValue)
+      && Math.abs(followerPollutionValue) > 0
+      && Number.isFinite(replacementPollution))
+      ? ((replacementPollution - followerPollutionValue) / Math.abs(followerPollutionValue)) * 100
+      : null;
+    const warningChangeMeta = (() => {
+      if (!Number.isFinite(percentChangeValue) || percentChangeValue === 0) {
+        return null;
+      }
+      const isIncrease = percentChangeValue > 0;
+      const directionLabel = isIncrease ? 'INCREASE' : 'decrease';
+      const formattedPercent = formatPercentChange(percentChangeValue);
+      if (!formattedPercent) {
+        return null;
+      }
+      const article = isIncrease ? 'an' : 'a';
+      const plainText = `This is ${article} ${directionLabel} of ${formattedPercent}`;
+      const percentHtml = `<span class="comparison-warning-percent">${escapeHtml(formattedPercent)}</span>`;
+      const directionHtml = `<span class="comparison-warning-direction ${isIncrease ? 'comparison-warning-direction--increase' : 'comparison-warning-direction--decrease'}">${escapeHtml(directionLabel)}</span>`;
+      const html = `This is ${escapeHtml(article)} ${directionHtml} of ${percentHtml}`;
+      return {
+        text: plainText,
+        value: percentChangeValue,
+        direction: directionLabel,
+        html
+      };
+    })();
+    const warningChangeText = warningChangeMeta?.text || null;
+    const warningChangeDisplayHtml = warningChangeMeta?.html || null;
+
     const pollutionLeaderLabel = `<span class="comparison-warning-entity">${escapeHtml(pollutionLeaderName)}</span>`;
     const energyLeaderLabel = `<span class="comparison-warning-entity">${escapeHtml(energyLeaderName)}</span>`;
 
@@ -3483,6 +3580,84 @@ function updateComparisonStatement(statement) {
       : (ratioIndicatesLower ? 'lower pollution' : 'higher pollution');
 
     const energyFollowerLine = energyFollowerName || '';
+    const energyTrend = Number.isFinite(energyRatio) && energyRatio < 1 ? 'lower' : 'higher';
+    const energyRatioLine = `${formatRatio(energyRatio)} times`;
+
+    const buildMetricCardData = (metrics) => {
+      if (!metrics) {
+        return null;
+      }
+      return {
+        name: metrics.name || '—',
+        pollution: formatDetailedPollution(metrics.pollution),
+        energy: formatDetailedEnergy(metrics.energy),
+        emissionFactor: formatEmissionFactorDetailed(metrics.emissionFactor)
+      };
+    };
+
+    const exportMetricCards = [
+      buildMetricCardData(leftPrimaryMetrics),
+      buildMetricCardData(leftSecondaryMetrics)
+    ].filter(Boolean);
+
+
+    // Only include the Energy calculation if there is no inclusion note
+    const calculationBlocks = [
+      { title: 'Pollution ratio', lines: pollutionFormulaLines },
+      { title: 'Energy ratio', lines: energyFormulaLines }
+    ];
+    if (!inclusionNoteText && energyDetailLines.length) {
+      calculationBlocks.push({ title: 'Energy', lines: energyDetailLines, showEnergy: true });
+    }
+    // If inclusion note is present, do NOT add the energy calculation
+    calculationBlocks.push({ title: 'Pollution estimate', lines: pollutionEstimateLines });
+    const filteredCalculationBlocks = calculationBlocks.filter(block => Array.isArray(block.lines) && block.lines.length);
+
+    const comparisonWarningText = (pollutionLeaderName && energyLeaderName)
+      ? `If ${pollutionLeaderName} replaced ${energyLeaderName}, ${pollutantName} pollution would be ${warningValueParts.display}`
+      : null;
+
+    const warningChangeHtml = warningChangeDisplayHtml
+      ? `<br><span class="comparison-warning-change">${warningChangeDisplayHtml}</span>`
+      : '';
+
+    setComparisonExportStore(buildComparisonExportPayload({
+      pollutionCard: {
+        title: pollutionLeaderName,
+        subtitle: `${pollutantName} pollution`,
+        ratioLine: pollutionRatioLine,
+        followerLine: pollutionRatioFollowerLine,
+        color: pollutionColor || '#f5a000',
+        trend: ratioIndicatesLower ? 'lower' : 'higher'
+      },
+      energyCard: {
+        title: energyLeaderName,
+        subtitle: 'Energy',
+        ratioLine: energyRatioLine,
+        followerLine: energyFollowerLine,
+        color: energyColor || '#0a77c4',
+        trend: energyTrend
+      },
+      warningText: comparisonWarningText,
+      warningValueDisplay: warningValueParts.display,
+      warningValueParts,
+      warningContext: {
+        polluterName: pollutionLeaderName,
+        baselineName: energyLeaderName,
+        pollutantName,
+        changePercent: warningChangeMeta?.value || null
+      },
+      warningChangeText,
+      metricCards: exportMetricCards,
+      calculationBlocks: filteredCalculationBlocks,
+      inclusionNoteText,
+      inclusionNoteLabel: inclusionNoteText ? 'Note: ' : null,
+      inclusionNoteDetails: inclusionNoteText ? energyDetailLines : null,
+      shouldReplaceEnergyCalc: Boolean(inclusionNoteText)
+    }));
+
+    const warningPrimaryHtml = `If ${pollutionLeaderLabel} replaced ${energyLeaderLabel}, ${pollutantName} pollution would be ${warningValueHtml}`;
+    const warningDisplayHtml = `${warningPrimaryHtml}${warningChangeHtml}`;
 
     const comparisonDivMarkup = `
       <div class="comparison-layout">
@@ -3498,7 +3673,7 @@ function updateComparisonStatement(statement) {
           <div class="comparison-card" tabindex="0" aria-label="${escapeHtml(`Show detailed energy metrics for ${energyLeaderName}`)}" style="background:${energyColor || '#0a77c4'};">
             <div class="comparison-card-line comparison-card-line-large">${energyLeaderName}</div>
             <div class="comparison-card-line comparison-card-line-small">Energy</div>
-            <div class="comparison-card-line comparison-card-line-large">${formatRatio(energyRatio)} times</div>
+            <div class="comparison-card-line comparison-card-line-large">${energyRatioLine}</div>
             <div class="comparison-card-line comparison-card-line-small">${energyFollowerLine}</div>
             ${sharedTooltipMarkup}
           </div>
@@ -3508,7 +3683,7 @@ function updateComparisonStatement(statement) {
         <div class="comparison-warning-wrap">
           <div class="comparison-warning-icon" aria-hidden="true"></div>
           <div class="comparison-warning-row" tabindex="0" aria-label="${escapeHtml('Show calculation behind the replacement warning')}">
-            <div class="comparison-warning-text">If ${pollutionLeaderLabel} replaced ${energyLeaderLabel}, ${pollutantName} pollution would be ${warningValueHtml}</div>
+            <div class="comparison-warning-text">${warningDisplayHtml}</div>
             ${warningTooltipMarkup}
           </div>
           <div class="comparison-warning-icon" aria-hidden="true"></div>
@@ -3542,6 +3717,59 @@ function updateComparisonStatement(statement) {
   }
 }
 
+function buildComparisonExportPayload({
+  pollutionCard,
+  energyCard,
+  warningText,
+  warningValueDisplay,
+  warningValueParts = null,
+  warningContext = null,
+  warningChangeText = null,
+  metricCards,
+  calculationBlocks,
+  inclusionNoteText,
+  inclusionNoteLabel,
+  inclusionNoteDetails,
+  shouldReplaceEnergyCalc = false
+}) {
+  if (!pollutionCard || !energyCard) {
+    return null;
+  }
+
+  const applyCardDefaults = (card, fallbackColor) => ({
+    title: card.title || '—',
+    subtitle: card.subtitle || '',
+    ratioLine: card.ratioLine || '—',
+    followerLine: card.followerLine || '',
+    color: card.color || fallbackColor,
+    trend: card.trend === 'lower' ? 'lower' : 'higher'
+  });
+
+  return {
+    cards: {
+      left: applyCardDefaults(pollutionCard, '#f26522'),
+      right: applyCardDefaults(energyCard, '#0a77c4')
+    },
+    warning: warningText ? {
+      text: warningText,
+      valueDisplay: warningValueDisplay || warningValueParts?.display || warningText,
+      valueText: warningValueParts?.valueText || null,
+      valueUnit: warningValueParts?.unitText || '',
+      polluterName: warningContext?.polluterName || null,
+      baselineName: warningContext?.baselineName || null,
+      pollutantName: warningContext?.pollutantName || null,
+      changeText: warningChangeText || null,
+      changePercent: warningContext?.changePercent ?? null
+    } : null,
+    metrics: Array.isArray(metricCards) ? metricCards : [],
+    calcBlocks: Array.isArray(calculationBlocks) ? calculationBlocks : [],
+    inclusionNote: inclusionNoteText || null,
+    inclusionNoteLabel: inclusionNoteLabel || null,
+    inclusionNoteDetails: Array.isArray(inclusionNoteDetails) ? inclusionNoteDetails.filter(Boolean) : null,
+    shouldReplaceEnergyCalc
+  };
+}
+
 /**
  * Hide the comparison statement
  */
@@ -3552,6 +3780,7 @@ function hideComparisonStatement() {
     clearComparisonMeasurement();
     setComparisonStatementVisibility(false, 'comparison-hide');
       comparisonDebugLog('comparison statement hidden');
+    clearComparisonExportStore();
   } else {
   }
 }

@@ -163,3 +163,16 @@ VALUES
 ON CONFLICT (source_id, color_token, rule_kind) DO UPDATE
 SET priority = EXCLUDED.priority,
     updated_at = NOW();
+
+
+CREATE TABLE public.naei_global_t_classification (
+  id bigserial PRIMARY KEY,
+  class_desc varchar(18)
+);
+GRANT SELECT ON public.naei_global_t_classification TO anon, authenticated;
+INSERT INTO public.naei_global_t_classification (id, class_desc) VALUES
+  (1, 'Air Pollutants'),
+  (2, 'Greenhouse Gases'),
+  (3, 'Heavy Metals'),
+  (4, 'Particulate Matter'),
+  (5, 'POPs&PAHs');
