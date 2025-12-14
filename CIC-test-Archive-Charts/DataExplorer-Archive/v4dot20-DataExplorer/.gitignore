@@ -5,11 +5,6 @@
 /V2.4 - mockup
 .idea/
 /CIC-test-Archive-Charts/DataExplorer-Archive/v4dot0-DataExplorer/node_modules
-<<<<<<< Local Changes
-/CIC-test-Archive-Charts/DataExplorer-Archive/v4dot20-DataExplorer/node_modules
-
-=======
->>>>>>> External Changes
 .env
 SharedResources/supabase-env.js
 SharedResources/supabase-env.template.js

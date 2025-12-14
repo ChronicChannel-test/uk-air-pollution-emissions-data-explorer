@@ -1,0 +1,33 @@
+{
+  "name": "cic-test-uk-air-pollution-emissions-data-explorer",
+  "version": "1.0.0",
+  "description": "UK Air Pollution/Emissions Data Explorer test shell plus bubble (v2.0) and line (v2.4) chart applications for UK government emissions data.",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "BROWSERSLIST_IGNORE_OLD_DATA=1 tailwindcss -i ./tailwind.input.css -o ./dist/tailwind.css --minify",
+    "watch:css": "BROWSERSLIST_IGNORE_OLD_DATA=1 tailwindcss -i ./tailwind.input.css -o ./dist/tailwind.css --watch",
+    "export:default-data": "node scripts/export-default-data.js",
+    "update:versions": "node scripts/update-footer-versions.js",
+    "supabase:env": "node scripts/generate-supabase-env.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChronicChannel-test/CIC-test-uk-air-pollution-emissions-data-explorer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ChronicChannel-test/CIC-test-uk-air-pollution-emissions-data-explorer/issues"
+  },
+  "homepage": "https://github.com/ChronicChannel-test/CIC-test-uk-air-pollution-emissions-data-explorer#readme",
+  "devDependencies": {
+    "dotenv": "^16.4.7",
+    "@supabase/supabase-js": "^2.39.6",
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.13"
+  }
+}
