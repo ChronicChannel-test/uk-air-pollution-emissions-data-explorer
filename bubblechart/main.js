@@ -3110,15 +3110,15 @@ function scheduleComparisonRedraw(reason = 'comparison-toggle') {
     pendingComparisonRedraw = null;
       comparisonDebugLog('run comparison redraw', {
         reason,
-        skipHeightUpdate: true,
+        action: 'comparison-only',
         pendingComparisonChromeHeight,
         comparisonStatementVisible
       });
-    try {
-      updateChart({ skipHeightUpdate: true });
-    } catch (error) {
-      console.error('Comparison redraw failed:', error, reason);
-    }
+    Promise.resolve()
+      .then(() => syncComparisonStatement())
+      .catch(error => {
+        console.error('Comparison redraw failed:', error, reason);
+      });
   });
 }
 
