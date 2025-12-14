@@ -266,7 +266,15 @@ if (layoutHeightManager) {
   window.__bubbleLayoutHeightManager = layoutHeightManager;
 
   const parentChangeDelay = layoutHeightManager.settings?.parentChangeDebounce || 200;
-  layoutHeightManager.onParentViewportChange?.(({ viewportHeight }) => {
+  layoutHeightManager.onParentViewportChange?.((payload = {}) => {
+    const { viewportHeight, footerHeight, delta } = payload;
+    comparisonDebugLog('parent viewport change event', {
+      viewportHeight,
+      footerHeight,
+      delta,
+      pendingComparisonChromeHeight,
+      comparisonStatementVisible
+    });
     lastKnownViewportHeight = viewportHeight || lastKnownViewportHeight;
     updateChartWrapperHeight('parent-viewport');
     drawChart(true);
@@ -2272,6 +2280,19 @@ function refreshCheckboxes(triggeredCheckbox = null, options = {}) {
   });
   
   if (scheduleRedraw) {
+    const checkedMeta = checkedBoxes.map(checkbox => {
+      const row = checkbox.closest('.categoryRow');
+      const select = row?.querySelector('select');
+      return {
+        index: checkboxOrder.get(checkbox),
+        category: select?.value || null
+      };
+    });
+    comparisonDebugLog('comparison checkbox change', {
+      reason,
+      checkedMeta,
+      totalRows: checkboxes.length
+    });
     scheduleComparisonRedraw(reason);
   }
 }
@@ -2883,8 +2904,17 @@ function setupEventListeners() {
   }, 250));
 
   if (layoutHeightManager) {
-    layoutHeightManager.observeWrapper(() => {
-      if (shouldIgnoreWrapperObserverTick()) {
+    layoutHeightManager.observeWrapper((event = {}) => {
+      const suppressed = shouldIgnoreWrapperObserverTick();
+      comparisonDebugLog('wrapper observer event', {
+        height: event.height,
+        previous: event.previous,
+        delta: event.delta,
+        suppressed,
+        pendingComparisonChromeHeight,
+        comparisonStatementVisible
+      });
+      if (suppressed) {
         return;
       }
         comparisonDebugLog('wrapper observer tick triggered redraw', {
@@ -3056,6 +3086,12 @@ async function drawChart(skipHeightUpdate = false) {
 }
 
 function scheduleComparisonRedraw(reason = 'comparison-toggle') {
+  comparisonDebugLog('scheduleComparisonRedraw invoked', {
+    reason,
+    pendingComparisonChromeHeight,
+    comparisonStatementVisible,
+    hasPending: Boolean(pendingComparisonRedraw)
+  });
   const raf = (window.requestAnimationFrame && window.requestAnimationFrame.bind(window))
     || (callback => setTimeout(callback, 16));
   const caf = (window.cancelAnimationFrame && window.cancelAnimationFrame.bind(window))
