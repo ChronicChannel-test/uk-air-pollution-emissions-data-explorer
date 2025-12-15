@@ -297,7 +297,11 @@
   <script src="export.js?v=v4-30-CIC-testdb"></script>
   <script>
     (function logLineTitleStyles() {
-      if (!window || !window.getComputedStyle) {
+      try {
+        if (!window || !window.getComputedStyle || !window.__NAEI_LAYOUT_DEBUG__) {
+          return;
+        }
+      } catch (error) {
         return;
       }
 

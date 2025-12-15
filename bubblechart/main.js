@@ -139,31 +139,38 @@ function detectMobileExperience() {
 const IS_MOBILE_EXPERIENCE = detectMobileExperience();
 window.__NAEI_DISABLE_BUBBLE_TUTORIAL__ = IS_MOBILE_EXPERIENCE;
 
-const DEFAULT_COMPARISON_DEBUG = true;
-const COMPARISON_DEBUG_PREFIX = '[comparison-debug]';
 const HAS_OWN = Object.prototype.hasOwnProperty;
+// Comparison chrome debug noise temporarily disabled; re-enable by restoring prior block when needed.
+// const DEFAULT_COMPARISON_DEBUG = true;
+// const COMPARISON_DEBUG_PREFIX = '[comparison-debug]';
+// function isComparisonDebugEnabled() { ... }
+// function comparisonDebugLog(message, payload) { ... }
+function comparisonDebugLog() {}
 
-function isComparisonDebugEnabled() {
+const DEFAULT_CATEGORY_DEBUG = false;
+const CATEGORY_DEBUG_PREFIX = '[bubble-defaults]';
+
+function isBubbleDefaultDebugEnabled() {
   if (typeof window !== 'undefined'
     && window
-    && HAS_OWN.call(window, '__NAEI_COMPARISON_DEBUG__')) {
-    return Boolean(window.__NAEI_COMPARISON_DEBUG__);
+    && HAS_OWN.call(window, '__NAEI_BUBBLE_DEFAULT_DEBUG__')) {
+    return Boolean(window.__NAEI_BUBBLE_DEFAULT_DEBUG__);
   }
-  return DEFAULT_COMPARISON_DEBUG;
+  return DEFAULT_CATEGORY_DEBUG;
 }
 
-function comparisonDebugLog(message, payload) {
-  if (!isComparisonDebugEnabled()) {
+function bubbleDefaultDebug(message, payload) {
+  if (!isBubbleDefaultDebugEnabled()) {
     return;
   }
   try {
     if (typeof payload !== 'undefined') {
-      console.log(COMPARISON_DEBUG_PREFIX, message, payload);
+      console.log(CATEGORY_DEBUG_PREFIX, message, payload);
     } else {
-      console.log(COMPARISON_DEBUG_PREFIX, message);
+      console.log(CATEGORY_DEBUG_PREFIX, message);
     }
   } catch (error) {
-    console.error('Error logging comparison debug:', error);
+    // If logging fails we intentionally stay quiet to avoid cascading errors
   }
 }
 let lastTrackedBubbleSelectionKey = null; // Prevent duplicate analytics events for unchanged selections
@@ -755,10 +762,54 @@ function getCategoryDisplayTitle(record) {
     return '';
   }
   const title = record.category_title
+    || record.categoryTitle
+    || record.category_name
+    || record.categoryName
     || record.group_name
+    || record.groupName
     || record.title
+    || record.name
+    || record.label
     || '';
   return typeof title === 'string' ? title : '';
+}
+
+function getBubbleCategoryNamePool() {
+  const normalizeName = (name) => {
+    if (!name) {
+      return '';
+    }
+    if (typeof name === 'string') {
+      return name.trim();
+    }
+    if (typeof name === 'object') {
+      return getCategoryDisplayTitle(name);
+    }
+    return String(name).trim();
+  };
+
+  const candidates = [];
+  if (Array.isArray(window.allCategoriesList) && window.allCategoriesList.length) {
+    candidates.push(...window.allCategoriesList);
+  }
+  if (Array.isArray(window.__bubbleSelectorOptions?.categoryNames) && window.__bubbleSelectorOptions.categoryNames.length) {
+    candidates.push(...window.__bubbleSelectorOptions.categoryNames);
+  }
+  const supabaseCategories = window.supabaseModule?.allCategories || [];
+  if (supabaseCategories.length) {
+    candidates.push(...supabaseCategories.map(getCategoryDisplayTitle));
+  }
+
+  const normalized = candidates
+    .map(normalizeName)
+    .filter(Boolean);
+  const unique = [...new Set(normalized)];
+
+  if ((!window.allCategoriesList || !window.allCategoriesList.length) && unique.length) {
+    window.allCategoriesList = unique.slice();
+  }
+
+  return unique;
 }
 
 async function fetchSelectorSnapshotFallback() {
@@ -885,6 +936,11 @@ function applySelectorOptionsToGlobals(selectorOptions) {
     window.allCategoriesList = (Array.isArray(categoryNames) && categoryNames.length)
       ? categoryNames.slice()
       : categories.map(category => category.category_title).sort(sortCategoryTitles);
+    bubbleDefaultDebug('applySelectorOptionsToGlobals', {
+      source: 'snapshot-options',
+      categoryCount: window.allCategoriesList.length,
+      sample: window.allCategoriesList.slice(0, 6)
+    });
   }
 }
 
@@ -949,6 +1005,11 @@ async function init() {
           return a.localeCompare(b);
         });
       window.allCategoriesList = categoryNames;
+      bubbleDefaultDebug('applySelectorOptionsToGlobals', {
+        source: 'supabase-fallback',
+        categoryCount: window.allCategoriesList.length,
+        sample: window.allCategoriesList.slice(0, 6)
+      });
     }
 
     // Setup UI
@@ -1740,6 +1801,11 @@ async function renderInitialView() {
   return new Promise(resolve => {
     const params = parseUrlParameters();
     const pollutantSelect = document.getElementById('pollutantSelect');
+    bubbleDefaultDebug('renderInitialView invoked', {
+      paramsPollutant: params.pollutantName,
+      paramsCategories: params.categoryNames,
+      initialCategoryCount: Array.isArray(window.allCategoriesList) ? window.allCategoriesList.length : 0
+    });
     
     // Use a small timeout to allow the DOM to update with options
     setTimeout(() => {
@@ -1766,47 +1832,43 @@ async function renderInitialView() {
       if (params.categoryNames && params.categoryNames.length > 0) {
         // Store comparison flags from URL for use in refreshButtons
         initialComparisonFlags = params.comparisonFlags || [];
+        bubbleDefaultDebug('renderInitialView applying URL categories', {
+          categoryNames: params.categoryNames
+        });
         params.categoryNames.forEach(name => addCategorySelector(name, false));
       } else {
         // Clear comparison flags for default categories (will be set to checked by default)
         initialComparisonFlags = [];
-        // Add default categories if none are in the URL
-      const allCategories = window.allCategoriesList || [];
-        
-        // Find specific "Ecodesign Stove - Ready To Burn" category
-        const ecodesignCategory = allCategories.find(g => 
-          g === 'Ecodesign Stove - Ready To Burn'
-        );
-        
-        // Find "Gas Boilers"  
-        const gasBoilerCategory = allCategories.find(g => 
-          g.toLowerCase().includes('gas boiler')
-        );
-        
-        // Always try to add both default categories
+        const allCategories = window.allCategoriesList || [];
+        const ecodesignCategory = allCategories.find(name => name === 'Ecodesign Stove - Ready To Burn');
+        const gasBoilerCategory = allCategories.find(name => typeof name === 'string' && name.toLowerCase().includes('gas boiler'));
+        bubbleDefaultDebug('renderInitialView default category search', {
+          categoryCount: allCategories.length,
+          sample: allCategories.slice(0, 8),
+          ecodesignFound: Boolean(ecodesignCategory),
+          gasFound: Boolean(gasBoilerCategory)
+        });
+
         if (ecodesignCategory) {
           addCategorySelector(ecodesignCategory, false);
         }
-        
+
         if (gasBoilerCategory) {
           addCategorySelector(gasBoilerCategory, false);
         }
-        
-        // If we didn't find either specific category, add first 2 available categories
+
         if (!ecodesignCategory && !gasBoilerCategory && allCategories.length > 0) {
           addCategorySelector(allCategories[0], false);
           if (allCategories.length > 1) {
             addCategorySelector(allCategories[1], false);
           }
         } else if (!ecodesignCategory && gasBoilerCategory && allCategories.length > 0) {
-          // If we only found Gas Boilers, add first available category as well
           const firstCategory = allCategories[0];
-          if (firstCategory !== gasBoilerCategory) {
+          if (firstCategory && firstCategory !== gasBoilerCategory) {
             addCategorySelector(firstCategory, false);
           }
         } else if (ecodesignCategory && !gasBoilerCategory && allCategories.length > 1) {
-          // If we only found Ecodesign, add second available category as well
-          const secondCategory = allCategories.find(g => g !== ecodesignCategory);
+          const secondCategory = allCategories.find(name => name !== ecodesignCategory);
           if (secondCategory) {
             addCategorySelector(secondCategory, false);
           }
@@ -1835,6 +1897,10 @@ async function renderInitialView() {
       // Refresh category dropdowns and buttons after adding default categories
       refreshCategoryDropdowns();
       refreshButtons();
+      bubbleDefaultDebug('renderInitialView completed', {
+        seededCategories: getSelectedCategories(),
+        comparisonFlags: initialComparisonFlags
+      });
       
       resolve();
     }, 50);
@@ -1925,11 +1991,32 @@ function parseUrlParameters() {
       if (id) {
         const category = categories.find(g => g.id === id);
         if (category) {
+          if (category.has_activity_data === false) {
+            return;
+          }
+          if (activeCategoryIdSet.size && !activeCategoryIdSet.has(category.id)) {
+            return;
+          }
           categoryNames.push(getCategoryDisplayTitle(category));
           comparisonFlags.push(hasComparisonFlag);
         }
       }
     });
+  }
+
+  const allowedCategoryNames = Array.isArray(window.allCategoriesList)
+    ? new Set(window.allCategoriesList)
+    : null;
+  if (allowedCategoryNames && categoryNames.length) {
+    const filteredNames = categoryNames.filter(name => allowedCategoryNames.has(name));
+    if (filteredNames.length !== categoryNames.length) {
+      bubbleDefaultDebug('parseUrlParameters dropped unsupported categories', {
+        before: categoryNames,
+        after: filteredNames
+      });
+    }
+    categoryNames = filteredNames;
+    comparisonFlags = comparisonFlags.slice(0, categoryNames.length);
   }
 
   // Validate year against available years
@@ -2023,6 +2110,11 @@ function addCategorySelector(defaultValue = "", usePlaceholder = true){
   const categoryName = (defaultValue && typeof defaultValue === 'object')
     ? getCategoryDisplayTitle(defaultValue)
     : defaultValue;
+  bubbleDefaultDebug('addCategorySelector invoked', {
+    requestedValue: categoryName,
+    usePlaceholder,
+    availableCategories: Array.isArray(window.allCategoriesList) ? window.allCategoriesList.length : 0
+  });
   const container = document.getElementById('categoryContainer');
   const div = document.createElement('div');
   div.className = 'categoryRow';
@@ -2106,6 +2198,20 @@ function addCategorySelector(defaultValue = "", usePlaceholder = true){
     
     // Verify the option exists
     const optionExists = [...sel.options].some(opt => opt.value === categoryName);
+    if (!optionExists) {
+      const injectedOption = new Option(categoryName, categoryName);
+      sel.add(injectedOption);
+      sel.value = categoryName;
+      bubbleDefaultDebug('addCategorySelector missing option', {
+        requestedValue: categoryName,
+        optionCount: sel.options.length,
+        sample: [...sel.options].slice(0, 6).map(opt => opt.value)
+      });
+    } else {
+      bubbleDefaultDebug('addCategorySelector applied option', {
+        requestedValue: categoryName
+      });
+    }
   }
   sel.addEventListener('change', () => { 
     refreshCategoryDropdowns(); 
@@ -2124,8 +2230,12 @@ function addCategorySelector(defaultValue = "", usePlaceholder = true){
     refreshCategoryDropdowns();
     refreshButtons();
     // alignComparisonHeader();
+    bubbleDefaultDebug('addCategorySelector post-refresh', {
+      currentSelections: getSelectedCategories()
+    });
   }, 10);
 }
+
 
 // Refresh category dropdown options (like linechart)
 function refreshCategoryDropdowns() {
@@ -2214,7 +2324,7 @@ function refreshButtons() {
       } else if (initialComparisonFlags.length > 0 && rowIndex < initialComparisonFlags.length) {
         comparisonCheckbox.checked = initialComparisonFlags[rowIndex];
       } else {
-        comparisonCheckbox.checked = rowIndex < 2;
+        comparisonCheckbox.checked = false;
       }
 
       comparisonCheckbox.addEventListener('change', (event) => refreshCheckboxes(event.target, {

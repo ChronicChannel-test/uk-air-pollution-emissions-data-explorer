@@ -584,6 +584,9 @@
       }
 
       function logElementMetrics(element, label) {
+        if (!window.__NAEI_LAYOUT_DEBUG__) {
+          return;
+        }
         if (!element) {
           console.warn(`Resources layout: missing ${label}`);
           return;

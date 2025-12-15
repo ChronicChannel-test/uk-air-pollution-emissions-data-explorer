@@ -1297,6 +1297,12 @@ async function loadData(options = {}) {
               categories: categories.length,
               rows: rows.length
             });
+            swallowBubblePromise(emitBubbleDatasetLoadedMetrics({
+              source: 'cache',
+              rowsCount: cachedRows.length,
+              startedAt: loadStartedAt,
+              fullDataset: true
+            }));
           } else {
             swallowBubblePromise(recordBubbleSupabaseFailure({
               source: 'cache',
@@ -1516,6 +1522,12 @@ async function loadData(options = {}) {
             categories: categories.length,
             rows: rows.length
           });
+          swallowBubblePromise(emitBubbleDatasetLoadedMetrics({
+            source: 'shared-loader',
+            rowsCount: Array.isArray(sharedData?.timeseries) ? sharedData.timeseries.length : 0,
+            startedAt: loadStartedAt,
+            fullDataset: true
+          }));
         } catch (error) {
           console.error('Shared loader failed, falling back to direct load:', error);
           const directFetchStartedAt = bubbleDataNow();
