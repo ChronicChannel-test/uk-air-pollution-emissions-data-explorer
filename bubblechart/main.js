@@ -2314,6 +2314,11 @@ function refreshCheckboxes(triggeredCheckbox = null, options = {}) {
       totalRows: checkboxes.length
     });
     scheduleComparisonRedraw(reason);
+    try {
+      updateURL();
+    } catch (error) {
+      console.warn('Comparison toggle URL update failed:', error);
+    }
   }
 }
 

@@ -2,6 +2,7 @@
 import re
 import urllib.parse
 from pathlib import Path
+from typing import Match
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION_FILE = ROOT / 'dataexplorer-version.txt'
@@ -18,7 +19,7 @@ if not VERSION_FILE.exists():
 version_raw = VERSION_FILE.read_text(encoding='utf-8').strip()
 slug = re.sub(r'[^A-Za-z0-9]+', '-', version_raw).strip('-') or 'build'
 
-changed_files = []
+changed_files: list[str] = []
 
 for html_path in ROOT.rglob('*.html'):
     relative_parts = html_path.relative_to(ROOT).parts
@@ -28,15 +29,19 @@ for html_path in ROOT.rglob('*.html'):
     original = html_path.read_text(encoding='utf-8')
     changed_flag = {'value': False}
 
-    def repl(match):
+    def repl(match: Match[str]) -> str:
         prefix, src, suffix = match.groups()
+        if prefix is None or src is None or suffix is None:
+            return match.group(0) or ''
         lowered = src.lower()
         if lowered.startswith(LOCAL_PREFIXES):
             return match.group(0)
 
         base, sep, query = src.partition('?')
-        params = urllib.parse.parse_qsl(query, keep_blank_values=True) if sep else []
-        new_params = []
+        params: list[tuple[str, str]] = []
+        if sep:
+            params = list(urllib.parse.parse_qsl(query, keep_blank_values=True))
+        new_params: list[tuple[str, str]] = []
         has_version = False
 
         for key, value in params:
