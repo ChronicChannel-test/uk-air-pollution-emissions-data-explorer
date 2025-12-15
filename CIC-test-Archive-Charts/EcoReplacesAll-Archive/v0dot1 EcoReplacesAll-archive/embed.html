@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Eco Replaces All | UK Air Pollution and Emissions Data Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Eco Replaces All prototype experience for the UK Air Pollution and Emissions Data Explorer">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Eco Replaces All | UK Air Pollution and Emissions Data Explorer">
+  <meta property="og:description" content="Eco Replaces All prototype experience for the UK Air Pollution and Emissions Data Explorer">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Eco Replaces All | UK Air Pollution and Emissions Data Explorer">
+  <meta name="twitter:description" content="Eco Replaces All prototype experience for the UK Air Pollution and Emissions Data Explorer">
+  <link rel="icon" type="image/png" sizes="64x64" href="../SharedResources/images/favicon.png">
+  <link rel="apple-touch-icon" href="../SharedResources/images/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../SharedResources/common-styles.css?v=inter1">
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .eco-shell {
+      min-height: 100vh;
+      padding: 32px clamp(16px, 4vw, 64px) 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.2), transparent 60%),
+                  linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(14, 165, 233, 0.12));
+    }
+
+    .eco-shell .title-row {
+      padding-right: clamp(120px, 12vw, 220px);
+    }
+
+    .eco-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      line-height: 1.6;
+      max-width: 940px;
+      color: #334155;
+      margin: 0;
+    }
+
+    .eco-controls {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 24px clamp(20px, 3vw, 44px);
+      box-shadow: 0 30px 65px rgba(15, 23, 42, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .eco-controls .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eco-controls .button-row label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #0f172a;
+      min-width: 180px;
+    }
+
+    .eco-controls .button-row select {
+      flex: 0 0 auto;
+      width: min(420px, 80vw);
+    }
+
+    .eco-controls.is-loading .button-row {
+      visibility: hidden;
+    }
+
+    .eco-controls-status {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    .eco-energy-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .eco-energy-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: 0 25px 55px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .eco-energy-card--replacement {
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(37, 99, 235, 0.85));
+      color: #e2e8f0;
+      border: none;
+    }
+
+    .eco-energy-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0 0 4px;
+      color: inherit;
+      opacity: 0.8;
+    }
+
+    .eco-energy-value {
+      font-size: 1.45rem;
+      font-weight: 600;
+      margin: 0;
+      color: inherit;
+    }
+
+    .eco-energy-note {
+      font-size: 0.9rem;
+      margin: 8px 0 0;
+      color: inherit;
+      opacity: 0.9;
+    }
+
+    .eco-results {
+      background: #fff6c2;
+      border-radius: 28px;
+      padding: 32px clamp(22px, 3vw, 48px) 40px;
+      color: #111827;
+      box-shadow: 0 30px 65px rgba(15, 23, 42, 0.18);
+      border: 1px solid rgba(15, 23, 42, 0.15);
+    }
+
+    .eco-results-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .eco-results-eyebrow {
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin: 0 0 6px;
+      color: #111827;
+    }
+
+    .eco-results-title {
+      font-size: clamp(1.5rem, 3vw, 2.4rem);
+      margin: 0;
+      color: #111827;
+    }
+
+    .eco-results-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eco-legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #111827;
+      font-weight: 600;
+    }
+
+    .eco-legend-chip::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: var(--chip-color, #fff);
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15);
+    }
+
+    .eco-chart-grid {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .eco-chart-grid.is-loading {
+      opacity: 0.65;
+    }
+
+    .eco-class-group {
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 20px;
+      padding: 20px clamp(18px, 3vw, 32px);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+    }
+
+    .eco-class-title {
+      margin: 0 0 18px;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #111827;
+      letter-spacing: 0.01em;
+    }
+
+    .eco-class-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .eco-chart-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 18px 20px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 220px;
+      color: #111827;
+    }
+
+    .eco-google-chart {
+      width: 100%;
+      min-height: 230px;
+    }
+
+    .eco-google-chart--empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #111827;
+      font-size: 0.9rem;
+      height: 230px;
+      border: 1px dashed rgba(15, 23, 42, 0.25);
+      border-radius: 12px;
+    }
+
+    .eco-chart-card.is-empty {
+      opacity: 0.6;
+    }
+
+    .eco-card-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eco-card-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .eco-card-unit {
+      margin: 0;
+      color: #111827;
+      font-size: 0.85rem;
+    }
+
+    .eco-chart-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .eco-chart-bar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .eco-chart-bar-label {
+      font-size: 0.82rem;
+      color: #cbd5f5;
+    }
+
+    .eco-chart-bar-meter {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.3);
+      overflow: hidden;
+    }
+
+    .eco-chart-bar-fill {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: var(--eco-bar-color, #fff);
+      width: var(--eco-bar-fill, 0%);
+      transition: width 160ms ease-out;
+    }
+
+    .eco-bar-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .eco-placeholder {
+      grid-column: 1 / -1;
+      text-align: center;
+      font-size: 1rem;
+      color: #cbd5f5;
+      margin: 0;
+      padding: 32px 0;
+    }
+
+    .eco-status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .eco-status-card {
+      border-radius: 16px;
+      padding: 16px 18px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+    }
+
+    .eco-status-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin: 0 0 4px;
+    }
+
+    .eco-status-value {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .eco-standalone-note {
+      border-radius: 16px;
+      padding: 18px 20px;
+      background: #fff7ed;
+      border: 1px solid rgba(124, 45, 18, 0.3);
+      color: #7c2d12;
+      display: none;
+    }
+
+    .eco-standalone-note strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .eco-shell.is-standalone .eco-standalone-note {
+      display: block;
+    }
+
+    @media (max-width: 720px) {
+      .eco-shell {
+        padding: 24px 16px 48px;
+      }
+
+      .eco-controls .button-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .eco-controls .button-row label {
+        min-width: auto;
+      }
+
+      .eco-results {
+        padding: 28px 18px 36px;
+      }
+    }
+
+    @media (max-width: 1260px) {
+      .eco-class-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 960px) {
+      .eco-class-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .eco-class-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-page-slug="eco-replaces-all">
+  <main class="chart-shell eco-shell" id="ecoReplacesAllShell">
+    <div class="title-row">
+      <h2 class="main-title" id="ecoReplacesAllTitle">
+        <span class="title-part title-part-1">Ecodesign wood burning stoves replacing</span>
+        <span class="title-part title-part-2">Fireplaces and Older Stoves</span>
+      </h2>
+    </div>
+    <p class="eco-subtitle">
+      Live preview of the Eco Replaces All view. Select a pollutant, fireplace category, and year to compare how Eco-ready stoves perform against the status quo. This embed always runs inside the CIC explorer shell.
+    </p>
+
+    <section class="eco-controls is-loading" aria-label="Eco replacements controls">
+      <div class="button-row">
+        <label for="ecoPollutantSelect">Pollutant selection</label>
+        <select id="ecoPollutantSelect" name="ecoPollutantSelect" disabled>
+          <option value="">Loading pollutant list…</option>
+        </select>
+      </div>
+      <div class="button-row">
+        <label for="ecoFireplaceSelect">Fireplace / stove category</label>
+        <select id="ecoFireplaceSelect" name="ecoFireplaceSelect" disabled>
+          <option value="">Loading fireplace & stove categories…</option>
+        </select>
+      </div>
+      <div class="button-row">
+        <label for="ecoYearSelect">Inventory year</label>
+        <select id="ecoYearSelect" name="ecoYearSelect" disabled>
+          <option value="">Loading year options…</option>
+        </select>
+      </div>
+      <p class="eco-controls-status" id="ecoControlsStatus" aria-live="polite">Preparing Supabase data…</p>
+    </section>
+
+    <section class="eco-energy-summary" aria-live="polite">
+      <article class="eco-energy-card">
+        <p class="eco-energy-label">Eco-ready stove activity</p>
+        <p class="eco-energy-value" data-energy-value="eco">—</p>
+        <p class="eco-energy-note">Fuel used by Ecodesign stove baseline</p>
+      </article>
+      <article class="eco-energy-card">
+        <p class="eco-energy-label">Current fireplace / stove</p>
+        <p class="eco-energy-value" data-energy-value="fireplace">—</p>
+        <p class="eco-energy-note">Activity for selected category</p>
+      </article>
+      <article class="eco-energy-card eco-energy-card--replacement">
+        <p class="eco-energy-label">Replacement activity applied</p>
+        <p class="eco-energy-value" data-energy-value="replacement">—</p>
+        <p class="eco-energy-note" id="ecoInclusionNote">Waiting for category comparison…</p>
+      </article>
+    </section>
+
+    <section class="eco-results" aria-labelledby="ecoResultsTitle">
+      <div class="eco-results-header">
+        <div>
+          <p class="eco-results-eyebrow">Replacement impact</p>
+          <h3 class="eco-results-title" id="ecoResultsTitle">Select a fireplace / stove category</h3>
+        </div>
+        <div class="eco-results-legend">
+          <span class="eco-legend-chip" style="--chip-color:#F58231;">Ecodesign - Ready To Burn</span>
+          <span class="eco-legend-chip" style="--chip-color:#E42020;">Current fireplace / stove</span>
+          <span class="eco-legend-chip" style="--chip-color:#911EB4;">Replacement scenario</span>
+        </div>
+      </div>
+      <div id="ecoChartGrid" class="eco-chart-grid" role="list">
+        <p class="eco-placeholder" id="ecoChartPlaceholder">Select a fireplace / stove category to preview comparison bars.</p>
+      </div>
+    </section>
+
+    <section class="eco-status-grid" aria-label="Build status">
+      <article class="eco-status-card" role="listitem">
+        <p class="eco-status-label">Status</p>
+        <p class="eco-status-value">Chart grid prototype live</p>
+      </article>
+      <article class="eco-status-card" role="listitem">
+        <p class="eco-status-label">Embed Scope</p>
+        <p class="eco-status-value">Always iframe-only</p>
+      </article>
+      <article class="eco-status-card" role="listitem">
+        <p class="eco-status-label">Last Updated</p>
+        <p class="eco-status-value">December 2025</p>
+      </article>
+    </section>
+
+    <aside class="eco-standalone-note" aria-live="polite">
+      <strong>Heads up</strong>
+      This view is designed to run inside the CIC Explorer shell. Embed it via embed.html rather than linking directly when possible.
+    </aside>
+  </main>
+
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="../SharedResources/analytics.js?v=v4-30-CIC-testdb"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="../SharedResources/supabase-env.js?v=v4-30-CIC-testdb"></script>
+  <script src="../SharedResources/supabase-config.js?v=v4-30-CIC-testdb"></script>
+  <script src="../SharedResources/shared-data-loader.js?v=v4-30-CIC-testdb"></script>
+  <script src="../SharedResources/colors.js?v=v4-30-CIC-testdb"></script>
+  <script src="../SharedResources/eco-replacement-utils.js?v=v4-30-CIC-testdb"></script>
+  <script>
+    (function initializeEcoReplacementsExperience() {
+      var DEFAULT_YEAR = 2023;
+      var DEFAULT_FIREPLACE_ID = 27;
+      var ECO_CATEGORY_PATTERN = /ecodesign.+ready.+burn/i;
+      var FIREPLACE_PATTERN = /(fireplace|stove|chiminea|burner|grate|open fire|log burner)/i;
+      var POLLUTANT_PRESETS = [
+        { value: 'preset-all', label: 'All' },
+        { value: 'preset-air-pollutants', label: 'Air Pollutants' },
+        { value: 'preset-greenhouse-gases', label: 'Greenhouse Gases' },
+        { value: 'preset-heavy-metals', label: 'Heavy Metals' },
+        { value: 'preset-particulate-matter', label: 'Particulate Matter' }
+      ];
+      var POLLUTANT_GROUPS = {
+        'preset-air-pollutants': ['nitrogen oxides', 'ammonia', 'sulphur dioxide', 'carbon monoxide', 'black carbon'],
+        'preset-greenhouse-gases': ['carbon dioxide', 'methane', 'nitrous oxide', 'nf3', 'sf6'],
+        'preset-heavy-metals': ['lead', 'mercury', 'cadmium', 'chromium', 'nickel', 'arsenic'],
+        'preset-particulate-matter': ['pm10', 'pm2.5', 'black carbon', 'black smoke']
+      };
+      var POLLUTANT_CLASS_LOOKUP = {
+        1: 4,
+        2: 4,
+        3: 4,
+        4: 4,
+        5: 4,
+        6: 4,
+        7: 1,
+        8: 1,
+        9: 1,
+        10: 1,
+        11: 1,
+        12: 1,
+        13: 1,
+        14: 1,
+        15: 1,
+        16: 1,
+        17: 1,
+        18: 1,
+        19: 1,
+        20: 1,
+        21: 1,
+        22: 1,
+        23: 1,
+        24: 1,
+        25: 1,
+        26: 1,
+        27: 1,
+        28: 1,
+        29: 1,
+        30: 1,
+        31: 1,
+        32: 3,
+        33: 3,
+        34: 3,
+        35: 3,
+        36: 3,
+        37: 3,
+        38: 3,
+        39: 3,
+        40: 3,
+        41: 3,
+        42: 3,
+        43: 3,
+        44: 3,
+        45: 3,
+        46: 3,
+        47: 3,
+        48: 3,
+        49: 1,
+        50: 1,
+        51: 1,
+        52: 1,
+        53: 1,
+        54: 1,
+        55: 1,
+        56: 2,
+        57: 1,
+        58: 1,
+        59: 1,
+        60: 1,
+        62: 2,
+        63: 2,
+        65: 2,
+        66: 2,
+        67: 2,
+        68: 2,
+        69: 2
+      };
+      var POLLUTANT_CLASS_META = {
+        1: { label: 'Air Pollutants' },
+        2: { label: 'Greenhouse Gases' },
+        3: { label: 'Heavy Metals' },
+        4: { label: 'Particulate Matter' },
+        5: { label: 'POPs&PAHs' }
+      };
+      var POLLUTANT_CLASS_ORDER = [1, 2, 3, 4, 5];
+      var FALLBACK_CLASS_ID = 'other';
+      var FALLBACK_CLASS_META = { label: 'Other pollutants' };
+      var BAR_COLORS = {
+        eco: '#F58231',
+        fireplace: '#E42020',
+        replacement: '#911EB4'
+      };
+      var dom = {
+        controls: document.querySelector('.eco-controls'),
+        pollutant: document.getElementById('ecoPollutantSelect'),
+        fireplace: document.getElementById('ecoFireplaceSelect'),
+        year: document.getElementById('ecoYearSelect'),
+        status: document.getElementById('ecoControlsStatus'),
+        chartGrid: document.getElementById('ecoChartGrid'),
+        chartPlaceholder: document.getElementById('ecoChartPlaceholder'),
+        energyValues: {
+          eco: document.querySelector('[data-energy-value="eco"]'),
+          fireplace: document.querySelector('[data-energy-value="fireplace"]'),
+          replacement: document.querySelector('[data-energy-value="replacement"]')
+        },
+        inclusionNote: document.getElementById('ecoInclusionNote'),
+        resultsTitle: document.getElementById('ecoResultsTitle')
+      };
+      var state = {
+        pollutants: [],
+        pollutantMap: new Map(),
+        categories: [],
+        categoryMap: new Map(),
+        filteredPollutantIds: new Set(),
+        timeseriesRows: [],
+        timeseriesIndex: null,
+        ecoCategoryId: null,
+        activityPollutantId: null,
+        activityUnitLabel: 'TJ',
+        activityLabel: 'Activity data',
+        selection: {
+          pollutant: POLLUTANT_PRESETS[0].value,
+          fireplace: null,
+          year: DEFAULT_YEAR
+        },
+        renderToken: 0,
+        ready: false,
+        numberFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }),
+        energyFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 })
+      };
+
+      var googleChartsReady = false;
+      var googleChartsPromise = loadGoogleCharts();
+      googleChartsPromise.then(function () {
+        googleChartsReady = true;
+      }).catch(function (error) {
+        console.warn('Google Charts failed to initialize:', error);
+      });
+
+      if (!dom.pollutant || !window.SharedDataLoader || !window.EcoReplacementUtils) {
+        setStatus('Shared modules missing. Reload the page.');
+        markControlsReady();
+        return;
+      }
+
+      bootstrap();
+
+      function bootstrap() {
+        setStatus('Preparing data and charts…');
+        Promise.all([
+          window.SharedDataLoader.bootstrapFullDataset('eco-replaces-all-view'),
+          googleChartsPromise
+        ])
+          .then(function () {
+            hydrateStateFromCache();
+            populatePollutantSelect();
+            populateFireplaceSelect();
+            populateYearSelect();
+            markControlsReady();
+            attachControlEvents();
+            state.ready = true;
+            handleSelectionChange();
+          })
+          .catch(function (error) {
+            console.warn('Eco replacements data bootstrap failed:', error);
+            setStatus('Unable to load shared data or charts. Please refresh.');
+            markControlsReady();
+          });
+      }
+
+      function hydrateStateFromCache() {
+        var cached = window.SharedDataLoader.getCachedData ? window.SharedDataLoader.getCachedData() : {};
+        state.pollutants = cached.pollutants || [];
+        state.categories = cached.categories || [];
+        state.pollutantMap = new Map();
+        state.categoryMap = new Map();
+        state.pollutants.forEach(function (pollutant) {
+          if (pollutant && Number.isFinite(pollutant.id)) {
+            state.pollutantMap.set(Number(pollutant.id), pollutant);
+          }
+        });
+        state.categories.forEach(function (category) {
+          if (category && category.id != null) {
+            state.categoryMap.set(Number(category.id), category);
+          }
+        });
+        state.timeseriesRows = window.SharedDataLoader.getAllTimeseries ? window.SharedDataLoader.getAllTimeseries() : [];
+        state.timeseriesIndex = window.EcoReplacementUtils.createTimeseriesIndex(state.timeseriesRows);
+        state.ecoCategoryId = findEcoCategoryId(state.categories);
+        var activityMeta = findActivityPollutantMeta(state.pollutants);
+        state.activityPollutantId = activityMeta ? activityMeta.id : null;
+        state.activityUnitLabel = activityMeta?.emission_unit || activityMeta?.unit || 'TJ';
+        state.activityLabel = activityMeta?.pollutant || 'Activity data';
+        state.filteredPollutantIds = deriveEcoRelevantPollutantIds(state.timeseriesRows, state.ecoCategoryId);
+      }
+
+      function populatePollutantSelect() {
+        dom.pollutant.innerHTML = '';
+        POLLUTANT_PRESETS.forEach(function (preset) {
+          dom.pollutant.appendChild(buildOption(preset.value, preset.label));
+        });
+        sortByName(state.pollutants, 'pollutant').forEach(function (pollutant) {
+          if (!pollutant || pollutant.id == null || !pollutant.pollutant) {
+            return;
+          }
+          if (isActivityDataPollutant(pollutant)) {
+            return;
+          }
+          dom.pollutant.appendChild(buildOption(String(pollutant.id), pollutant.pollutant));
+        });
+        dom.pollutant.value = state.selection.pollutant;
+        dom.pollutant.disabled = false;
+      }
+
+      function populateFireplaceSelect() {
+        dom.fireplace.innerHTML = '';
+        var matches = sortByName(state.categories.filter(function (category) {
+          var title = category && (category.category_title || category.group_name || '');
+          return FIREPLACE_PATTERN.test(String(title));
+        }), 'category_title');
+        if (!matches.length) {
+          dom.fireplace.appendChild(buildOption('', 'No fireplace / stove categories available'));
+          dom.fireplace.disabled = true;
+          updateResultsTitle();
+          return;
+        }
+        var preferredCategoryId = matches.some(function (category) {
+          return Number(category.id) === Number(DEFAULT_FIREPLACE_ID);
+        }) ? Number(DEFAULT_FIREPLACE_ID) : Number(matches[0].id);
+        matches.forEach(function (category) {
+          var label = category.category_title || category.group_name;
+          if (!label) {
+            return;
+          }
+          var option = buildOption(String(category.id), label);
+          option.selected = Number(category.id) === preferredCategoryId;
+          dom.fireplace.appendChild(option);
+        });
+        state.selection.fireplace = preferredCategoryId;
+        dom.fireplace.value = String(preferredCategoryId);
+        dom.fireplace.disabled = false;
+        updateResultsTitle();
+      }
+
+      function populateYearSelect() {
+        var years = extractYearList(state.timeseriesRows);
+        dom.year.innerHTML = '';
+        if (!years.length) {
+          years = [DEFAULT_YEAR];
+        }
+        years.forEach(function (year) {
+          dom.year.appendChild(buildOption(String(year), String(year)));
+        });
+        var defaultYear = years.includes(DEFAULT_YEAR) ? DEFAULT_YEAR : years[years.length - 1];
+        state.selection.year = defaultYear;
+        dom.year.value = String(defaultYear);
+        dom.year.disabled = false;
+      }
+
+      function attachControlEvents() {
+        dom.pollutant.addEventListener('change', handleSelectionChange);
+        dom.fireplace.addEventListener('change', handleSelectionChange);
+        dom.year.addEventListener('change', handleSelectionChange);
+      }
+
+      function handleSelectionChange() {
+        state.selection.pollutant = dom.pollutant.value;
+        state.selection.fireplace = Number(dom.fireplace.value) || null;
+        state.selection.year = Number(dom.year.value) || DEFAULT_YEAR;
+        updateResultsTitle();
+        if (!state.ready) {
+          return;
+        }
+        renderEcoImpacts();
+      }
+
+      function renderEcoImpacts() {
+        var token = ++state.renderToken;
+        if (!state.ecoCategoryId || !state.activityPollutantId || !state.selection.fireplace) {
+          updatePlaceholder('Select a fireplace / stove category to preview comparison bars.');
+          renderEnergySummary(null);
+          clearChartGrid();
+          return;
+        }
+
+        setGridBusy(true);
+
+        window.EcoReplacementUtils.computeEnergyProfile({
+          timeseriesIndex: state.timeseriesIndex,
+          ecoCategoryId: state.ecoCategoryId,
+          fireplaceCategoryId: state.selection.fireplace,
+          activityPollutantId: state.activityPollutantId,
+          year: state.selection.year,
+          sharedLoader: window.SharedDataLoader
+        }).then(function (energyProfile) {
+          if (token !== state.renderToken) {
+            return;
+          }
+          renderEnergySummary(energyProfile);
+          var pollutantIds = resolveSelectedPollutantIds(state.selection.pollutant);
+          if (!pollutantIds.length) {
+            updatePlaceholder('No pollutants match this preset. Pick another option.');
+            clearChartGrid();
+            setGridBusy(false);
+            return;
+          }
+          return Promise.all(pollutantIds.map(function (pollutantId) {
+            return window.EcoReplacementUtils.computeReplacementScenario({
+              pollutantId: pollutantId,
+              timeseriesIndex: state.timeseriesIndex,
+              ecoCategoryId: state.ecoCategoryId,
+              fireplaceCategoryId: state.selection.fireplace,
+              activityPollutantId: state.activityPollutantId,
+              year: state.selection.year,
+              energyProfile: energyProfile,
+              sharedLoader: window.SharedDataLoader
+            }).then(function (result) {
+              return result ? { result: result, meta: state.pollutantMap.get(pollutantId) || null, pollutantId: pollutantId } : null;
+            });
+          })).then(function (scenarios) {
+            if (token !== state.renderToken) {
+              return;
+            }
+            renderChartGrid((scenarios || []).filter(Boolean));
+          }).catch(function (error) {
+            console.warn('Eco replacements scenario failed:', error);
+            if (token === state.renderToken) {
+              updatePlaceholder('Unable to calculate replacement impact for this selection.');
+              clearChartGrid();
+            }
+          }).finally(function () {
+            if (token === state.renderToken) {
+              setGridBusy(false);
+            }
+          });
+        }).catch(function (error) {
+          console.warn('Eco energy profile failed:', error);
+          if (token === state.renderToken) {
+            renderEnergySummary(null);
+            updatePlaceholder('Unable to read energy profile for this selection.');
+            clearChartGrid();
+            setGridBusy(false);
+          }
+        });
+      }
+
+      function renderEnergySummary(profile) {
+        var values = profile ? {
+          eco: profile.ecoEnergy,
+          fireplace: profile.fireplaceEnergy,
+          replacement: profile.replacementEnergy
+        } : { eco: null, fireplace: null, replacement: null };
+        Object.keys(values).forEach(function (key) {
+          var target = dom.energyValues[key];
+          if (!target) {
+            return;
+          }
+          target.textContent = formatActivityValue(values[key]);
+        });
+        if (dom.inclusionNote) {
+          dom.inclusionNote.textContent = profile ? formatInclusionNote(profile.inclusion) : 'Select a fireplace / stove category to compare activity totals.';
+        }
+      }
+
+      function updateResultsTitle() {
+        if (!dom.resultsTitle) {
+          return;
+        }
+        var title = state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : 'Select a fireplace / stove category';
+        dom.resultsTitle.textContent = title || 'Select a fireplace / stove category';
+      }
+
+      function getCategoryLabel(categoryId) {
+        if (!Number.isFinite(Number(categoryId))) {
+          return 'Select a fireplace / stove category';
+        }
+        var category = state.categoryMap ? state.categoryMap.get(Number(categoryId)) : null;
+        if (!category) {
+          return 'Select a fireplace / stove category';
+        }
+        return category.category_title || category.group_name || 'Select a fireplace / stove category';
+      }
+
+      function renderChartGrid(items) {
+        if (!dom.chartGrid) {
+          return;
+        }
+        dom.chartGrid.innerHTML = '';
+        if (!items.length) {
+          updatePlaceholder('No pollutant data available for this combination.');
+          return;
+        }
+        hidePlaceholder();
+        var grouped = groupScenariosByClass(items);
+        grouped.forEach(function (group) {
+          dom.chartGrid.appendChild(buildClassSection(group));
+        });
+      }
+
+      function groupScenariosByClass(items) {
+        var buckets = new Map();
+        (items || []).forEach(function (entry) {
+          var pollutantId = Number(entry?.meta?.id ?? entry?.pollutantId);
+          var classId = getPollutantClassId(pollutantId);
+          if (!buckets.has(classId)) {
+            buckets.set(classId, []);
+          }
+          buckets.get(classId).push(entry);
+        });
+        return Array.from(buckets.entries()).sort(function (a, b) {
+          return getClassSortOrder(a[0]) - getClassSortOrder(b[0]);
+        }).map(function (pair) {
+          var classId = pair[0];
+          var entries = pair[1].slice().sort(function (entryA, entryB) {
+            var nameA = (entryA.meta?.pollutant || '').toLowerCase();
+            var nameB = (entryB.meta?.pollutant || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+          });
+          return {
+            classId: classId,
+            label: getClassLabel(classId),
+            items: entries
+          };
+        });
+      }
+
+      function buildClassSection(group) {
+        var section = document.createElement('section');
+        section.className = 'eco-class-group';
+        var title = document.createElement('h4');
+        title.className = 'eco-class-title';
+        title.textContent = group.label;
+        section.appendChild(title);
+        var grid = document.createElement('div');
+        grid.className = 'eco-class-grid';
+        group.items.forEach(function (entry) {
+          grid.appendChild(buildChartCard(entry));
+        });
+        section.appendChild(grid);
+        return section;
+      }
+
+      function buildChartCard(entry) {
+        var card = document.createElement('article');
+        card.className = 'eco-chart-card';
+        var pollutantName = entry.meta?.pollutant || 'Unknown pollutant';
+        var unit = entry.meta?.emission_unit || 'tonnes';
+        var hasData = [entry.result.ecoEmission, entry.result.fireplaceEmission, entry.result.replacementEmission]
+          .some(function (value) { return Number.isFinite(value) && value >= 0; });
+        if (!hasData) {
+          card.classList.add('is-empty');
+        }
+
+        var header = document.createElement('div');
+        header.className = 'eco-card-header';
+        var title = document.createElement('h4');
+        title.className = 'eco-card-title';
+        title.textContent = pollutantName;
+        header.appendChild(title);
+        var unitLine = document.createElement('p');
+        unitLine.className = 'eco-card-unit';
+        unitLine.textContent = 'Emissions (' + unit + ') · ' + state.selection.year;
+        header.appendChild(unitLine);
+        card.appendChild(header);
+
+        var chartContainer = document.createElement('div');
+        chartContainer.className = 'eco-google-chart';
+        card.appendChild(chartContainer);
+
+        if (hasData) {
+          renderGoogleBarChart(chartContainer, entry, unit);
+        } else {
+          chartContainer.classList.add('eco-google-chart--empty');
+          chartContainer.textContent = 'No emissions data available';
+        }
+
+        var deltaText = formatDeltaText(entry.result, unit);
+        if (deltaText) {
+          var delta = document.createElement('p');
+          delta.className = 'eco-card-unit';
+          delta.textContent = deltaText;
+          card.appendChild(delta);
+        }
+
+        return card;
+      }
+
+      function renderGoogleBarChart(container, entry, unit) {
+        if (!googleChartsReady || !window.google || !window.google.visualization) {
+          container.classList.add('eco-google-chart--empty');
+          container.textContent = 'Charts are still loading…';
+          return;
+        }
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Scenario');
+        data.addColumn('number', 'Emissions');
+        data.addColumn({ type: 'string', role: 'annotation' });
+        data.addColumn({ type: 'string', role: 'style' });
+        data.addRows([
+          buildChartRow('Ecodesign - Ready To Burn', entry.result.ecoEmission, unit, BAR_COLORS.eco),
+          buildChartRow('Current fireplace / stove', entry.result.fireplaceEmission, unit, BAR_COLORS.fireplace),
+          buildChartRow('Replacement scenario', entry.result.replacementEmission, unit, BAR_COLORS.replacement)
+        ]);
+
+        var options = {
+          height: 230,
+          backgroundColor: 'transparent',
+          legend: { position: 'none' },
+          chartArea: { width: '60%', height: '68%', top: 16, left: 10 },
+          hAxis: {
+            textStyle: { color: '#111827', fontSize: 12 },
+            textPosition: 'none',
+            baselineColor: '#111111',
+            gridlines: { color: 'transparent' },
+            ticks: []
+          },
+          vAxis: {
+            textStyle: { color: '#111827', fontSize: 12 },
+            baselineColor: '#111111',
+            gridlines: { color: '#111111' },
+            viewWindow: { min: 0 }
+          },
+          annotations: {
+            textStyle: { color: '#111827', fontSize: 11, bold: true },
+            alwaysOutside: true
+          },
+          bar: { groupWidth: '28%' },
+          animation: {
+            startup: true,
+            duration: 320,
+            easing: 'out'
+          },
+          tooltip: { textStyle: { color: '#111827' } }
+        };
+
+        var chart = new google.visualization.ColumnChart(container);
+        chart.draw(data, options);
+      }
+
+      function buildChartRow(label, value, unit, color) {
+        var hasValue = Number.isFinite(value) && value >= 0;
+        var annotation = hasValue ? formatEmissionValue(value, unit) : 'No data';
+        return [label, hasValue ? value : null, annotation, 'color: ' + color];
+      }
+
+      function formatDeltaText(result, unit) {
+        if (!result) {
+          return '';
+        }
+        if (!Number.isFinite(result.fireplaceEmission) || !Number.isFinite(result.replacementEmission)) {
+          return '';
+        }
+        var delta = result.fireplaceEmission - result.replacementEmission;
+        if (!Number.isFinite(delta) || delta === 0) {
+          return '';
+        }
+        var direction = delta > 0 ? 'Potential reduction' : 'Potential increase';
+        return direction + ': ' + formatEmissionValue(Math.abs(delta), unit);
+      }
+
+      function getPollutantClassId(pollutantId) {
+        if (!Number.isFinite(pollutantId)) {
+          return FALLBACK_CLASS_ID;
+        }
+        return POLLUTANT_CLASS_LOOKUP[pollutantId] || FALLBACK_CLASS_ID;
+      }
+
+      function getClassLabel(classId) {
+        if (Number.isFinite(classId) && POLLUTANT_CLASS_META[classId]) {
+          return POLLUTANT_CLASS_META[classId].label;
+        }
+        return FALLBACK_CLASS_META.label;
+      }
+
+      function getClassSortOrder(classId) {
+        if (Number.isFinite(classId)) {
+          var index = POLLUTANT_CLASS_ORDER.indexOf(classId);
+          if (index !== -1) {
+            return index;
+          }
+        }
+        return POLLUTANT_CLASS_ORDER.length + 1;
+      }
+
+      function resolveSelectedPollutantIds(value) {
+        if (!value) {
+          return [];
+        }
+        if (value.startsWith('preset-')) {
+          if (value === 'preset-all') {
+            var baseIds = state.filteredPollutantIds.size ? Array.from(state.filteredPollutantIds) : state.pollutants.map(function (p) { return p.id; });
+            return baseIds.filter(function (id) { return Number.isFinite(id) && !isActivityPollutantId(id); });
+          }
+          var targets = (POLLUTANT_GROUPS[value] || []).map(function (name) { return name.toLowerCase(); });
+          if (!targets.length) {
+            return [];
+          }
+          return state.pollutants.filter(function (pollutant) {
+            var label = (pollutant.pollutant || '').toLowerCase();
+            return targets.some(function (target) { return label.includes(target); });
+          }).map(function (pollutant) { return pollutant.id; }).filter(function (id) { return Number.isFinite(id) && !isActivityPollutantId(id); });
+        }
+        var parsed = Number(value);
+        return Number.isFinite(parsed) && !isActivityPollutantId(parsed) ? [parsed] : [];
+      }
+
+      function deriveEcoRelevantPollutantIds(rows, categoryId) {
+        if (!Array.isArray(rows) || !Number.isFinite(categoryId)) {
+          return new Set();
+        }
+        var yearKey = 'f' + DEFAULT_YEAR;
+        return rows.reduce(function (set, row) {
+          if (!row || Number(row.category_id) !== Number(categoryId)) {
+            return set;
+          }
+          if (!hasYearValue(row, yearKey)) {
+            return set;
+          }
+          if (Number.isFinite(row.pollutant_id) && !isActivityPollutantId(row.pollutant_id)) {
+            set.add(Number(row.pollutant_id));
+          }
+          return set;
+        }, new Set());
+      }
+
+      function findEcoCategoryId(categories) {
+        var match = (categories || []).find(function (category) {
+          var title = category && (category.category_title || category.group_name || '');
+          return ECO_CATEGORY_PATTERN.test(String(title).toLowerCase());
+        });
+        return match ? Number(match.id) : null;
+      }
+
+      function findActivityPollutantMeta(pollutants) {
+        var fallback = null;
+        (pollutants || []).forEach(function (pollutant) {
+          if (!pollutant || pollutant.id == null || !pollutant.pollutant) {
+            return;
+          }
+          var label = pollutant.pollutant.toLowerCase();
+          if (label.includes('activity data') || label === 'activity') {
+            fallback = pollutant;
+          } else if (!fallback && label.includes('activity')) {
+            fallback = pollutant;
+          }
+        });
+        return fallback;
+      }
+
+      function isActivityDataPollutant(pollutant) {
+        if (!pollutant) {
+          return false;
+        }
+        if (isActivityPollutantId(pollutant.id)) {
+          return true;
+        }
+        var label = (pollutant.pollutant || '').toLowerCase();
+        return label.includes('activity data');
+      }
+
+      function isActivityPollutantId(pollutantId) {
+        return Number.isFinite(state.activityPollutantId) && Number(pollutantId) === Number(state.activityPollutantId);
+      }
+
+      function formatActivityValue(value) {
+        if (!Number.isFinite(value) || value < 0) {
+          return '—';
+        }
+        if (value === 0) {
+          return '0 ' + state.activityUnitLabel;
+        }
+        return state.energyFormatter.format(value) + ' ' + state.activityUnitLabel;
+      }
+
+      function formatEmissionValue(value, unit) {
+        if (!Number.isFinite(value) || value < 0) {
+          return '—';
+        }
+        if (value === 0) {
+          return '0' + (unit ? ' ' + unit : '');
+        }
+        return state.numberFormatter.format(value) + (unit ? ' ' + unit : '');
+      }
+
+      function formatInclusionNote(assessment) {
+        if (!assessment || assessment.included === null) {
+          return 'Comparing Supabase category metadata to decide whether Eco replaces or supplements this activity.';
+        }
+        return assessment.included
+          ? 'Metadata shows the fireplace fuels already overlap, so Eco-ready activity replaces the current category.'
+          : 'Fuel sets differ, so replacement assumes Eco-ready activity is added on top of the current fireplace total.';
+      }
+
+      function buildOption(value, label) {
+        var option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        return option;
+      }
+
+      function sortByName(list, property) {
+        return (list || []).slice().sort(function (a, b) {
+          var nameA = (a && (a[property] || a.pollutant || '')) || '';
+          var nameB = (b && (b[property] || b.pollutant || '')) || '';
+          return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+        });
+      }
+
+      function extractYearList(rows) {
+        var pattern = /^f(\d{4})$/;
+        var yearSet = new Set();
+        (rows || []).forEach(function (row) {
+          if (!row) {
+            return;
+          }
+          Object.keys(row).forEach(function (key) {
+            var match = pattern.exec(key);
+            if (match) {
+              yearSet.add(Number(match[1]));
+            }
+          });
+        });
+        return Array.from(yearSet).sort(function (a, b) { return a - b; });
+      }
+
+      function hasYearValue(row, yearKey) {
+        if (!row || !yearKey || !(yearKey in row)) {
+          return false;
+        }
+        var value = row[yearKey];
+        if (value === null || value === undefined) {
+          return false;
+        }
+        if (typeof value === 'number') {
+          return !Number.isNaN(value);
+        }
+        if (typeof value === 'string') {
+          return value.trim().length > 0 && !Number.isNaN(Number(value));
+        }
+        return true;
+      }
+
+      function setStatus(message) {
+        if (dom.status) {
+          dom.status.textContent = message || '';
+          dom.status.hidden = !message;
+        }
+      }
+
+      function markControlsReady() {
+        if (dom.controls) {
+          dom.controls.classList.remove('is-loading');
+        }
+      }
+
+      function setGridBusy(isBusy) {
+        if (!dom.chartGrid) {
+          return;
+        }
+        dom.chartGrid.classList.toggle('is-loading', Boolean(isBusy));
+      }
+
+      function updatePlaceholder(message) {
+        if (!dom.chartPlaceholder) {
+          return;
+        }
+        dom.chartPlaceholder.textContent = message;
+        dom.chartPlaceholder.hidden = false;
+      }
+
+      function hidePlaceholder() {
+        if (dom.chartPlaceholder) {
+          dom.chartPlaceholder.hidden = true;
+        }
+      }
+
+      function clearChartGrid() {
+        if (dom.chartGrid) {
+          dom.chartGrid.innerHTML = '';
+        }
+      }
+
+      function loadGoogleCharts() {
+        return new Promise(function (resolve, reject) {
+          if (!window.google || !window.google.charts) {
+            reject(new Error('Google Charts loader missing.'));
+            return;
+          }
+          var resolved = false;
+          var timeoutId = setTimeout(function () {
+            if (resolved) {
+              return;
+            }
+            resolved = true;
+            reject(new Error('Google Charts loader timed out.'));
+          }, 10000);
+          try {
+            google.charts.load('current', { packages: ['corechart', 'bar'] });
+            google.charts.setOnLoadCallback(function () {
+              if (resolved) {
+                return;
+              }
+              resolved = true;
+              clearTimeout(timeoutId);
+              resolve();
+            });
+          } catch (error) {
+            if (resolved) {
+              return;
+            }
+            resolved = true;
+            clearTimeout(timeoutId);
+            reject(error);
+          }
+        });
+      }
+    })();
+  </script>
+  <script>
+    (function initializeEcoReplacesAllView() {
+      var shell = document.getElementById('ecoReplacesAllShell');
+      var chartId = 'eco-replaces-all';
+      var embedded = window.parent && window.parent !== window;
+      var seenLogged = false;
+
+      if (!embedded && shell) {
+        shell.classList.add('is-standalone');
+      }
+
+      function trackSeen() {
+        if (seenLogged || !window.SiteAnalytics || typeof window.SiteAnalytics.trackInteraction !== 'function') {
+          return;
+        }
+        window.SiteAnalytics.trackInteraction('eco_replaces_all_seen', {
+          chartId: chartId,
+          embedded: embedded,
+          pageSlug: '/EcoReplacesAll'
+        });
+        seenLogged = true;
+      }
+
+      trackSeen();
+
+      window.addEventListener('message', function handleEcoMessages(event) {
+        if (event && event.data && event.data.type === 'chartVisibility' && event.data.chartId === chartId && event.data.visible) {
+          trackSeen();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
