@@ -34,4 +34,6 @@ PY
 fi
 
 git add index.html
+python3 "$REPO_ROOT/scripts/update-script-cache-bust.py"
+git ls-files -z '*.html' | xargs -0 git add
 node "$REPO_ROOT/scripts/update-footer-versions.js"
