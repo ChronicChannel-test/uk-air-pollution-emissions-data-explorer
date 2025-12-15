@@ -90,6 +90,13 @@ const restrictedGreens = new Set([
   '#BCF60C'  // Lime
 ]);
 
+const outlineRecommendedHexes = new Set([
+  ...distinctPalette,
+  '#0A77C4', // Energy card fallback
+  '#F26522', // Legacy pollution card
+  '#F5A000'  // Current pollution card
+]);
+
 function normalizeName(value = '') {
   if (typeof value !== 'string') {
     return '';
@@ -547,6 +554,27 @@ function setColorForCategory(name, color) {
   markColorAsUsed(color);
 }
 
+function shouldOutlineLightCard(color) {
+  if (!color || typeof color !== 'string') {
+    return false;
+  }
+  const normalized = color.trim().toUpperCase();
+  if (!normalized) {
+    return false;
+  }
+  if (outlineRecommendedHexes.has(normalized)) {
+    return true;
+  }
+  // Allow shorthand hex (e.g., #abc) to still match the recommendation set
+  if (/^#([0-9A-F]{3})$/i.test(normalized)) {
+    const expanded = normalized.replace(/^#([0-9A-F])([0-9A-F])([0-9A-F])$/i, (_, r, g, b) => (
+      `#${r}${r}${g}${g}${b}${b}`.toUpperCase()
+    ));
+    return outlineRecommendedHexes.has(expanded);
+  }
+  return false;
+}
+
 attemptCategoryIndexBuildFromCache();
 ensureRuleBootstrapScheduled();
 
@@ -559,5 +587,6 @@ window.Colors = {
   getColorCache,
   setColorForCategory,
   refreshColorRules,
-  getRuleDiagnostics
+  getRuleDiagnostics,
+  shouldOutlineLightCard
 };

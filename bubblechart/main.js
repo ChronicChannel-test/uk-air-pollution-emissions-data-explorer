@@ -3277,6 +3277,11 @@ function updateComparisonStatement(statement) {
 
     const pollutantUnitMeta = window.EmissionUnits?.getUnitMeta(pollutantUnit);
     const activityUnitMeta = window.EmissionUnits?.getUnitMeta(activityUnit);
+    const shouldOutlineCardText = (color) => Boolean(window.Colors?.shouldOutlineLightCard?.(color));
+    const pollutionCardColor = pollutionColor || '#f5a000';
+    const energyCardColor = energyColor || '#0a77c4';
+    const pollutionCardClasses = `comparison-card${shouldOutlineCardText(pollutionCardColor) ? ' comparison-card--outline' : ''}`;
+    const energyCardClasses = `comparison-card${shouldOutlineCardText(energyCardColor) ? ' comparison-card--outline' : ''}`;
 
     if (!pollutantName || !pollutionLeaderName || !pollutionFollowerName || !energyLeaderName || !energyFollowerName) {
       hideComparisonStatement();
@@ -3645,7 +3650,7 @@ function updateComparisonStatement(statement) {
         subtitle: `${pollutantName} pollution`,
         ratioLine: pollutionRatioLine,
         followerLine: pollutionRatioFollowerLine,
-        color: pollutionColor || '#f5a000',
+        color: pollutionCardColor,
         trend: ratioIndicatesLower ? 'lower' : 'higher'
       },
       energyCard: {
@@ -3653,7 +3658,7 @@ function updateComparisonStatement(statement) {
         subtitle: 'Energy',
         ratioLine: energyRatioLine,
         followerLine: energyFollowerLine,
-        color: energyColor || '#0a77c4',
+        color: energyCardColor,
         trend: energyTrend
       },
       warningText: comparisonWarningText,
@@ -3681,14 +3686,14 @@ function updateComparisonStatement(statement) {
       <div class="comparison-layout">
         <div class="comparison-row">
           <div class="${pollutionArrowClass}" aria-hidden="true"></div>
-          <div class="comparison-card" tabindex="0" aria-label="${escapeHtml(`Show detailed pollution metrics for ${pollutionLeaderName}`)}" style="background:${pollutionColor || '#f5a000'};">
+          <div class="${pollutionCardClasses}" tabindex="0" aria-label="${escapeHtml(`Show detailed pollution metrics for ${pollutionLeaderName}`)}" style="background:${pollutionCardColor};">
             <div class="comparison-card-line comparison-card-line-large">${pollutionLeaderName}</div>
             <div class="comparison-card-line comparison-card-line-small">${pollutantName} pollution</div>
             <div class="comparison-card-line comparison-card-line-large">${pollutionRatioLine}</div>
             <div class="comparison-card-line comparison-card-line-small">${pollutionRatioFollowerLine}</div>
             ${sharedTooltipMarkup}
           </div>
-          <div class="comparison-card" tabindex="0" aria-label="${escapeHtml(`Show detailed energy metrics for ${energyLeaderName}`)}" style="background:${energyColor || '#0a77c4'};">
+          <div class="${energyCardClasses}" tabindex="0" aria-label="${escapeHtml(`Show detailed energy metrics for ${energyLeaderName}`)}" style="background:${energyCardColor};">
             <div class="comparison-card-line comparison-card-line-large">${energyLeaderName}</div>
             <div class="comparison-card-line comparison-card-line-small">Energy</div>
             <div class="comparison-card-line comparison-card-line-large">${energyRatioLine}</div>

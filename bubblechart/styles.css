@@ -1036,6 +1036,17 @@ body {
 }
 
 .comparison-card-line { color: #fff; line-height: 1.2; }
+.comparison-card--outline .comparison-card-line {
+  text-shadow:
+    0.45px 0 0 rgba(0, 0, 0, 0.6),
+    -0.45px 0 0 rgba(0, 0, 0, 0.6),
+    0 0.45px 0 rgba(0, 0, 0, 0.6),
+    0 -0.45px 0 rgba(0, 0, 0, 0.6),
+    0.32px 0.32px 0 rgba(0, 0, 0, 0.48),
+    -0.32px 0.32px 0 rgba(0, 0, 0, 0.48),
+    0.32px -0.32px 0 rgba(0, 0, 0, 0.48),
+    -0.32px -0.32px 0 rgba(0, 0, 0, 0.48);
+}
 .comparison-card-line-large { font-size: clamp(11px, 1.2vw + 7px, 26px); font-weight: 800; }
 .comparison-card-line-small { font-size: clamp(10px, 0.9vw + 5px, 18px); font-weight: 700; }
 
@@ -1095,7 +1106,19 @@ body {
   background: url('../SharedResources/images/Warning%20triangle-alpha.svg') center center / contain no-repeat;
 }
 
-.comparison-warning-text { font-size: clamp(10px, 0.85vw + 5px, 16px); width: 100%; }
+.comparison-warning-text {
+  font-size: clamp(10px, 0.85vw + 5px, 16px);
+  width: 100%;
+  text-shadow:
+    0.45px 0 0 rgba(0, 0, 0, 0.6),
+    -0.45px 0 0 rgba(0, 0, 0, 0.6),
+    0 0.45px 0 rgba(0, 0, 0, 0.6),
+    0 -0.45px 0 rgba(0, 0, 0, 0.6),
+    0.32px 0.32px 0 rgba(0, 0, 0, 0.48),
+    -0.32px 0.32px 0 rgba(0, 0, 0, 0.48),
+    0.32px -0.32px 0 rgba(0, 0, 0, 0.48),
+    -0.32px -0.32px 0 rgba(0, 0, 0, 0.48);
+}
 .comparison-warning-break { display: inline; }
 .comparison-warning-text .comparison-warning-entity { font-weight: 700; }
 .comparison-warning-value {

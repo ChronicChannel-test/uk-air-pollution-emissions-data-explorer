@@ -2651,6 +2651,8 @@ function drawComparisonCard(ctx, { card, layout, x, y, width, height, typography
   drawRoundedRect(ctx, x, y, width, height, 24);
   ctx.fillStyle = card.color || '#444444';
   ctx.fill();
+  const shouldOutlineText = Boolean(window.Colors?.shouldOutlineLightCard?.(card.color));
+  const outlineColor = 'rgba(0, 0, 0, 0.62)';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.fillStyle = '#ffffff';
@@ -2668,7 +2670,17 @@ function drawComparisonCard(ctx, { card, layout, x, y, width, height, typography
       return;
     }
     ctx.font = block.font;
+    const outlineWidth = shouldOutlineText
+      ? Math.min(4, Math.max(1.1, getFontPixelSize(block.font) * 0.085))
+      : 0;
     block.lines.forEach(line => {
+      if (shouldOutlineText) {
+        ctx.lineWidth = outlineWidth;
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2.5;
+        ctx.strokeStyle = outlineColor;
+        ctx.strokeText(line, textX, cursorY);
+      }
       ctx.fillText(line, textX, cursorY);
       cursorY += block.lineHeight;
     });
@@ -2754,6 +2766,8 @@ function drawComparisonWarning(ctx, { x, y, width, warning, layout, assets, cent
   ctx.fill();
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
+  const shouldOutlineText = true;
+  const outlineColor = 'rgba(0, 0, 0, 0.62)';
   const blockHeight = typeof textHeight === 'number'
     ? textHeight
     : renderLines.reduce((sum, line, index) => sum + line.ascent + line.descent + (index > 0 ? computedLineGap : 0), 0);
@@ -2776,6 +2790,14 @@ function drawComparisonWarning(ctx, { x, y, width, warning, layout, assets, cent
       }
       ctx.font = token.font;
       ctx.fillStyle = token.fill || '#ffffff';
+      if (shouldOutlineText) {
+        const outlineWidth = Math.min(4, Math.max(1.1, getFontPixelSize(token.font) * 0.085));
+        ctx.lineWidth = outlineWidth;
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2.5;
+        ctx.strokeStyle = outlineColor;
+        ctx.strokeText(token.text, cursorX, baselineY);
+      }
       ctx.fillText(token.text, cursorX, baselineY);
       cursorX += token.width ?? ctx.measureText(token.text).width;
     });
