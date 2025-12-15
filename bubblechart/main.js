@@ -3545,10 +3545,23 @@ function updateComparisonStatement(statement) {
 
     const baselinePollutionSource = warningDetails?.baseline || comparisonData?.leftSecondary || null;
     const followerPollutionValue = normalizeNumber(baselinePollutionSource?.pollutantValue);
-    const percentChangeValue = (Number.isFinite(followerPollutionValue)
-      && Math.abs(followerPollutionValue) > 0
+    const polluterPollutionValue = normalizeNumber(warningDetails?.polluter?.pollutantValue);
+    const polluterIncludedInBaseline = Boolean(warningDetails?.inclusion);
+    const percentBaselinePollution = (() => {
+      // If the polluter is separate from the baseline category, use the combined
+      // historical pollution so the replacement delta reflects the whole system.
+      if (!Number.isFinite(followerPollutionValue)) {
+        return Number.isFinite(polluterPollutionValue) ? polluterPollutionValue : null;
+      }
+      if (polluterIncludedInBaseline || !Number.isFinite(polluterPollutionValue)) {
+        return followerPollutionValue;
+      }
+      return followerPollutionValue + polluterPollutionValue;
+    })();
+    const percentChangeValue = (Number.isFinite(percentBaselinePollution)
+      && Math.abs(percentBaselinePollution) > 0
       && Number.isFinite(replacementPollution))
-      ? ((replacementPollution - followerPollutionValue) / Math.abs(followerPollutionValue)) * 100
+      ? ((replacementPollution - percentBaselinePollution) / Math.abs(percentBaselinePollution)) * 100
       : null;
     const warningChangeMeta = (() => {
       if (!Number.isFinite(percentChangeValue) || percentChangeValue === 0) {

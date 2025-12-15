@@ -22,8 +22,8 @@ linechart/supabase.js
 package-lock.json
 package.json
 resources/embed.html
-scripts/export-default-data.js
-scripts/generate-supabase-env.js
+scripts/
 system_docs/
 test-github-pages.html
 user-guide/embed.html
+.githooks/pre-commit

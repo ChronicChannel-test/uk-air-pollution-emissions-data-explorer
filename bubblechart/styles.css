@@ -1271,7 +1271,9 @@ body {
 
 .comparison-tooltip__calc-detail-line--primary {
   font-weight: 700;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .comparison-tooltip__note {
