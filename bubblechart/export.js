@@ -1840,43 +1840,47 @@ function buildComparisonDetailsLayout({ width, padding, data, measureCtx }) {
   const contentStartX = padding + detailSideMargin;
   const contentEndX = width - padding - detailSideMargin;
   const availableWidth = Math.max(320, contentEndX - contentStartX);
-          const metricCardGap = metrics.length > 1 ? 36 : 0;
-          const metricCardPadding = 28;
-          const metricLabelFont = '600 42px "Inter", system-ui, sans-serif';
-          const metricValueFont = '700 58px "Inter", system-ui, sans-serif';
-          let maxValueWidth = 0;
-          if (metrics.length) {
-            measureCtx.font = metricValueFont;
-            const valueWidths = metrics.map(metric => Math.max(
-              measureCtx.measureText(metric.pollution || '—').width,
-              measureCtx.measureText(metric.energy || '—').width,
-              measureCtx.measureText(metric.emissionFactor || '—').width
-            ));
-            maxValueWidth = Math.max(0, ...valueWidths);
-          }
-          const minCardInnerWidth = maxValueWidth + metricCardPadding * 2;
-          let metricCardWidth = metrics.length > 1
-            ? Math.max(320, (availableWidth - metricCardGap) / 2)
-            : Math.min(520, availableWidth);
-          metricCardWidth = Math.max(Math.min(460, metricCardWidth), minCardInnerWidth || 320);
-  const metricNameFont = '700 64px "Inter", system-ui, sans-serif';
-  const metricNameLineHeight = 74;
-  const metricLabelLineHeight = 56;
-  const metricValueLineHeight = 64;
-  const metricCardHeight = metrics.length
-    ? Math.max(520, Math.max(...metrics.map(metric => {
+  let metricCardGap = metrics.length > 1 ? 36 : 0;
+  const metricCardPadding = 28;
+  const metricLabelFont = '600 42px "Inter", system-ui, sans-serif';
+  const metricValueFont = '700 58px "Inter", system-ui, sans-serif';
+  let maxValueWidth = 0;
+  if (metrics.length) {
+    measureCtx.font = metricValueFont;
+    const valueWidths = metrics.map(metric => Math.max(
+      measureCtx.measureText(metric.pollution || '—').width,
+      measureCtx.measureText(metric.energy || '—').width,
+      measureCtx.measureText(metric.emissionFactor || '—').width
+    ));
+    maxValueWidth = Math.max(0, ...valueWidths);
+  }
+  const minCardInnerWidth = maxValueWidth + metricCardPadding * 2;
+  let metricCardWidth = metrics.length > 1
+    ? Math.max(320, (availableWidth - metricCardGap) / 2)
+    : Math.min(520, availableWidth);
+  metricCardWidth = Math.max(Math.min(460, metricCardWidth), minCardInnerWidth || 320);
+  const measureMetricCardHeight = (cardWidth) => {
+    if (!metrics.length) {
+      return 0;
+    }
+    return Math.max(520, Math.max(...metrics.map(metric => {
       const nameLines = wrapTextIntoLines(
         measureCtx,
         metricNameFont,
         metric?.name || '—',
-        metricCardWidth - metricCardPadding * 2
+        cardWidth - metricCardPadding * 2
       );
       const totalNameHeight = nameLines.length * metricNameLineHeight;
       const labelValueHeight = 3 * (metricLabelLineHeight + metricValueLineHeight);
       return totalNameHeight + labelValueHeight + metricCardPadding * 2 + 20;
-    })))
-    : 0;
-  const metricsRowWidth = metrics.length
+    })));
+  };
+  const metricNameFont = '700 64px "Inter", system-ui, sans-serif';
+  const metricNameLineHeight = 74;
+  const metricLabelLineHeight = 56;
+  const metricValueLineHeight = 64;
+  let metricCardHeight = metrics.length ? measureMetricCardHeight(metricCardWidth) : 0;
+  let metricsRowWidth = metrics.length
     ? Math.min(availableWidth, metrics.length * metricCardWidth + metricCardGap * (metrics.length - 1))
     : 0;
   const sectionGap = metrics.length && calcBlocks.length ? 60 : 0;
@@ -1902,6 +1906,7 @@ function buildComparisonDetailsLayout({ width, padding, data, measureCtx }) {
 
   updateCalcSizing();
 
+  let forcedStackedCalcLayout = false;
   if (alignCalculationsRight) {
     const needsStackedCalc = shouldStackCalcBlocks({
       blocks: calcBlocks,
@@ -1913,9 +1918,21 @@ function buildComparisonDetailsLayout({ width, padding, data, measureCtx }) {
     });
     if (needsStackedCalc) {
       alignCalculationsRight = false;
+      forcedStackedCalcLayout = true;
       updateCalcSizing();
     }
   }
+
+  if (forcedStackedCalcLayout && metrics.length) {
+    const hasDualColumns = columnsPerRow === 2 && metrics.length > 1;
+    metricCardGap = hasDualColumns ? calcColumnGap : 0;
+    metricCardWidth = calcBlockWidth;
+    metricCardWidth = Math.max(metricCardWidth, minCardInnerWidth || 320);
+    metricCardHeight = measureMetricCardHeight(metricCardWidth);
+    metricsRowWidth = hasDualColumns ? availableWidth : metricCardWidth;
+  }
+
+  const metricsRenderedHeight = metrics.length ? metricCardHeight : 0;
 
   const rowGap = 30;
   const hasCalcContent = calcBlocks.length > 0 || inclusionConfig;
@@ -1995,25 +2012,27 @@ function buildComparisonDetailsLayout({ width, padding, data, measureCtx }) {
   }
   const metricsGap = alignCalculationsRight ? 0 : (metrics.length && (calcRows.length || inclusionCard) ? 50 : 0);
   const combinedTopHeight = alignCalculationsRight
-    ? Math.max(metricCardHeight, calcHeight)
-    : (metrics.length ? metricCardHeight : 0)
+    ? Math.max(metricsRenderedHeight, calcHeight)
+    : (metrics.length ? metricsRenderedHeight : 0)
       + (calcRows.length ? (metrics.length ? metricsGap : 0) + calcHeight : 0);
   const totalHeight = topSpacing + combinedTopHeight + inclusionHeight + bottomSpacing;
   return {
     totalHeight,
     draw(ctx, startY) {
       let cursorY = startY + topSpacing;
+      const metricsShareCalcColumn = forcedStackedCalcLayout && metrics.length;
       if (metrics.length) {
-          drawMetricCardRow(ctx, {
+        const metricsStartX = metricsShareCalcColumn ? calcColumnX : contentStartX;
+        drawMetricCardRow(ctx, {
           metrics,
-            x: contentStartX,
+          x: metricsStartX,
           y: cursorY,
           cardWidth: metricCardWidth,
           cardGap: metricCardGap,
           height: metricCardHeight
         });
         if (!alignCalculationsRight) {
-          cursorY += metricCardHeight + (calcRows.length ? metricsGap : 0);
+          cursorY += metricsRenderedHeight + (calcRows.length ? metricsGap : 0);
         }
       }
       const calcStartY = alignCalculationsRight ? startY + topSpacing : cursorY;
@@ -2058,7 +2077,7 @@ function buildComparisonDetailsLayout({ width, padding, data, measureCtx }) {
         });
         const calcColumnHeight = rowY - calcStartY;
         if (alignCalculationsRight) {
-          const columnHeight = Math.max(metricCardHeight, calcColumnHeight);
+          const columnHeight = Math.max(metricsRenderedHeight, calcColumnHeight);
           cursorY = startY + topSpacing + columnHeight;
         } else {
           cursorY = rowY;
@@ -2066,7 +2085,7 @@ function buildComparisonDetailsLayout({ width, padding, data, measureCtx }) {
       }
       if (inclusionCard && !inclusionDrawn) {
         const baseY = alignCalculationsRight
-          ? startY + topSpacing + Math.max(metricCardHeight, calcHeight)
+          ? startY + topSpacing + Math.max(metricsRenderedHeight, calcHeight)
           : cursorY;
         const insertionY = baseY + inclusionGap;
         drawInclusionCard(ctx, { layout: inclusionCard, x: calcColumnX, y: insertionY });
@@ -2906,9 +2925,9 @@ function drawWarningIcon(ctx, centerX, centerY, size) {
 
 function drawMetricCardRow(ctx, { metrics, x, y, cardWidth, cardGap, height }) {
   let cardX = x;
-  metrics.forEach(metric => {
+  metrics.forEach((metric, index) => {
     drawMetricCard(ctx, { metric, x: cardX, y, width: cardWidth, height });
-    cardX += cardWidth + cardGap;
+    cardX += cardWidth + (index < metrics.length - 1 ? cardGap : 0);
   });
 }
 
