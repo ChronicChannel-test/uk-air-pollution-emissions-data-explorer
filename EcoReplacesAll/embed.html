@@ -39,6 +39,12 @@
                   linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(14, 165, 233, 0.12));
     }
 
+    .eco-hero-head {
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+    }
+
     .eco-shell .title-row {
       padding-right: clamp(120px, 12vw, 220px);
       margin-bottom: 4px;
@@ -427,20 +433,22 @@
 </head>
 <body data-page-slug="eco-replaces-all">
   <main class="chart-shell eco-shell" id="ecoReplacesAllShell">
-    <div class="title-row">
-      <h2 class="main-title" id="ecoReplacesAllTitle">
-        <span class="title-part title-part-1">Ecodesign stoves replacing</span>
-        <span class="title-part title-part-2">Fireplaces and Older Stoves</span>
-      </h2>
-    </div>
-    <section class="eco-subtitle" aria-label="Ecodesign stove replacement context">
+    <div class="eco-hero-head">
+      <div class="title-row">
+        <h2 class="main-title" id="ecoReplacesAllTitle">
+          <span class="title-part title-part-1">Ecodesign stoves replacing</span>
+          <span class="title-part title-part-2">Fireplaces and Older Stoves</span>
+        </h2>
+      </div>
+      <section class="eco-subtitle" aria-label="Ecodesign stove replacement context">
       <p><strong>Upgrading stoves can change emissions, but it does not automatically guarantee cleaner air.</strong></p>
       <p>This page shows how emissions can change when different types of fireplaces and stoves are replaced with <strong>Ecodesign-compliant stoves using Ready to Burn certified wood.</strong></p>
       <p>Different stove types produce different emission profiles for various pollutants. While Ecodesign stoves meet regulatory limits for some pollutants under test conditions, <strong>this does not mean emissions are lower for every pollutant in every case.</strong></p>
       <p>By selecting a <strong>fireplace or stove category</strong>, you can compare its emissions with an <strong>Ecodesign stove burning Ready to Burn wood.</strong> In some cases, emissions may decrease; in others, they may stay the same or increase for some pollutants, such as PAHs or PM2.5.</p>
       <p><strong>These results are comparative estimates</strong>, based on emission factors from the UK's <strong>National Atmospheric Emissions Inventory (NAEI)</strong> and other published sources. The NAEI combines emission factors, fuel-use data, and modelling from surveys, industry statistics, and official energy records to produce national estimates. These figures are intended to illustrate differences between appliance types and fuels. <strong>They are not predictions of emissions from individual homes.</strong></p>
       <p>Although the <strong>Stove Industry Association (SIA)</strong> and its members suggest that replacing older stoves with modern Ecodesign models will improve air quality, evidence does not always support this. Some claims about reductions in pollutants like PM2.5 and PAHs are overstated. Not all stove replacements lead to meaningful emission reductions, and <strong>the promotion of Ready to Burn wood and new stoves will not, in all cases, deliver the air quality improvements the industry claims.</strong> Consumers and policymakers need to consider all relevant factors, including stove efficiency, maintenance, and usage, when assessing environmental impact.</p>
-    </section>
+      </section>
+    </div>
 
     <section class="eco-controls is-loading" aria-label="Eco replacements controls">
       <div class="button-row">
