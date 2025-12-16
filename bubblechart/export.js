@@ -1881,17 +1881,42 @@ function buildComparisonDetailsLayout({ width, padding, data, measureCtx }) {
     : 0;
   const sectionGap = metrics.length && calcBlocks.length ? 60 : 0;
   const remainingWidth = availableWidth - metricsRowWidth - sectionGap;
-  const alignCalculationsRight = metrics.length && calcBlocks.length && remainingWidth >= 320;
+  let alignCalculationsRight = metrics.length && calcBlocks.length && remainingWidth >= 320;
   const forceSingleColumn = shouldReplaceEnergyCalc;
-  const columnsPerRow = (alignCalculationsRight || forceSingleColumn) ? 1 : 2;
-  const calcColumnGap = columnsPerRow === 1 ? 0 : 40;
-  const calcBlockWidth = alignCalculationsRight
-    ? Math.max(320, remainingWidth)
-    : Math.max(320, (availableWidth - calcColumnGap) / columnsPerRow);
   const calcHeaderFont = '700 58px "Inter", system-ui, sans-serif';
   const calcLineFont = '700 54px "Inter", system-ui, sans-serif';
   const calcLineHeight = 62;
-  const calcBlockPadding = alignCalculationsRight ? 10 : 34;
+  let columnsPerRow;
+  let calcColumnGap;
+  let calcBlockWidth;
+  let calcBlockPadding;
+
+  const updateCalcSizing = () => {
+    columnsPerRow = (alignCalculationsRight || forceSingleColumn) ? 1 : 2;
+    calcColumnGap = columnsPerRow === 1 ? 0 : 40;
+    calcBlockWidth = alignCalculationsRight
+      ? Math.max(320, remainingWidth)
+      : Math.max(320, (availableWidth - calcColumnGap) / columnsPerRow);
+    calcBlockPadding = alignCalculationsRight ? 10 : 34;
+  };
+
+  updateCalcSizing();
+
+  if (alignCalculationsRight) {
+    const needsStackedCalc = shouldStackCalcBlocks({
+      blocks: calcBlocks,
+      measureCtx,
+      headerFont: calcHeaderFont,
+      lineFont: calcLineFont,
+      blockWidth: calcBlockWidth,
+      padding: calcBlockPadding
+    });
+    if (needsStackedCalc) {
+      alignCalculationsRight = false;
+      updateCalcSizing();
+    }
+  }
+
   const rowGap = 30;
   const hasCalcContent = calcBlocks.length > 0 || inclusionConfig;
   const shouldRenderRightColumn = alignCalculationsRight && hasCalcContent;
@@ -2121,6 +2146,29 @@ function normalizeCalculationLines(lines) {
     secondaryLine,
     extraLines
   };
+}
+
+function shouldStackCalcBlocks({ blocks, measureCtx, headerFont, lineFont, blockWidth, padding }) {
+  if (!Array.isArray(blocks) || !blocks.length || !measureCtx) {
+    return false;
+  }
+  const innerWidth = Math.max(0, blockWidth - padding * 2);
+  if (innerWidth <= 0) {
+    return true;
+  }
+  const MIN_LABEL_VALUE_GAP = 28;
+  return blocks.some(block => {
+    const title = (block?.title || '').toString();
+    const normalized = normalizeCalculationLines(block?.lines || []);
+    const primaryLine = normalized.primaryLine || normalized.secondaryLine || '';
+
+    measureCtx.font = headerFont;
+    const labelWidth = measureCtx.measureText(title).width || 0;
+    measureCtx.font = lineFont;
+    const valueWidth = measureCtx.measureText(primaryLine || '—').width || 0;
+
+    return labelWidth + valueWidth + MIN_LABEL_VALUE_GAP > innerWidth;
+  });
 }
 
 function resolveResponsiveClampPx(viewportWidth, clampConfig = {}) {
@@ -2487,13 +2535,18 @@ function buildStructuredWarningLines({ warning, fonts, lineHeights, measureCtx, 
 
   const hasChangeLine = Boolean(changeDefinitionTemplate);
 
-  const firstLineTokens = [
+  const firstLineLeadingTokens = [
     { text: 'If ', font: fonts.base, fill: textColor },
-    { text: formatEntity(polluterName), font: fonts.entity, fill: textColor },
+    { text: formatEntity(polluterName), font: fonts.entity, fill: textColor }
+  ];
+
+  const firstLineTrailingTokens = [
     { text: ' replaced ', font: fonts.base, fill: textColor },
     { text: formatEntity(baselineName), font: fonts.entity, fill: textColor },
     { text: ',', font: fonts.base, fill: textColor }
   ];
+
+  const firstLineTokens = [...firstLineLeadingTokens, ...firstLineTrailingTokens];
 
   const secondLineTokens = [
     { text: `${formatEntity(pollutantName)} pollution would be`, font: fonts.base, fill: textColor }
@@ -2514,6 +2567,15 @@ function buildStructuredWarningLines({ warning, fonts, lineHeights, measureCtx, 
   }
 
   const allowCompactLayout = true;
+  const shouldForceFirstLineBreak = (() => {
+    if (!maxWidth || !firstLineTokens.length) {
+      return false;
+    }
+    const measured = measureWarningLines([
+      { tokens: firstLineTokens, lineHeight: lineHeights.base }
+    ], measureCtx);
+    return Boolean(measured?.[0] && measured[0].width > maxWidth);
+  })();
   let singleLine = null;
   if (allowCompactLayout) {
     const singleLineTokens = [
@@ -2574,10 +2636,14 @@ function buildStructuredWarningLines({ warning, fonts, lineHeights, measureCtx, 
     }
   }
 
-  const multiline = [
-    { tokens: firstLineTokens, lineHeight: lineHeights.base },
-    { tokens: secondLineTokens, lineHeight: lineHeights.base }
-  ];
+  const multiline = [];
+  if (shouldForceFirstLineBreak && firstLineLeadingTokens.length && firstLineTrailingTokens.length) {
+    multiline.push({ tokens: firstLineLeadingTokens, lineHeight: lineHeights.base });
+    multiline.push({ tokens: firstLineTrailingTokens, lineHeight: lineHeights.base });
+  } else {
+    multiline.push({ tokens: firstLineTokens, lineHeight: lineHeights.base });
+  }
+  multiline.push({ tokens: secondLineTokens, lineHeight: lineHeights.base });
   if (valueTokens.length) {
     multiline.push({ tokens: valueTokens, lineHeight: lineHeights.value });
   }
