@@ -76,19 +76,21 @@
 
     .eco-controls {
       background: #ffffff;
-      border-radius: 24px;
-      padding: 24px clamp(20px, 3vw, 44px);
-      box-shadow: 0 30px 65px rgba(15, 23, 42, 0.12);
+      border-radius: 20px;
+      padding: 16px clamp(16px, 2vw, 28px);
+      box-shadow: 0 24px 52px rgba(15, 23, 42, 0.1);
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 8px;
     }
 
     .eco-controls .button-row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
+      gap: 2px;
+      margin: 0;
+      padding: 0;
     }
 
     .eco-controls .button-row label {
@@ -96,21 +98,37 @@
       font-weight: 600;
       letter-spacing: 0.01em;
       color: #0f172a;
-      min-width: 180px;
+      min-width: auto;
+      margin-right: 4px;
+      white-space: nowrap;
     }
 
     .eco-controls .button-row select {
-      flex: 0 0 auto;
-      width: min(420px, 80vw);
+      width: auto;
+      min-width: 0;
+      max-width: 100%;
+      margin: 0;
+    }
+
+    #ecoPollutantSelect {
+      min-width: 180px;
+    }
+
+    #ecoFireplaceSelect {
+      width: auto;
+      min-width: calc(20ch + 30px);
+      max-width: clamp(280px, 48vw, 560px);
+    }
+
+    #ecoYearSelect {
+      width: auto;
+      min-width: 72px;
+      max-width: 110px;
+      margin-left: 2px;
     }
 
     .eco-controls.is-loading .button-row {
       visibility: hidden;
-    }
-
-    .eco-controls-status {
-      font-size: 0.85rem;
-      color: #64748b;
     }
 
     .eco-energy-summary {
@@ -167,10 +185,16 @@
 
     .eco-results-header {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 16px;
+      flex-direction: column;
+      gap: 18px;
       margin-bottom: 24px;
+    }
+
+    .eco-results-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
     }
 
     .eco-results-eyebrow {
@@ -185,6 +209,31 @@
       font-size: clamp(1.5rem, 3vw, 2.4rem);
       margin: 0;
       color: #111827;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .eco-results-title-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .eco-results-title-note {
+      font-size: 0.6em;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    .eco-results-description {
+      margin: 0;
+      width: 100%;
+      font-size: 0.95rem;
+      color: #475569;
+      line-height: 1.5;
+      text-align: left;
     }
 
     .eco-results-legend {
@@ -192,24 +241,29 @@
       flex-wrap: wrap;
       align-items: center;
       gap: 12px;
+      width: 100%;
+      justify-content: flex-end;
     }
 
     .eco-legend-chip {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       color: #111827;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.01em;
     }
 
     .eco-legend-chip::before {
       content: '';
+      display: inline-block;
       width: 14px;
       height: 14px;
       border-radius: 999px;
       background: var(--chip-color, #fff);
-      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15);
+      box-shadow: none;
+      margin-right: 6px;
     }
 
     .eco-chart-grid {
@@ -337,15 +391,6 @@
       color: #f8fafc;
     }
 
-    .eco-placeholder {
-      grid-column: 1 / -1;
-      text-align: center;
-      font-size: 1rem;
-      color: #cbd5f5;
-      margin: 0;
-      padding: 32px 0;
-    }
-
     .eco-status-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -442,34 +487,32 @@
       </div>
       <section class="eco-subtitle" aria-label="Ecodesign stove replacement context">
       <p><strong>Upgrading stoves can change emissions, but it does not automatically guarantee cleaner air.</strong></p>
+      <p>Although the <strong>Stove Industry Association (SIA)</strong> and its members suggest that replacing older stoves with modern Ecodesign models will improve air quality, evidence does not always support this. Some claims about reductions in pollutants like PM2.5 and PAHs are overstated. Not all stove replacements lead to meaningful emission reductions, and <strong>the promotion of Ready to Burn wood and new stoves will not, in all cases, deliver the air quality improvements the industry claims.</strong> Consumers and policymakers need to consider all relevant factors, including stove efficiency, maintenance, and usage, when assessing environmental impact.</p>
       <p>This page shows how emissions can change when different types of fireplaces and stoves are replaced with <strong>Ecodesign-compliant stoves using Ready to Burn certified wood.</strong></p>
       <p>Different stove types produce different emission profiles for various pollutants. While Ecodesign stoves meet regulatory limits for some pollutants under test conditions, <strong>this does not mean emissions are lower for every pollutant in every case.</strong></p>
       <p>By selecting a <strong>fireplace or stove category</strong>, you can compare its emissions with an <strong>Ecodesign stove burning Ready to Burn wood.</strong> In some cases, emissions may decrease; in others, they may stay the same or increase for some pollutants, such as PAHs or PM2.5.</p>
-      <p><strong>These results are comparative estimates</strong>, based on emission factors from the UK's <strong>National Atmospheric Emissions Inventory (NAEI)</strong> and other published sources. The NAEI combines emission factors, fuel-use data, and modelling from surveys, industry statistics, and official energy records to produce national estimates. These figures are intended to illustrate differences between appliance types and fuels. <strong>They are not predictions of emissions from individual homes.</strong></p>
-      <p>Although the <strong>Stove Industry Association (SIA)</strong> and its members suggest that replacing older stoves with modern Ecodesign models will improve air quality, evidence does not always support this. Some claims about reductions in pollutants like PM2.5 and PAHs are overstated. Not all stove replacements lead to meaningful emission reductions, and <strong>the promotion of Ready to Burn wood and new stoves will not, in all cases, deliver the air quality improvements the industry claims.</strong> Consumers and policymakers need to consider all relevant factors, including stove efficiency, maintenance, and usage, when assessing environmental impact.</p>
       </section>
     </div>
 
     <section class="eco-controls is-loading" aria-label="Eco replacements controls">
       <div class="button-row">
-        <label for="ecoPollutantSelect">Pollutant selection</label>
+        <label for="ecoPollutantSelect">Pollutant:</label>
         <select id="ecoPollutantSelect" name="ecoPollutantSelect" disabled>
           <option value="">Loading pollutant list…</option>
         </select>
       </div>
       <div class="button-row">
-        <label for="ecoFireplaceSelect">Fireplace / stove category</label>
+        <label for="ecoFireplaceSelect">Fireplace/Stove category:</label>
         <select id="ecoFireplaceSelect" name="ecoFireplaceSelect" disabled>
           <option value="">Loading fireplace & stove categories…</option>
         </select>
       </div>
       <div class="button-row">
-        <label for="ecoYearSelect">Inventory year</label>
+        <label for="ecoYearSelect">Year:</label>
         <select id="ecoYearSelect" name="ecoYearSelect" disabled>
           <option value="">Loading year options…</option>
         </select>
       </div>
-      <p class="eco-controls-status" id="ecoControlsStatus" aria-live="polite">Preparing Supabase data…</p>
     </section>
 
     <section class="eco-energy-summary" aria-live="polite">
@@ -492,19 +535,23 @@
 
     <section class="eco-results" aria-labelledby="ecoResultsTitle">
       <div class="eco-results-header">
-        <div>
-          <p class="eco-results-eyebrow">Replacement impact</p>
-          <h3 class="eco-results-title" id="ecoResultsTitle">Select a fireplace / stove category</h3>
+        <div class="eco-results-heading">
+          <h3 class="eco-results-title" id="ecoResultsTitle">
+            <span class="eco-results-title-line">
+              Ecodesign burning Ready To Burn wood
+              <span class="eco-results-title-note">(dry wood, seasoned wood & wood briquettes)</span>
+            </span>
+            <span class="eco-results-title-line" id="ecoResultsSubtitle">Select a fireplace / stove category to compare</span>
+          </h3>
         </div>
+        <p class="eco-results-description"><strong>These results are comparative estimates</strong>, based on emission factors from the UK's <strong>National Atmospheric Emissions Inventory (NAEI)</strong> and other published sources. The NAEI combines emission factors, fuel-use data, and modelling from surveys, industry statistics, and official energy records to produce national estimates. These figures are intended to illustrate differences between appliance types and fuels. <strong>They are not predictions of emissions from individual homes.</strong></p>
         <div class="eco-results-legend">
           <span class="eco-legend-chip" style="--chip-color:#F58231;">Ecodesign - Ready To Burn</span>
-          <span class="eco-legend-chip" style="--chip-color:#E42020;">Current fireplace / stove</span>
+          <span class="eco-legend-chip" style="--chip-color:#E42020;" id="ecoLegendCurrent">Current fireplace / stove</span>
           <span class="eco-legend-chip" style="--chip-color:#911EB4;">Replacement scenario</span>
         </div>
       </div>
-      <div id="ecoChartGrid" class="eco-chart-grid" role="list">
-        <p class="eco-placeholder" id="ecoChartPlaceholder">Select a fireplace / stove category to preview comparison bars.</p>
-      </div>
+      <div id="ecoChartGrid" class="eco-chart-grid" role="list"></div>
     </section>
 
     <section class="eco-status-grid" aria-label="Build status">
@@ -529,16 +576,17 @@
   </main>
 
   <script src="https://www.gstatic.com/charts/loader.js"></script>
-  <script src="../SharedResources/analytics.js?v=v4-30-CIC-testdb"></script>
+  <script src="../SharedResources/analytics.js?v=v4-31-CIC-testdb"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="../SharedResources/supabase-env.js?v=v4-30-CIC-testdb"></script>
-  <script src="../SharedResources/supabase-config.js?v=v4-30-CIC-testdb"></script>
-  <script src="../SharedResources/shared-data-loader.js?v=v4-30-CIC-testdb"></script>
-  <script src="../SharedResources/colors.js?v=v4-30-CIC-testdb"></script>
-  <script src="../SharedResources/eco-replacement-utils.js?v=v4-30-CIC-testdb"></script>
+  <script src="../SharedResources/supabase-env.js?v=v4-31-CIC-testdb"></script>
+  <script src="../SharedResources/supabase-config.js?v=v4-31-CIC-testdb"></script>
+  <script src="../SharedResources/shared-data-loader.js?v=v4-31-CIC-testdb"></script>
+  <script src="../SharedResources/colors.js?v=v4-31-CIC-testdb"></script>
+  <script src="../SharedResources/eco-replacement-utils.js?v=v4-31-CIC-testdb"></script>
   <script>
     (function initializeEcoReplacementsExperience() {
       var DEFAULT_YEAR = 2023;
+      var MIN_ECO_YEAR = 2017;
       var DEFAULT_FIREPLACE_ID = 27;
       var ECO_READY_CATEGORY_ID = 20;
       var ECO_CATEGORY_PATTERN = /ecodesign.+ready.+burn/i;
@@ -550,11 +598,11 @@
         { value: 'preset-heavy-metals', label: 'Heavy Metals' },
         { value: 'preset-particulate-matter', label: 'Particulate Matter' }
       ];
-      var POLLUTANT_GROUPS = {
-        'preset-air-pollutants': ['nitrogen oxides', 'ammonia', 'sulphur dioxide', 'carbon monoxide', 'black carbon'],
-        'preset-greenhouse-gases': ['carbon dioxide', 'methane', 'nitrous oxide', 'nf3', 'sf6'],
-        'preset-heavy-metals': ['lead', 'mercury', 'cadmium', 'chromium', 'nickel', 'arsenic'],
-        'preset-particulate-matter': ['pm10', 'pm2.5', 'black carbon', 'black smoke']
+      var POLLUTANT_PRESET_CLASS_TARGETS = {
+        'preset-air-pollutants': [1],
+        'preset-greenhouse-gases': [2],
+        'preset-heavy-metals': [3],
+        'preset-particulate-matter': [4]
       };
       var POLLUTANT_CLASS_LOOKUP = {
         1: 4,
@@ -647,14 +695,15 @@
         year: document.getElementById('ecoYearSelect'),
         status: document.getElementById('ecoControlsStatus'),
         chartGrid: document.getElementById('ecoChartGrid'),
-        chartPlaceholder: document.getElementById('ecoChartPlaceholder'),
         energyValues: {
           eco: document.querySelector('[data-energy-value="eco"]'),
           fireplace: document.querySelector('[data-energy-value="fireplace"]'),
           replacement: document.querySelector('[data-energy-value="replacement"]')
         },
         inclusionNote: document.getElementById('ecoInclusionNote'),
-        resultsTitle: document.getElementById('ecoResultsTitle')
+        resultsTitle: document.getElementById('ecoResultsTitle'),
+        resultsSubtitle: document.getElementById('ecoResultsSubtitle'),
+        legendCurrent: document.getElementById('ecoLegendCurrent')
       };
       var state = {
         pollutants: [],
@@ -793,7 +842,9 @@
       }
 
       function populateYearSelect() {
-        var years = extractYearList(state.timeseriesRows);
+        var years = extractYearList(state.timeseriesRows).filter(function (year) {
+          return Number.isFinite(year) && year >= MIN_ECO_YEAR;
+        });
         dom.year.innerHTML = '';
         if (!years.length) {
           years = [DEFAULT_YEAR];
@@ -827,7 +878,6 @@
       function renderEcoImpacts() {
         var token = ++state.renderToken;
         if (!state.ecoCategoryId || !state.activityPollutantId || !state.selection.fireplace) {
-          updatePlaceholder('Select a fireplace / stove category to preview comparison bars.');
           renderEnergySummary(null);
           clearChartGrid();
           return;
@@ -849,7 +899,6 @@
           renderEnergySummary(energyProfile);
           var pollutantIds = resolveSelectedPollutantIds(state.selection.pollutant);
           if (!pollutantIds.length) {
-            updatePlaceholder('No pollutants match this preset. Pick another option.');
             clearChartGrid();
             setGridBusy(false);
             return;
@@ -875,7 +924,6 @@
           }).catch(function (error) {
             console.warn('Eco replacements scenario failed:', error);
             if (token === state.renderToken) {
-              updatePlaceholder('Unable to calculate replacement impact for this selection.');
               clearChartGrid();
             }
           }).finally(function () {
@@ -887,7 +935,6 @@
           console.warn('Eco energy profile failed:', error);
           if (token === state.renderToken) {
             renderEnergySummary(null);
-            updatePlaceholder('Unable to read energy profile for this selection.');
             clearChartGrid();
             setGridBusy(false);
           }
@@ -913,11 +960,16 @@
       }
 
       function updateResultsTitle() {
-        if (!dom.resultsTitle) {
-          return;
+        var label = state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : null;
+        var subtitle = label ? 'replacing ' + label : 'Select a fireplace / stove category to compare';
+        if (dom.resultsSubtitle) {
+          dom.resultsSubtitle.textContent = subtitle;
+        } else if (dom.resultsTitle) {
+          dom.resultsTitle.textContent = subtitle;
         }
-        var title = state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : 'Select a fireplace / stove category';
-        dom.resultsTitle.textContent = title || 'Select a fireplace / stove category';
+        if (dom.legendCurrent) {
+          dom.legendCurrent.textContent = label || 'Current fireplace / stove';
+        }
       }
 
       function getCategoryLabel(categoryId) {
@@ -937,10 +989,8 @@
         }
         dom.chartGrid.innerHTML = '';
         if (!items.length) {
-          updatePlaceholder('No pollutant data available for this combination.');
           return;
         }
-        hidePlaceholder();
         var grouped = groupScenariosByClass(items);
         grouped.forEach(function (group) {
           dom.chartGrid.appendChild(buildClassSection(group));
@@ -1141,14 +1191,18 @@
             var baseIds = state.filteredPollutantIds.size ? Array.from(state.filteredPollutantIds) : state.pollutants.map(function (p) { return p.id; });
             return baseIds.filter(function (id) { return Number.isFinite(id) && !isActivityPollutantId(id); });
           }
-          var targets = (POLLUTANT_GROUPS[value] || []).map(function (name) { return name.toLowerCase(); });
-          if (!targets.length) {
+          var classTargets = POLLUTANT_PRESET_CLASS_TARGETS[value];
+          if (!classTargets || !classTargets.length) {
             return [];
           }
-          return state.pollutants.filter(function (pollutant) {
-            var label = (pollutant.pollutant || '').toLowerCase();
-            return targets.some(function (target) { return label.includes(target); });
-          }).map(function (pollutant) { return pollutant.id; }).filter(function (id) { return Number.isFinite(id) && !isActivityPollutantId(id); });
+          var candidateIds = state.filteredPollutantIds.size ? Array.from(state.filteredPollutantIds) : state.pollutants.map(function (pollutant) { return pollutant.id; });
+          return candidateIds.filter(function (id) {
+            if (!Number.isFinite(id) || isActivityPollutantId(id)) {
+              return false;
+            }
+            var classId = getPollutantClassId(id);
+            return classTargets.some(function (target) { return target === classId; });
+          });
         }
         var parsed = Number(value);
         return Number.isFinite(parsed) && !isActivityPollutantId(parsed) ? [parsed] : [];
@@ -1317,20 +1371,6 @@
           return;
         }
         dom.chartGrid.classList.toggle('is-loading', Boolean(isBusy));
-      }
-
-      function updatePlaceholder(message) {
-        if (!dom.chartPlaceholder) {
-          return;
-        }
-        dom.chartPlaceholder.textContent = message;
-        dom.chartPlaceholder.hidden = false;
-      }
-
-      function hidePlaceholder() {
-        if (dom.chartPlaceholder) {
-          dom.chartPlaceholder.hidden = true;
-        }
       }
 
       function clearChartGrid() {

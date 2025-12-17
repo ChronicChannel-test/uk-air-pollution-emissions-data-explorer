@@ -12,6 +12,5 @@ resources/
 scripts/
 system_docs/
 supabase/
-test-github-pages.html
 user-guide/
 .githooks/pre-commit
