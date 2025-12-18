@@ -1,12 +1,12 @@
 # Version History
 
-## v4.32
+## v4.32 - LIVE
 - GH Test: 2025-12-17
-- GH Live: Not yet deployed
+- GH Live: 2025-12-18
 - Notes: Site errors instrumentation now mirrors Supabase console/unhandled promise messages into `site_errors` and deduplicates them to keep QA-only issues visible upstream.
 - Notes: Shared Supabase loader now retries transient failures (exponential backoff + jitter) before surfacing `sbase_data_error` events on category-info embeds.
 
-## v4.31 - LIVE
+## v4.31
 - GH Test: 2025-12-14
 - GH Live: 2025-12-16
 - Notes: Hard-refresh regression fix that isolates the bubble and line Supabase loaders (no more `supabase` redeclaration) and adds a harness scenario to guard against future collisions.
