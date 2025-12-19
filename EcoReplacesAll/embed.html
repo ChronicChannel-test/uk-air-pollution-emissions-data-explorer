@@ -135,6 +135,9 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
+      width: 100%;
+      margin: 0;
+      padding: 4px 0 8px;
     }
 
     .eco-energy-card {
@@ -142,29 +145,299 @@
       border-radius: 18px;
       padding: 18px 20px;
       box-shadow: 0 25px 55px rgba(15, 23, 42, 0.08);
-      border: 1px solid rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 200px;
     }
 
-    .eco-energy-card--replacement {
-      background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(37, 99, 235, 0.85));
-      color: #e2e8f0;
-      border: none;
+    .eco-energy-card--comparison {
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      color: #0f172a;
     }
 
-    .eco-energy-label {
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin: 0 0 4px;
-      color: inherit;
-      opacity: 0.8;
+    .eco-energy-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .eco-energy-category {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #475569;
     }
 
     .eco-energy-value {
       font-size: 1.45rem;
       font-weight: 600;
+      margin: 0 0 6px;
+      color: #0f172a;
+    }
+
+    .eco-energy-bottom {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eco-energy-calculation {
+      font-size: 0.85rem;
+      color: #475569;
+      margin: 8px 0 0;
+    }
+
+    .eco-energy-total {
+      font-size: clamp(2rem, 4vw, 2.9rem);
+      font-weight: 700;
+      color: #0f172a;
+      margin: 2px 0 0;
+    }
+
+    .eco-energy-card.is-idle .eco-energy-total {
+      opacity: 0.45;
+    }
+
+    .eco-energy-card--replacement {
+      background: linear-gradient(135deg, #05070c, #5f0b0b 65%, #880e0e);
+      color: #fef3c7;
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      box-shadow: 0 25px 55px rgba(80, 7, 7, 0.45);
+    }
+
+    .eco-pm-card {
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      box-shadow: 0 25px 55px rgba(15, 23, 42, 0.08);
+    }
+
+    .eco-pm-card .eco-energy-label {
+      color: #0f172a;
+    }
+
+    .eco-pm-card-description {
+      margin: 6px 0 0;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    .eco-outcome-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: -4px 0 6px;
+    }
+
+    .eco-outcome-summary-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .eco-outcome-summary-title {
       margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .eco-outcome-summary-count {
+      margin: -8px 0 0;
+      font-size: clamp(2.8rem, 5.2vw, 4.2rem);
+      font-weight: 700;
+      color: #ffffff;
+      text-align: right;
+      line-height: 1;
+    }
+
+    .eco-outcome-summary-inline {
+      margin: 0;
+      font-size: 0.78rem;
+      color: #ffffff;
+      display: none;
+    }
+
+    .eco-outcome-summary-inline.is-visible {
+      display: block;
+    }
+
+    .eco-outcome-summary-note {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .eco-outcome-card {
+      padding: 18px 22px;
+      gap: 12px;
+      min-height: 210px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #0b0505 10%, #380808 55%, #7c0f0f 100%);
+      color: #fff7ed;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .eco-energy-label,
+    .eco-outcome-title {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .eco-outcome-title {
+      color: #ffffff;
+    }
+
+    .eco-outcome-main {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .eco-outcome-buckets {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 10px;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .eco-outcome-column {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .eco-outcome-column--right {
+      text-align: right;
+      align-items: flex-end;
+    }
+
+    .eco-outcome-label {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .eco-outcome-count {
+      margin: 0;
+      font-size: clamp(2.4rem, 4.5vw, 3.4rem);
+      line-height: 1;
+    }
+
+    .eco-dual-text {
+      position: relative;
+      display: inline-flex;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--eco-dual-fill, currentColor);
+      --eco-dual-outline: #ffffff;
+    }
+
+    .eco-dual-text__outline,
+    .eco-dual-text__fill {
+      font: inherit;
+      letter-spacing: inherit;
+    }
+
+    .eco-dual-text__outline {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      color: transparent;
+      pointer-events: none;
+      text-shadow:
+        0 0 1px var(--eco-dual-outline, #ffffff),
+        0 0.8px var(--eco-dual-outline, #ffffff),
+        0 -0.8px var(--eco-dual-outline, #ffffff),
+        0.8px 0 var(--eco-dual-outline, #ffffff),
+        -0.8px 0 var(--eco-dual-outline, #ffffff),
+        0.6px 0.6px var(--eco-dual-outline, #ffffff),
+        -0.6px 0.6px var(--eco-dual-outline, #ffffff),
+        0.6px -0.6px var(--eco-dual-outline, #ffffff),
+        -0.6px -0.6px var(--eco-dual-outline, #ffffff);
+    }
+
+    .eco-dual-text__fill {
+      position: relative;
+      z-index: 1;
       color: inherit;
+    }
+
+    .eco-outcome-bucket-label {
+      position: absolute;
+      left: 38px;
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0;
+      font-size: 1.8rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: #ffffff;
+      -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
+      paint-order: stroke fill;
+      min-width: 92px;
+      text-align: center;
+    }
+
+    .eco-outcome-bucket--lower.eco-outcome-bucket--lt50 {
+      background: linear-gradient(135deg, #d1ff7e, #4fdc30);
+    }
+
+    .eco-outcome-bucket--lower.eco-outcome-bucket--gte50 {
+      background: linear-gradient(135deg, #8ef86a, #1e7b17);
+    }
+
+    .eco-outcome-bucket--higher.eco-outcome-bucket--lt50 {
+      background: linear-gradient(135deg, #ffda57, #f0941f);
+    }
+
+    .eco-outcome-bucket--higher.eco-outcome-bucket--gte50 {
+      background: linear-gradient(135deg, #ffb347, #e6390a);
+    }
+
+    .eco-outcome-bucket-value {
+      margin: 0;
+      font-size: 2.4rem;
+      font-weight: 700;
+    }
+
+    .eco-outcome-note {
+      display: none;
+    }
+
+    .eco-outcome-card.is-idle .eco-dual-text__fill {
+      opacity: 0.65;
+    }
+
+    .eco-energy-card--replacement .eco-energy-label {
+      color: inherit;
+      opacity: 0.85;
+    }
+
+    .eco-energy-card--replacement .eco-energy-value,
+    .eco-energy-card--replacement .eco-energy-note {
+      color: inherit;
+    }
+
+    .eco-energy-label {
+      color: #0f172a;
+      opacity: 1;
     }
 
     .eco-energy-note {
@@ -172,6 +445,25 @@
       margin: 8px 0 0;
       color: inherit;
       opacity: 0.9;
+    }
+
+    .eco-energy-placeholder-value {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 4px 0;
+      color: #0f172a;
+    }
+
+    .eco-pollutant-count {
+      font-size: clamp(2rem, 4vw, 2.9rem);
+      font-weight: 700;
+      color: inherit;
+      margin: 6px 0 2px;
+    }
+
+    .eco-outcome-summary-count.eco-pollutant-count {
+      font-size: clamp(2.4rem, 4.5vw, 3.4rem);
+      margin-top: -8px;
     }
 
     .eco-results {
@@ -186,7 +478,7 @@
     .eco-results-header {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 24px;
       margin-bottom: 24px;
     }
 
@@ -344,17 +636,26 @@
       color: #111827;
     }
 
-    .eco-card-unit {
-      margin: 0;
+    .eco-outcome-bucket {
+      position: relative;
+      border-radius: 14px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin: 2px 0 0;
+      font-size: clamp(1.6rem, 3.6vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
       color: #111827;
-      font-size: 0.85rem;
     }
 
     .eco-chart-bars {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-    }
+      font-size: 2.1rem;
+      font-weight: 700;
 
     .eco-chart-bar {
       display: grid;
@@ -515,24 +816,6 @@
       </div>
     </section>
 
-    <section class="eco-energy-summary" aria-live="polite">
-      <article class="eco-energy-card">
-        <p class="eco-energy-label">Eco-ready stove activity</p>
-        <p class="eco-energy-value" data-energy-value="eco">—</p>
-        <p class="eco-energy-note">Fuel used by Ecodesign stove baseline</p>
-      </article>
-      <article class="eco-energy-card">
-        <p class="eco-energy-label">Current fireplace / stove</p>
-        <p class="eco-energy-value" data-energy-value="fireplace">—</p>
-        <p class="eco-energy-note">Activity for selected category</p>
-      </article>
-      <article class="eco-energy-card eco-energy-card--replacement">
-        <p class="eco-energy-label">Replacement activity applied</p>
-        <p class="eco-energy-value" data-energy-value="replacement">—</p>
-        <p class="eco-energy-note" id="ecoInclusionNote">Waiting for category comparison…</p>
-      </article>
-    </section>
-
     <section class="eco-results" aria-labelledby="ecoResultsTitle">
       <div class="eco-results-header">
         <div class="eco-results-heading">
@@ -544,7 +827,95 @@
             <span class="eco-results-title-line" id="ecoResultsSubtitle">Select a fireplace / stove category to compare</span>
           </h3>
         </div>
-        <p class="eco-results-description"><strong>These results are comparative estimates</strong>, based on emission factors from the UK's <strong>National Atmospheric Emissions Inventory (NAEI)</strong> and other published sources. The NAEI combines emission factors, fuel-use data, and modelling from surveys, industry statistics, and official energy records to produce national estimates. These figures are intended to illustrate differences between appliance types and fuels. <strong>They are not predictions of emissions from individual homes.</strong></p>
+        <section class="eco-energy-summary" aria-live="polite">
+          <article class="eco-energy-card eco-energy-card--comparison is-idle" id="ecoEnergyCard">
+            <p class="eco-energy-label">ENERGY</p>
+            <div class="eco-energy-stack">
+              <p class="eco-energy-category">Ecodesign - Ready To Burn</p>
+              <p class="eco-energy-value" id="ecoEnergyEcoValue">—</p>
+              <p class="eco-energy-category" id="ecoEnergyFireplaceLabel">Fireplace / stove category</p>
+              <p class="eco-energy-value" id="ecoEnergyFireplaceValue">—</p>
+            </div>
+            <div class="eco-energy-bottom">
+              <p class="eco-energy-calculation" id="ecoEnergyCalculation">Select a fireplace / stove category to compare activity totals.</p>
+              <p class="eco-energy-total" id="ecoEnergyReplacementValue">—</p>
+            </div>
+          </article>
+          <article class="eco-energy-card eco-pm-card" id="ecoPmCard">
+            <p class="eco-energy-label">PM2.5 POLLUTION<br>DOMESTIC COMBUSTION</p>
+            <p class="eco-pm-card-description">Configure this card to compare PM2.5 from fireplaces/stoves with domestic combustion totals.</p>
+          </article>
+          <article class="eco-energy-card eco-energy-card--replacement eco-outcome-card is-idle" id="ecoOutcomeCard">
+            <div class="eco-outcome-summary" id="ecoOutcomePollutantSummary">
+              <div class="eco-outcome-summary-head">
+                <p class="eco-outcome-summary-title" id="ecoPollutantCardTitle">TOTAL POLLUTANTS</p>
+                <p class="eco-outcome-summary-count eco-pollutant-count" id="ecoPollutantCardCount">—</p>
+              </div>
+              <p class="eco-outcome-summary-inline" id="ecoPollutantCardInlineNote" hidden>16PAH is excluded from the total because it combines 16 pollutants already counted</p>
+              <p class="eco-outcome-summary-note" id="ecoPollutantCardNote">Counting pollutants…</p>
+            </div>
+            <div class="eco-outcome-main">
+              <div class="eco-outcome-column">
+                <p class="eco-outcome-label">Lower</p>
+                <p class="eco-outcome-count">
+                  <span class="eco-dual-text" id="ecoOutcomeLowerCount" style="--eco-dual-outline:#fefefe; --eco-dual-fill:#0f9c48;">
+                    <span class="eco-dual-text__outline" aria-hidden="true">—</span>
+                    <span class="eco-dual-text__fill">—</span>
+                  </span>
+                </p>
+              </div>
+              <div class="eco-outcome-column eco-outcome-column--right">
+                <p class="eco-outcome-label">Higher</p>
+                <p class="eco-outcome-count">
+                  <span class="eco-dual-text" id="ecoOutcomeHigherCount" style="--eco-dual-outline:#fefefe; --eco-dual-fill:#FF2600;">
+                    <span class="eco-dual-text__outline" aria-hidden="true">—</span>
+                    <span class="eco-dual-text__fill">—</span>
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div class="eco-outcome-buckets">
+              <div class="eco-outcome-bucket eco-outcome-bucket--lower eco-outcome-bucket--lt50">
+                <p class="eco-outcome-bucket-label">&lt;50%</p>
+                <p class="eco-outcome-bucket-value">
+                  <span class="eco-dual-text" id="ecoOutcomeLowerLt" style="--eco-dual-outline:#0f0f0f; --eco-dual-fill:#ffffff; --eco-dual-scale:1.04;">
+                    <span class="eco-dual-text__outline" aria-hidden="true">—</span>
+                    <span class="eco-dual-text__fill">—</span>
+                  </span>
+                </p>
+              </div>
+              <div class="eco-outcome-bucket eco-outcome-bucket--higher eco-outcome-bucket--lt50">
+                <p class="eco-outcome-bucket-label">&lt;50%</p>
+                <p class="eco-outcome-bucket-value">
+                  <span class="eco-dual-text" id="ecoOutcomeHigherLt" style="--eco-dual-outline:#0f0f0f; --eco-dual-fill:#ffffff; --eco-dual-scale:1.04;">
+                    <span class="eco-dual-text__outline" aria-hidden="true">—</span>
+                    <span class="eco-dual-text__fill">—</span>
+                  </span>
+                </p>
+              </div>
+              <div class="eco-outcome-bucket eco-outcome-bucket--lower eco-outcome-bucket--gte50">
+                <p class="eco-outcome-bucket-label">&gt;50%</p>
+                <p class="eco-outcome-bucket-value">
+                  <span class="eco-dual-text" id="ecoOutcomeLowerGte" style="--eco-dual-outline:#0f0f0f; --eco-dual-fill:#ffffff; --eco-dual-scale:1.04;">
+                    <span class="eco-dual-text__outline" aria-hidden="true">—</span>
+                    <span class="eco-dual-text__fill">—</span>
+                  </span>
+                </p>
+              </div>
+              <div class="eco-outcome-bucket eco-outcome-bucket--higher eco-outcome-bucket--gte50">
+                <p class="eco-outcome-bucket-label">&gt;50%</p>
+                <p class="eco-outcome-bucket-value">
+                  <span class="eco-dual-text" id="ecoOutcomeHigherGte" style="--eco-dual-outline:#0f0f0f; --eco-dual-fill:#ffffff; --eco-dual-scale:1.04;">
+                    <span class="eco-dual-text__outline" aria-hidden="true">—</span>
+                    <span class="eco-dual-text__fill">—</span>
+                  </span>
+                </p>
+              </div>
+            </div>
+            <p class="eco-energy-note eco-outcome-note" id="ecoOutcomeNote">Waiting for pollutant comparisons…</p>
+          </article>
+        </section>
+        <p class="eco-results-description"><strong>These results are comparative estimates</strong>, based on data from the UK's <strong>National Atmospheric Emissions Inventory (NAEI)</strong> and other published sources. The NAEI combines emission factors, fuel-use data, and modelling from surveys, industry statistics, and official energy records to produce national estimates. Emission factors are based on laboratory tests that directly measure emissions from real fireplaces and stoves burning different fuels under controlled conditions. These figures are intended to illustrate differences between appliance types and fuels. <strong>They are not predictions of emissions from individual homes.</strong></p>
         <div class="eco-results-legend">
           <span class="eco-legend-chip" style="--chip-color:#F58231;">Ecodesign - Ready To Burn</span>
           <span class="eco-legend-chip" style="--chip-color:#E42020;" id="ecoLegendCurrent">Current fireplace / stove</span>
@@ -683,6 +1054,9 @@
       var POLLUTANT_CLASS_ORDER = [1, 2, 3, 4, 5];
       var FALLBACK_CLASS_ID = 'other';
       var FALLBACK_CLASS_META = { label: 'Other pollutants' };
+      var EXCLUDED_POLLUTANT_TAG = '16PAH';
+      var EXCLUDED_POLLUTANT_NOTE = '16PAH is excluded from the total because it combines 16 pollutants already counted';
+      var ENERGY_NOTE_DEFAULT = 'Select a fireplace / stove category to compare activity totals.';
       var BAR_COLORS = {
         eco: '#F58231',
         fireplace: '#E42020',
@@ -695,15 +1069,18 @@
         year: document.getElementById('ecoYearSelect'),
         status: document.getElementById('ecoControlsStatus'),
         chartGrid: document.getElementById('ecoChartGrid'),
-        energyValues: {
-          eco: document.querySelector('[data-energy-value="eco"]'),
-          fireplace: document.querySelector('[data-energy-value="fireplace"]'),
-          replacement: document.querySelector('[data-energy-value="replacement"]')
+        energyCard: buildEnergyDomRefs(),
+        pollutantSummary: {
+          container: document.getElementById('ecoOutcomePollutantSummary'),
+          title: document.getElementById('ecoPollutantCardTitle'),
+          count: document.getElementById('ecoPollutantCardCount'),
+          note: document.getElementById('ecoPollutantCardNote'),
+          inlineNote: document.getElementById('ecoPollutantCardInlineNote')
         },
-        inclusionNote: document.getElementById('ecoInclusionNote'),
         resultsTitle: document.getElementById('ecoResultsTitle'),
         resultsSubtitle: document.getElementById('ecoResultsSubtitle'),
-        legendCurrent: document.getElementById('ecoLegendCurrent')
+        legendCurrent: document.getElementById('ecoLegendCurrent'),
+        outcomeCard: buildOutcomeDomRefs()
       };
       var state = {
         pollutants: [],
@@ -715,8 +1092,6 @@
         timeseriesIndex: null,
         ecoCategoryId: null,
         activityPollutantId: null,
-        activityUnitLabel: 'TJ',
-        activityLabel: 'Activity data',
         selection: {
           pollutant: POLLUTANT_PRESETS[0].value,
           fireplace: null,
@@ -724,9 +1099,70 @@
         },
         renderToken: 0,
         ready: false,
+        activityUnitLabel: 'TJ',
         numberFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }),
-        energyFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 })
+        percentFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 }),
+        energyFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 }),
+        latestEnergyProfile: null
       };
+
+      function buildEnergyDomRefs() {
+        return {
+          container: document.getElementById('ecoEnergyCard'),
+          replacement: document.getElementById('ecoEnergyReplacementValue'),
+          fireplace: document.getElementById('ecoEnergyFireplaceValue'),
+          eco: document.getElementById('ecoEnergyEcoValue'),
+          calculation: document.getElementById('ecoEnergyCalculation'),
+          fireplaceLabel: document.getElementById('ecoEnergyFireplaceLabel')
+        };
+      }
+
+      function buildOutcomeDomRefs() {
+        return {
+          container: document.getElementById('ecoOutcomeCard'),
+          note: document.getElementById('ecoOutcomeNote'),
+          totals: {
+            lower: collectDualTextRefs('ecoOutcomeLowerCount'),
+            higher: collectDualTextRefs('ecoOutcomeHigherCount')
+          },
+          buckets: {
+            lowerLt: collectDualTextRefs('ecoOutcomeLowerLt'),
+            lowerGte: collectDualTextRefs('ecoOutcomeLowerGte'),
+            higherLt: collectDualTextRefs('ecoOutcomeHigherLt'),
+            higherGte: collectDualTextRefs('ecoOutcomeHigherGte')
+          }
+        };
+      }
+
+      function collectDualTextRefs(id) {
+        var root = document.getElementById(id);
+        if (!root) {
+          return null;
+        }
+        return {
+          root: root,
+          outline: root.querySelector('.eco-dual-text__outline'),
+          fill: root.querySelector('.eco-dual-text__fill')
+        };
+      }
+
+      function setDualTextValue(target, value) {
+        if (!target) {
+          return;
+        }
+        var hasValue = Number.isFinite(value);
+        var text = hasValue ? String(value) : '—';
+        if (target.outline) {
+          target.outline.textContent = text;
+        }
+        if (target.fill) {
+          target.fill.textContent = text;
+        }
+        if (target.root) {
+          target.root.setAttribute('data-value', text);
+          target.root.setAttribute('data-empty', hasValue ? 'false' : 'true');
+        }
+      }
 
       var googleChartsReady = false;
       var googleChartsPromise = loadGoogleCharts();
@@ -788,8 +1224,7 @@
         state.ecoCategoryId = findEcoCategoryId(state.categories);
         var activityMeta = findActivityPollutantMeta(state.pollutants);
         state.activityPollutantId = activityMeta ? activityMeta.id : null;
-        state.activityUnitLabel = activityMeta?.emission_unit || activityMeta?.unit || 'TJ';
-        state.activityLabel = activityMeta?.pollutant || 'Activity data';
+        state.activityUnitLabel = activityMeta?.emission_unit || activityMeta?.unit || state.activityUnitLabel || 'TJ';
         state.filteredPollutantIds = deriveEcoRelevantPollutantIds(state.timeseriesRows, state.ecoCategoryId);
       }
 
@@ -869,6 +1304,7 @@
         state.selection.fireplace = Number(dom.fireplace.value) || null;
         state.selection.year = Number(dom.year.value) || DEFAULT_YEAR;
         updateResultsTitle();
+        updatePollutantSummaryCard();
         if (!state.ready) {
           return;
         }
@@ -877,9 +1313,11 @@
 
       function renderEcoImpacts() {
         var token = ++state.renderToken;
+        updateOutcomeCard(null);
         if (!state.ecoCategoryId || !state.activityPollutantId || !state.selection.fireplace) {
           renderEnergySummary(null);
           clearChartGrid();
+          updateOutcomeCard(null);
           return;
         }
 
@@ -901,6 +1339,7 @@
           if (!pollutantIds.length) {
             clearChartGrid();
             setGridBusy(false);
+            updateOutcomeCard(null);
             return;
           }
           return Promise.all(pollutantIds.map(function (pollutantId) {
@@ -920,11 +1359,14 @@
             if (token !== state.renderToken) {
               return;
             }
-            renderChartGrid((scenarios || []).filter(Boolean));
+            var filtered = (scenarios || []).filter(Boolean);
+            updateOutcomeCard(filtered);
+            renderChartGrid(filtered);
           }).catch(function (error) {
             console.warn('Eco replacements scenario failed:', error);
             if (token === state.renderToken) {
               clearChartGrid();
+              updateOutcomeCard(null);
             }
           }).finally(function () {
             if (token === state.renderToken) {
@@ -936,27 +1378,212 @@
           if (token === state.renderToken) {
             renderEnergySummary(null);
             clearChartGrid();
+            updateOutcomeCard(null);
             setGridBusy(false);
           }
         });
       }
 
       function renderEnergySummary(profile) {
-        var values = profile ? {
-          eco: profile.ecoEnergy,
-          fireplace: profile.fireplaceEnergy,
-          replacement: profile.replacementEnergy
-        } : { eco: null, fireplace: null, replacement: null };
-        Object.keys(values).forEach(function (key) {
-          var target = dom.energyValues[key];
-          if (!target) {
+        state.latestEnergyProfile = profile || null;
+        var energyDom = dom.energyCard;
+        if (!energyDom) {
+          return;
+        }
+        var hasProfile = Boolean(profile);
+        var fireplaceLabel = state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : 'Fireplace / stove category';
+        if (energyDom.fireplaceLabel) {
+          energyDom.fireplaceLabel.textContent = fireplaceLabel;
+        }
+        if (energyDom.replacement) {
+          energyDom.replacement.textContent = hasProfile ? formatActivityValue(profile.replacementEnergy) : '—';
+        }
+        if (energyDom.fireplace) {
+          energyDom.fireplace.textContent = hasProfile ? formatActivityValue(profile.fireplaceEnergy) : '—';
+        }
+        if (energyDom.eco) {
+          energyDom.eco.textContent = hasProfile ? formatActivityValue(profile.ecoEnergy) : '—';
+        }
+        if (energyDom.calculation) {
+          energyDom.calculation.textContent = buildEnergyCalculationText(profile, fireplaceLabel);
+        }
+        if (energyDom.container) {
+          var ready = hasProfile && Number.isFinite(profile && profile.replacementEnergy);
+          energyDom.container.classList.toggle('is-idle', !ready);
+        }
+      }
+
+      function updatePollutantSummaryCard() {
+        if (!dom.pollutantSummary || !dom.pollutantSummary.count) {
+          return;
+        }
+        var summary = buildPollutantSummary(state.selection.pollutant);
+        if (dom.pollutantSummary.title) {
+          dom.pollutantSummary.title.textContent = summary.title;
+        }
+        if (dom.pollutantSummary.count) {
+          dom.pollutantSummary.count.textContent = summary.countDisplay;
+          dom.pollutantSummary.count.setAttribute('aria-label', summary.ariaLabel);
+        }
+        var showInlineNotice = summary.note === EXCLUDED_POLLUTANT_NOTE;
+        if (dom.pollutantSummary.inlineNote) {
+          dom.pollutantSummary.inlineNote.textContent = showInlineNotice ? summary.note : '';
+          dom.pollutantSummary.inlineNote.hidden = !showInlineNotice;
+          dom.pollutantSummary.inlineNote.classList.toggle('is-visible', showInlineNotice);
+        }
+        if (dom.pollutantSummary.note) {
+          dom.pollutantSummary.note.textContent = summary.note;
+          dom.pollutantSummary.note.hidden = showInlineNotice;
+        }
+      }
+
+      function buildPollutantSummary(selectionValue) {
+        var ids = resolveSelectedPollutantIds(selectionValue);
+        var counted = new Set();
+        var excludedSixteenPAH = false;
+
+        ids.forEach(function (id) {
+          var numericId = Number(id);
+          var pollutant = state.pollutantMap.get(numericId);
+          if (shouldExcludeFromTotal(pollutant)) {
+            excludedSixteenPAH = true;
             return;
           }
-          target.textContent = formatActivityValue(values[key]);
+          if (Number.isFinite(numericId)) {
+            counted.add(numericId);
+          }
         });
-        if (dom.inclusionNote) {
-          dom.inclusionNote.textContent = profile ? formatInclusionNote(profile.inclusion) : 'Select a fireplace / stove category to compare activity totals.';
+
+        var meta = getPollutantSummaryMeta(selectionValue);
+        var count = counted.size;
+        var note;
+
+        if (excludedSixteenPAH) {
+          note = EXCLUDED_POLLUTANT_NOTE;
+        } else if (count > 1 && meta.multiNote) {
+          note = meta.multiNote.replace('{count}', count);
+        } else if (count === 1 && meta.singleNote) {
+          note = meta.singleNote;
+        } else {
+          note = meta.emptyNote || 'No pollutants are available for this selection yet.';
         }
+
+        return {
+          title: meta.title,
+          count: count,
+          countDisplay: state.numberFormatter.format(count),
+          ariaLabel: count === 1 ? '1 pollutant in scope' : count + ' pollutants in scope',
+          note: note
+        };
+      }
+
+      function getPollutantSummaryMeta(selectionValue) {
+        if (selectionValue === 'preset-all') {
+          return {
+            title: 'TOTAL POLLUTANTS',
+            multiNote: 'Counting {count} tracked pollutants across all classes.',
+            singleNote: 'Counting 1 tracked pollutant across all classes.',
+            emptyNote: 'No pollutants are available across the tracked classes yet.'
+          };
+        }
+        var preset = POLLUTANT_PRESETS.find(function (option) {
+          return option.value === selectionValue;
+        });
+        if (preset && selectionValue !== 'preset-all') {
+          return {
+            title: 'Total Pollutants in ' + preset.label,
+            multiNote: 'Counting {count} pollutants in ' + preset.label + '.',
+            singleNote: 'Counting 1 pollutant in ' + preset.label + '.',
+            emptyNote: 'No pollutants are available for ' + preset.label + '.'
+          };
+        }
+        return {
+          title: 'Selected pollutant',
+          multiNote: 'Counting {count} pollutants in this selection.',
+          singleNote: 'One pollutant selected for comparison.',
+          emptyNote: 'Select a pollutant to see how many are in scope.'
+        };
+      }
+
+      function shouldExcludeFromTotal(pollutant) {
+        if (!pollutant || !pollutant.pollutant) {
+          return false;
+        }
+        var normalized = pollutant.pollutant.replace(/[^a-z0-9]/gi, '').toUpperCase();
+        return normalized === EXCLUDED_POLLUTANT_TAG;
+      }
+
+      function updateOutcomeCard(items) {
+        if (!dom.outcomeCard || !dom.outcomeCard.container) {
+          return;
+        }
+        var scenarios = Array.isArray(items) ? items : [];
+        var summary = summarizeScenarioOutcomes(scenarios);
+        var totalComparisons = summary.total;
+        var hasComparisons = totalComparisons > 0;
+
+        setDualTextValue(dom.outcomeCard.totals?.lower, hasComparisons ? summary.lower.total : null);
+        setDualTextValue(dom.outcomeCard.totals?.higher, hasComparisons ? summary.higher.total : null);
+        setDualTextValue(dom.outcomeCard.buckets?.lowerLt, hasComparisons ? summary.lower.lt50 : null);
+        setDualTextValue(dom.outcomeCard.buckets?.lowerGte, hasComparisons ? summary.lower.gte50 : null);
+        setDualTextValue(dom.outcomeCard.buckets?.higherLt, hasComparisons ? summary.higher.lt50 : null);
+        setDualTextValue(dom.outcomeCard.buckets?.higherGte, hasComparisons ? summary.higher.gte50 : null);
+
+        if (dom.outcomeCard.container) {
+          dom.outcomeCard.container.classList.toggle('is-idle', !hasComparisons);
+        }
+        if (dom.outcomeCard.note) {
+          dom.outcomeCard.note.textContent = hasComparisons
+            ? 'Based on ' + totalComparisons + ' pollutant comparison' + (totalComparisons === 1 ? '' : 's') + '.'
+            : 'Waiting for pollutant comparisons…';
+        }
+      }
+
+      function summarizeScenarioOutcomes(items) {
+        var summary = {
+          lower: { total: 0, lt50: 0, gte50: 0 },
+          higher: { total: 0, lt50: 0, gte50: 0 },
+          total: 0
+        };
+        (items || []).forEach(function (entry) {
+          if (shouldExcludeFromTotal(entry?.meta)) {
+            return;
+          }
+          var delta = analyzeScenarioDelta(entry && entry.result);
+          if (!delta) {
+            return;
+          }
+          summary[delta.direction].total += 1;
+          summary[delta.direction][delta.bucket] += 1;
+          summary.total += 1;
+        });
+        return summary;
+      }
+
+      function analyzeScenarioDelta(result) {
+        if (!result) {
+          return null;
+        }
+        var fireplace = Number(result.fireplaceEmission);
+        var replacement = Number(result.replacementEmission);
+        if (!Number.isFinite(fireplace) || !Number.isFinite(replacement)) {
+          return null;
+        }
+        var delta = replacement - fireplace;
+        if (delta === 0) {
+          return null;
+        }
+        var magnitude = Math.abs(fireplace);
+        var ratio;
+        if (magnitude === 0) {
+          ratio = replacement === fireplace ? 0 : Infinity;
+        } else {
+          ratio = Math.abs(delta) / magnitude;
+        }
+        return {
+          direction: delta < 0 ? 'lower' : 'higher',
+          bucket: ratio >= 0.5 ? 'gte50' : 'lt50'
+        };
       }
 
       function updateResultsTitle() {
@@ -1074,6 +1701,15 @@
           chartContainer.textContent = 'No emissions data available';
         }
 
+        var percentDelta = computeReplacementPercent(entry.result);
+        if (percentDelta) {
+          var percentNode = document.createElement('p');
+          percentNode.className = 'eco-delta-percentage eco-delta-percentage--' + percentDelta.trend;
+          percentNode.textContent = percentDelta.display;
+          percentNode.setAttribute('aria-label', percentDelta.ariaLabel);
+          card.appendChild(percentNode);
+        }
+
         var deltaText = formatDeltaText(entry.result, unit);
         if (deltaText) {
           var delta = document.createElement('p');
@@ -1156,6 +1792,58 @@
         }
         var direction = delta > 0 ? 'Potential reduction' : 'Potential increase';
         return direction + ': ' + formatEmissionValue(Math.abs(delta), unit);
+      }
+
+      function computeReplacementPercent(result) {
+        if (!result) {
+          return null;
+        }
+        var fireplace = Number(result.fireplaceEmission);
+        var replacement = Number(result.replacementEmission);
+        if (!Number.isFinite(fireplace) || !Number.isFinite(replacement)) {
+          return null;
+        }
+        var baseline = Math.abs(fireplace);
+        var change;
+        if (baseline === 0) {
+          if (replacement === fireplace) {
+            change = 0;
+          } else {
+            change = replacement > fireplace ? Infinity : -Infinity;
+          }
+        } else {
+          change = ((replacement - fireplace) / baseline) * 100;
+        }
+        var absChange = Math.abs(change);
+        var isFiniteChange = Number.isFinite(absChange);
+        var formattedNumber = isFiniteChange ? state.percentFormatter.format(absChange) : '∞';
+        var percentText = formattedNumber + '%';
+        var display;
+        var trend;
+        var ariaLabel;
+        if (change > 0) {
+          display = '+' + percentText;
+          trend = 'increase';
+          ariaLabel = isFiniteChange
+            ? 'Increase of ' + formattedNumber + ' percent compared to the current fireplace or stove'
+            : 'Increase beyond measurable percent compared to the current fireplace or stove';
+        } else if (change < 0) {
+          display = '-' + percentText;
+          trend = 'reduction';
+          ariaLabel = isFiniteChange
+            ? 'Reduction of ' + formattedNumber + ' percent compared to the current fireplace or stove'
+            : 'Reduction beyond measurable percent compared to the current fireplace or stove';
+        } else {
+          display = '0%';
+          trend = 'neutral';
+          ariaLabel = 'No change compared to the current fireplace or stove';
+        }
+        return {
+          value: change,
+          display: display,
+          trend: trend,
+          ariaLabel: ariaLabel
+        };
       }
 
       function getPollutantClassId(pollutantId) {
@@ -1260,6 +1948,13 @@
         return fallback;
       }
 
+      function sanitizeUnitLabel(label) {
+        if (!label) {
+          return '';
+        }
+        return String(label).replace(/\s*\(net\)/ig, '').trim();
+      }
+
       function isActivityDataPollutant(pollutant) {
         if (!pollutant) {
           return false;
@@ -1276,13 +1971,47 @@
       }
 
       function formatActivityValue(value) {
+        var unitLabel = state.activityUnitLabel || 'TJ';
+        var formatter = state.energyFormatter || state.numberFormatter;
         if (!Number.isFinite(value) || value < 0) {
           return '—';
         }
         if (value === 0) {
-          return '0 ' + state.activityUnitLabel;
+          return '0 ' + unitLabel;
         }
-        return state.energyFormatter.format(value) + ' ' + state.activityUnitLabel;
+        return formatter.format(value) + ' ' + unitLabel;
+      }
+
+      function formatActivityValueForCalculation(value) {
+        var unitLabel = sanitizeUnitLabel(state.activityUnitLabel || 'TJ') || 'TJ';
+        var formatter = state.energyFormatter || state.numberFormatter;
+        if (!Number.isFinite(value) || value < 0) {
+          return '—';
+        }
+        if (value === 0) {
+          return '0 ' + unitLabel;
+        }
+        return formatter.format(value) + ' ' + unitLabel;
+      }
+
+      function buildEnergyCalculationText(profile, fireplaceLabel) {
+        var fallbackLabel = fireplaceLabel || (state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : 'this fireplace / stove category');
+        if (!profile) {
+          return ENERGY_NOTE_DEFAULT;
+        }
+        var assessment = profile.inclusion || {};
+        if (assessment.included === null || typeof assessment.included === 'undefined') {
+          return 'Checking whether Ready To Burn energy overlaps with ' + fallbackLabel + '.';
+        }
+        if (assessment.included) {
+          return 'Ecodesign - Ready To Burn is included in ' + fallbackLabel + '.';
+        }
+        var ecoValue = formatActivityValueForCalculation(profile.ecoEnergy);
+        var fireplaceValue = formatActivityValueForCalculation(profile.fireplaceEnergy);
+        if (ecoValue === '—' || fireplaceValue === '—') {
+          return 'Waiting for energy totals…';
+        }
+        return ecoValue + ' + ' + fireplaceValue + ' =';
       }
 
       function formatEmissionValue(value, unit) {
@@ -1293,15 +2022,6 @@
           return '0' + (unit ? ' ' + unit : '');
         }
         return state.numberFormatter.format(value) + (unit ? ' ' + unit : '');
-      }
-
-      function formatInclusionNote(assessment) {
-        if (!assessment || assessment.included === null) {
-          return 'Comparing Supabase category metadata to decide whether Eco replaces or supplements this activity.';
-        }
-        return assessment.included
-          ? 'Metadata shows the fireplace fuels already overlap, so Eco-ready activity replaces the current category.'
-          : 'Fuel sets differ, so replacement assumes Eco-ready activity is added on top of the current fireplace total.';
       }
 
       function buildOption(value, label) {
