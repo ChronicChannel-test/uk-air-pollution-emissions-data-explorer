@@ -133,11 +133,17 @@
 
     .eco-energy-summary {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: minmax(200px, 25%) minmax(260px, 50%) minmax(200px, 25%);
       gap: 16px;
       width: 100%;
       margin: 0;
       padding: 4px 0 8px;
+    }
+
+    @media (max-width: 1100px) {
+      .eco-energy-summary {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
     }
 
     .eco-energy-card {
@@ -150,6 +156,7 @@
       flex-direction: column;
       gap: 6px;
       min-height: 200px;
+      --eco-card-width: auto;
     }
 
     .eco-energy-card--comparison {
@@ -175,6 +182,7 @@
       font-weight: 600;
       margin: 0 0 6px;
       color: #0f172a;
+      white-space: nowrap;
     }
 
     .eco-energy-bottom {
@@ -191,10 +199,13 @@
     }
 
     .eco-energy-total {
-      font-size: clamp(2rem, 4vw, 2.9rem);
+      font-size: calc(var(--eco-card-width, 320px) / 9);
       font-weight: 700;
       color: #0f172a;
       margin: 2px 0 0;
+      white-space: nowrap;
+      line-height: 1.05;
+      max-width: 100%;
     }
 
     .eco-energy-card.is-idle .eco-energy-total {
@@ -216,6 +227,13 @@
 
     .eco-pm-card .eco-energy-label {
       color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .eco-pm-label-lower {
+      text-transform: none;
+      letter-spacing: -0.02em;
     }
 
     .eco-pm-card-description {
@@ -224,18 +242,107 @@
       color: #475569;
     }
 
+    .eco-pm-plot {
+      position: relative;
+    }
+
+    .eco-pm-chart {
+      --eco-pm-height: 240px;
+      display: block;
+      height: var(--eco-pm-height);
+      width: 100%;
+      margin: 8px 0 0;
+      position: relative;
+    }
+
+    .eco-pm-legend {
+      display: inline-flex;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      padding: 6px 0;
+      margin: 4px 0 0;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .eco-pm-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      border: none;
+      font-size: 0.78rem;
+      color: #0f172a;
+      line-height: 1.35;
+    }
+
+    .eco-pm-swatch {
+      width: 12px;
+      height: 12px;
+      min-width: 12px;
+      min-height: 12px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+      display: inline-block;
+      align-self: flex-start;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .eco-pm-note {
+      margin: 0;
+      font-size: 0.82rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .eco-pm-note {
+      margin: 6px 0 0;
+      font-size: 0.82rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .eco-pm-labels {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .eco-pm-labels .eco-pm-label {
+      position: absolute;
+      transform: translate(-50%, -24px);
+      font-weight: 800;
+      font-size: 1.5rem;
+      text-shadow:
+        1px 1px 0 #ffffff,
+        -1px -1px 0 #ffffff,
+        -1px 1px 0 #ffffff,
+        1px -1px 0 #ffffff,
+        0 1px 0 #ffffff,
+        0 -1px 0 #ffffff,
+        1px 0 0 #ffffff,
+        -1px 0 0 #ffffff,
+        0 0 3px rgba(255, 255, 255, 0.9);
+    }
+
     .eco-outcome-summary {
       display: flex;
       flex-direction: column;
       gap: 6px;
       margin: -4px 0 6px;
+      margin-bottom: auto;
     }
 
     .eco-outcome-summary-head {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: flex-start;
-      gap: 16px;
+      gap: 4px;
     }
 
     .eco-outcome-summary-title {
@@ -248,11 +355,11 @@
     }
 
     .eco-outcome-summary-count {
-      margin: -8px 0 0;
+      margin: 0;
       font-size: clamp(2.8rem, 5.2vw, 4.2rem);
       font-weight: 700;
       color: #ffffff;
-      text-align: right;
+      text-align: left;
       line-height: 1;
     }
 
@@ -282,6 +389,8 @@
       color: #fff7ed;
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .eco-energy-label,
@@ -306,10 +415,11 @@
 
     .eco-outcome-buckets {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1.02fr 0.98fr;
       gap: 8px 10px;
       width: 100%;
       margin-top: 8px;
+      --eco-tile-width: auto;
     }
 
     .eco-outcome-column {
@@ -378,11 +488,11 @@
 
     .eco-outcome-bucket-label {
       position: absolute;
-      left: 38px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
       margin: 0;
-      font-size: 1.8rem;
+      font-size: var(--eco-tile-label-size, 24px);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -413,7 +523,7 @@
 
     .eco-outcome-bucket-value {
       margin: 0;
-      font-size: 2.4rem;
+      font-size: var(--eco-tile-value-size, 28px);
       font-weight: 700;
     }
 
@@ -639,7 +749,8 @@
     .eco-outcome-bucket {
       position: relative;
       border-radius: 14px;
-      padding: 6px 12px;
+      padding: var(--eco-tile-pad-y, 8px) var(--eco-tile-pad-x, 12px);
+      min-height: var(--eco-tile-height, 72px);
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -790,7 +901,7 @@
       <p><strong>Upgrading stoves can change emissions, but it does not automatically guarantee cleaner air.</strong></p>
       <p>Although the <strong>Stove Industry Association (SIA)</strong> and its members suggest that replacing older stoves with modern Ecodesign models will improve air quality, evidence does not always support this. Some claims about reductions in pollutants like PM2.5 and PAHs are overstated. Not all stove replacements lead to meaningful emission reductions, and <strong>the promotion of Ready to Burn wood and new stoves will not, in all cases, deliver the air quality improvements the industry claims.</strong> Consumers and policymakers need to consider all relevant factors, including stove efficiency, maintenance, and usage, when assessing environmental impact.</p>
       <p>This page shows how emissions can change when different types of fireplaces and stoves are replaced with <strong>Ecodesign-compliant stoves using Ready to Burn certified wood.</strong></p>
-      <p>Different stove types produce different emission profiles for various pollutants. While Ecodesign stoves meet regulatory limits for some pollutants under test conditions, <strong>this does not mean emissions are lower for every pollutant in every case.</strong></p>
+      <p>Different stove types produce different emission profiles for various pollutants. While Ecodesign stoves meet regulatory limits for some pollutants under test conditions, <strong>this does not mean emissions are lower for every pollutant in every case.</strong> Emission factors for Ecodesign stoves using Ready to Burn wood can vary from year to year depending on the mix of wood fuels burned.</p>
       <p>By selecting a <strong>fireplace or stove category</strong>, you can compare its emissions with an <strong>Ecodesign stove burning Ready to Burn wood.</strong> In some cases, emissions may decrease; in others, they may stay the same or increase for some pollutants, such as PAHs or PM2.5.</p>
       </section>
     </div>
@@ -837,13 +948,24 @@
               <p class="eco-energy-value" id="ecoEnergyFireplaceValue">—</p>
             </div>
             <div class="eco-energy-bottom">
+              <p class="eco-energy-category">Total Energy</p>
               <p class="eco-energy-calculation" id="ecoEnergyCalculation">Select a fireplace / stove category to compare activity totals.</p>
               <p class="eco-energy-total" id="ecoEnergyReplacementValue">—</p>
             </div>
           </article>
           <article class="eco-energy-card eco-pm-card" id="ecoPmCard">
-            <p class="eco-energy-label">PM2.5 POLLUTION<br>DOMESTIC COMBUSTION</p>
-            <p class="eco-pm-card-description">Configure this card to compare PM2.5 from fireplaces/stoves with domestic combustion totals.</p>
+            <p class="eco-energy-label">PM2.5 POLLUTION EMISSIONS<br>FROM DOMESTIC COMBUSTION <span class="eco-pm-label-lower">(point of use)</span></p>
+            <div class="eco-pm-legend" aria-hidden="true">
+              <span class="eco-pm-chip"><span class="eco-pm-swatch" style="background:#e11d48;"></span>Fireplaces & Stoves exc Ecodesign Ready To Burn</span>
+              <span class="eco-pm-chip"><span class="eco-pm-swatch" style="background:#f97316;"></span>Ecodesign Ready To Burn</span>
+              <span class="eco-pm-chip"><span class="eco-pm-swatch" style="background:#cbd5e1;"></span>Other</span>
+              <span class="eco-pm-chip"><span class="eco-pm-swatch" style="background:#2563eb;"></span>Gas Boilers</span>
+            </div>
+            <div class="eco-pm-plot">
+              <div class="eco-pm-chart" id="ecoPmChart" role="img" aria-label="Stacked columns comparing PM2.5 from domestic combustion for 2023, Eco-RTB replacement, and electric heating replacement with ticks at 0, 3, 6, 9, and 12 kilotonnes and segment colors: blue gas boilers, grey other, orange Ecodesign stoves Ready to Burn, red fireplaces and older stoves."></div>
+              <div class="eco-pm-labels" id="ecoPmLabels" aria-hidden="true"></div>
+            </div>
+            <p class="eco-pm-note">Electric heating and heat pumps produce no PM2.5 at the point of use. Emissions from electricity generation are regulated separately and occur away from homes and people's lungs.</p>
           </article>
           <article class="eco-energy-card eco-energy-card--replacement eco-outcome-card is-idle" id="ecoOutcomeCard">
             <div class="eco-outcome-summary" id="ecoOutcomePollutantSummary">
@@ -876,7 +998,7 @@
             </div>
             <div class="eco-outcome-buckets">
               <div class="eco-outcome-bucket eco-outcome-bucket--lower eco-outcome-bucket--lt50">
-                <p class="eco-outcome-bucket-label">&lt;50%</p>
+                <p class="eco-outcome-bucket-label">&lt;-50%</p>
                 <p class="eco-outcome-bucket-value">
                   <span class="eco-dual-text" id="ecoOutcomeLowerLt" style="--eco-dual-outline:#0f0f0f; --eco-dual-fill:#ffffff; --eco-dual-scale:1.04;">
                     <span class="eco-dual-text__outline" aria-hidden="true">—</span>
@@ -894,7 +1016,7 @@
                 </p>
               </div>
               <div class="eco-outcome-bucket eco-outcome-bucket--lower eco-outcome-bucket--gte50">
-                <p class="eco-outcome-bucket-label">&gt;50%</p>
+                <p class="eco-outcome-bucket-label">&gt;-50%</p>
                 <p class="eco-outcome-bucket-value">
                   <span class="eco-dual-text" id="ecoOutcomeLowerGte" style="--eco-dual-outline:#0f0f0f; --eco-dual-fill:#ffffff; --eco-dual-scale:1.04;">
                     <span class="eco-dual-text__outline" aria-hidden="true">—</span>
@@ -947,15 +1069,155 @@
   </main>
 
   <script src="https://www.gstatic.com/charts/loader.js"></script>
-  <script src="../SharedResources/analytics.js?v=v4-32-CIC-testdb"></script>
+  <script src="../SharedResources/analytics.js?v=v4-40-CIC-testdb"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="../SharedResources/supabase-env.js?v=v4-32-CIC-testdb"></script>
-  <script src="../SharedResources/supabase-config.js?v=v4-32-CIC-testdb"></script>
-  <script src="../SharedResources/shared-data-loader.js?v=v4-32-CIC-testdb"></script>
-  <script src="../SharedResources/colors.js?v=v4-32-CIC-testdb"></script>
-  <script src="../SharedResources/eco-replacement-utils.js?v=v4-32-CIC-testdb"></script>
+  <script src="../SharedResources/supabase-env.js?v=v4-40-CIC-testdb"></script>
+  <script src="../SharedResources/supabase-config.js?v=v4-40-CIC-testdb"></script>
+  <script src="../SharedResources/shared-data-loader.js?v=v4-40-CIC-testdb"></script>
+  <script src="../SharedResources/colors.js?v=v4-40-CIC-testdb"></script>
+  <script src="../SharedResources/eco-replacement-utils.js?v=v4-40-CIC-testdb"></script>
   <script>
     (function initializeEcoReplacementsExperience() {
+    function measureEcoCardWidths() {
+      try {
+        // Energy card
+        var card = document.querySelector('.eco-energy-card');
+        if (card) {
+          var w = card.getBoundingClientRect().width;
+          document.documentElement.style.setProperty('--eco-card-width', w + 'px');
+          var energyTotal = card.querySelector('.eco-energy-total');
+          if (energyTotal) {
+            var energySize = w / 4.5; // bump headline energy font
+            energyTotal.style.fontSize = energySize + 'px';
+          }
+          var energyFont = energyTotal ? getComputedStyle(energyTotal).fontSize : 'n/a';
+          console.log('[eco-measure] card width', w, 'energy font', energyFont, 'set', energyTotal ? energyTotal.style.fontSize : 'n/a');
+        }
+
+        // Outcome tiles (use widest tile to size all)
+        var tiles = document.querySelectorAll('.eco-outcome-bucket');
+        var maxTileWidth = 0;
+        var tileWidths = [];
+        tiles.forEach(function(tile, idx) {
+          var tw = tile.getBoundingClientRect().width;
+          var col = tile.closest('.eco-outcome-buckets');
+          var colWidth = col ? col.getBoundingClientRect().width : null;
+          if (tw > maxTileWidth) {
+            maxTileWidth = tw;
+          }
+          tileWidths.push({ idx: idx, width: tw, colWidth: colWidth });
+        });
+
+        if (maxTileWidth > 0) {
+          var usable = maxTileWidth - 14; // preserve a small inset
+          var labelSize = usable / 6; // slightly smaller labels
+          var valueSize = usable / 4.5; // slightly smaller values
+          var lineGap = 4;
+          var padY = 6;
+          var padX = 10;
+          var tileHeight = padY + (labelSize + lineGap) + (valueSize + lineGap) + padY;
+
+          // Apply shared sizes to root
+          document.documentElement.style.setProperty('--eco-tile-width', maxTileWidth + 'px');
+          document.documentElement.style.setProperty('--eco-tile-label-size', labelSize.toFixed(2) + 'px');
+          document.documentElement.style.setProperty('--eco-tile-value-size', valueSize.toFixed(2) + 'px');
+          document.documentElement.style.setProperty('--eco-tile-height', tileHeight.toFixed(2) + 'px');
+          document.documentElement.style.setProperty('--eco-tile-pad-y', padY + 'px');
+          document.documentElement.style.setProperty('--eco-tile-pad-x', padX + 'px');
+
+          // Apply to each tile (same sizes)
+          tiles.forEach(function(tile) {
+            tile.style.setProperty('--eco-tile-width', maxTileWidth + 'px');
+            tile.style.setProperty('--eco-tile-label-size', labelSize.toFixed(2) + 'px');
+            tile.style.setProperty('--eco-tile-value-size', valueSize.toFixed(2) + 'px');
+            tile.style.setProperty('--eco-tile-height', tileHeight.toFixed(2) + 'px');
+            tile.style.setProperty('--eco-tile-pad-y', padY + 'px');
+            tile.style.setProperty('--eco-tile-pad-x', padX + 'px');
+
+            var labelEl = tile.querySelector('.eco-outcome-bucket-label');
+            var valueEl = tile.querySelector('.eco-outcome-bucket-value');
+            if (labelEl) {
+              labelEl.style.fontSize = labelSize + 'px';
+            }
+            if (valueEl) {
+              valueEl.style.fontSize = valueSize + 'px';
+            }
+          });
+
+          // Add sizing info to log entries
+          tileWidths = tileWidths.map(function(entry) {
+            return Object.assign({}, entry, {
+              labelSize: labelSize,
+              valueSize: valueSize,
+              tileHeight: tileHeight,
+              labelFont: labelSize + 'px',
+              valueFont: valueSize + 'px'
+            });
+          });
+        }
+
+        if (tileWidths.length) {
+          console.log('[eco-measure] tiles', tileWidths, 'max', maxTileWidth);
+        }
+      } catch (err) {
+        console.error('Width measure failed', err);
+      }
+    }
+
+    function debounce(fn, delay) {
+      var t;
+      return function() {
+        clearTimeout(t);
+        t = setTimeout(fn, delay);
+      };
+    }
+
+    function startEcoResizeObservers() {
+      if (!('ResizeObserver' in window)) {
+        return;
+      }
+
+      var card = document.querySelector('.eco-energy-card');
+      var tiles = document.querySelectorAll('.eco-outcome-bucket');
+
+      var observer = new ResizeObserver(function(entries) {
+        entries.forEach(function(entry) {
+          var target = entry && entry.target;
+          if (!target) {
+            return;
+          }
+          var width = entry.contentRect && entry.contentRect.width ? entry.contentRect.width : target.getBoundingClientRect().width;
+          if (target.classList.contains('eco-energy-card')) {
+            document.documentElement.style.setProperty('--eco-card-width', width + 'px');
+          }
+          if (target.classList.contains('eco-outcome-bucket')) {
+            target.style.setProperty('--eco-tile-width', width + 'px');
+          }
+        });
+      });
+
+      if (card) {
+        observer.observe(card);
+      }
+      if (tiles && tiles.length) {
+        tiles.forEach(function(tile) {
+          observer.observe(tile);
+        });
+      }
+    }
+
+    function startEcoMeasureTick() {
+      var attempts = 0;
+      var maxAttempts = 12;
+      function tick() {
+        measureEcoCardWidths();
+        attempts += 1;
+        if (attempts < maxAttempts) {
+          setTimeout(tick, 180);
+        }
+      }
+      tick();
+    }
       var DEFAULT_YEAR = 2023;
       var MIN_ECO_YEAR = 2017;
       var DEFAULT_FIREPLACE_ID = 27;
@@ -1099,7 +1361,7 @@
         },
         renderToken: 0,
         ready: false,
-        activityUnitLabel: 'TJ',
+        activityUnitLabel: 'TJ(net)',
         numberFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }),
         percentFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 }),
         energyFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 }),
@@ -1168,17 +1430,23 @@
       var googleChartsPromise = loadGoogleCharts();
       googleChartsPromise.then(function () {
         googleChartsReady = true;
+        renderPmStackedChart();
       }).catch(function (error) {
         console.warn('Google Charts failed to initialize:', error);
+      });
+
+      var pmChartResizeTimer = null;
+      window.addEventListener('resize', function () {
+        clearTimeout(pmChartResizeTimer);
+        pmChartResizeTimer = setTimeout(renderPmStackedChart, 200);
       });
 
       if (!dom.pollutant || !window.SharedDataLoader || !window.EcoReplacementUtils) {
         setStatus('Shared modules missing. Reload the page.');
         markControlsReady();
-        return;
+      } else {
+        bootstrap();
       }
-
-      bootstrap();
 
       function bootstrap() {
         setStatus('Preparing data and charts…');
@@ -1195,6 +1463,11 @@
             attachControlEvents();
             state.ready = true;
             handleSelectionChange();
+            renderPmStackedChart();
+            measureEcoCardWidths();
+            startEcoResizeObservers();
+            window.addEventListener('resize', debounce(measureEcoCardWidths, 150));
+            startEcoMeasureTick();
           })
           .catch(function (error) {
             console.warn('Eco replacements data bootstrap failed:', error);
@@ -1224,7 +1497,7 @@
         state.ecoCategoryId = findEcoCategoryId(state.categories);
         var activityMeta = findActivityPollutantMeta(state.pollutants);
         state.activityPollutantId = activityMeta ? activityMeta.id : null;
-        state.activityUnitLabel = activityMeta?.emission_unit || activityMeta?.unit || state.activityUnitLabel || 'TJ';
+        state.activityUnitLabel = 'TJ(net)';
         state.filteredPollutantIds = deriveEcoRelevantPollutantIds(state.timeseriesRows, state.ecoCategoryId);
       }
 
@@ -1411,6 +1684,8 @@
           var ready = hasProfile && Number.isFinite(profile && profile.replacementEnergy);
           energyDom.container.classList.toggle('is-idle', !ready);
         }
+
+        measureEcoCardWidths();
       }
 
       function updatePollutantSummaryCard() {
@@ -1537,6 +1812,8 @@
             ? 'Based on ' + totalComparisons + ' pollutant comparison' + (totalComparisons === 1 ? '' : 's') + '.'
             : 'Waiting for pollutant comparisons…';
         }
+
+        measureEcoCardWidths();
       }
 
       function summarizeScenarioOutcomes(items) {
@@ -1773,6 +2050,92 @@
         chart.draw(data, options);
       }
 
+      var pmChartInstance = null;
+
+      function renderPmStackedChart() {
+        var container = document.getElementById('ecoPmChart');
+        if (!container) {
+          return;
+        }
+        if (!googleChartsReady || !window.google || !window.google.visualization) {
+          container.textContent = 'Charts are still loading…';
+          return;
+        }
+
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Scenario');
+        data.addColumn('number', 'Gas boilers');
+        data.addColumn('number', 'Other domestic combustion');
+        data.addColumn('number', 'Ecodesign stoves (Ready to Burn)');
+        data.addColumn('number', 'Fireplaces, older stoves & non-RtB Ecodesign');
+        data.addRows([
+          ['2023', 0.154583189159025, 0.870939123669875, 0.674, 9.12],
+          ['Replacement\nScenario', 0.154583189159025, 0.870939123669875, 5.682, 0],
+          ['Replaced with electric\nheating/heat pumps', 0.154583189159025, 0.870939123669875, 0, 0]
+        ]);
+
+        var options = {
+          height: 240,
+          backgroundColor: 'transparent',
+          isStacked: true,
+          legend: { position: 'none' },
+          colors: ['#2563eb', '#cbd5e1', '#f97316', '#e11d48'],
+          chartArea: { left: 44, right: 8, top: 8, height: '76%' },
+          bar: { groupWidth: '34%' },
+          vAxis: {
+            ticks: [0, 3, 6, 9, 12],
+            viewWindow: { min: 0, max: 12 },
+            textStyle: { color: '#111827', fontSize: 12 },
+            gridlines: { color: '#e2e8f0' },
+            baselineColor: '#94a3b8'
+          },
+          hAxis: {
+            textStyle: { color: '#111827', fontSize: 13, bold: true },
+            slantedText: false
+          },
+          annotations: {
+            textStyle: { color: '#0f172a', fontSize: 11, bold: true }
+          },
+          tooltip: { textStyle: { color: '#0f172a' } },
+          animation: { startup: true, duration: 320, easing: 'out' }
+        };
+
+        if (!pmChartInstance) {
+          pmChartInstance = new google.visualization.ColumnChart(container);
+        }
+        pmChartInstance.draw(data, options);
+        google.visualization.events.removeAllListeners(pmChartInstance);
+        google.visualization.events.addListener(pmChartInstance, 'ready', function () {
+          renderPmStackedLabels(pmChartInstance, data);
+        });
+      }
+
+      function renderPmStackedLabels(chart, data) {
+        var container = document.getElementById('ecoPmLabels');
+        if (!container || !chart || !data) {
+          return;
+        }
+        container.innerHTML = '';
+        var cli = chart.getChartLayoutInterface();
+        var labelColors = ['#FF2600', '#911EB4', '#0f9c48'];
+
+        for (var i = 0; i < data.getNumberOfRows(); i++) {
+          var total = 0;
+          for (var c = 1; c < data.getNumberOfColumns(); c++) {
+            total += Number(data.getValue(i, c)) || 0;
+          }
+          var x = cli.getXLocation(i);
+          var y = cli.getYLocation(total);
+          var span = document.createElement('span');
+          span.className = 'eco-pm-label';
+          span.textContent = total.toFixed(2) + ' kt';
+          span.style.left = x + 'px';
+          span.style.top = y + 'px';
+          span.style.color = labelColors[i] || '#0f172a';
+          container.appendChild(span);
+        }
+      }
+
       function buildChartRow(label, value, unit, color) {
         var hasValue = Number.isFinite(value) && value >= 0;
         var annotation = hasValue ? formatEmissionValue(value, unit) : 'No data';
@@ -1952,7 +2315,7 @@
         if (!label) {
           return '';
         }
-        return String(label).replace(/\s*\(net\)/ig, '').trim();
+        return String(label).trim();
       }
 
       function isActivityDataPollutant(pollutant) {
@@ -2133,7 +2496,7 @@
           }
         });
       }
-    })();
+      })();
   </script>
   <script>
     (function initializeEcoReplacesAllView() {

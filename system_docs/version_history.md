@@ -1,5 +1,10 @@
 # Version History
 
+## v4.40
+- GH Test: 2025-12-19
+- GH Live: Not yet deployed
+- Shared Supabase loader now uses a longer retry window (0.5s → 2.5s → 8s) and a fourth attempt to keep category-info data available during transient Supabase dropouts.
+
 ## v4.32 - LIVE
 - GH Test: 2025-12-17
 - GH Live: 2025-12-18
