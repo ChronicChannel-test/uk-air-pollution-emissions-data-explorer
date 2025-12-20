@@ -709,29 +709,25 @@
 
     .eco-chart-card {
       background: #ffffff;
-      border-radius: 18px;
-      padding: 18px 20px;
-      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 16px;
+      padding: 14px 16px 22px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      min-height: 220px;
+      gap: 12px;
+      min-height: 260px;
       color: #111827;
+      position: relative;
     }
 
     .eco-google-chart {
       width: 100%;
-      min-height: 230px;
+      min-height: 260px;
     }
 
     .eco-google-chart svg text {
-      fill: #111827;
-    }
-
-    /* Force Google Charts axis labels to render visibly within mini charts */
-    .eco-google-chart .google-visualization-axis text {
-      fill: #111827 !important;
-      opacity: 1 !important;
+      fill: inherit;
     }
 
     /* Allow axis labels to render outside the plot clip if needed */
@@ -765,6 +761,37 @@
       font-size: 1.15rem;
       font-weight: 600;
       color: #111827;
+    }
+
+    .eco-delta-percentage {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      margin: 0;
+      padding: 10px 12px;
+      min-width: 7ch;
+      border-radius: 12px;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.12rem;
+      letter-spacing: -0.01em;
+      text-align: center;
+      line-height: 1.1;
+      text-shadow:
+        0 0 1px rgba(0, 0, 0, 0.7),
+        0 0 2px rgba(0, 0, 0, 0.7),
+        0 1px 2px rgba(0, 0, 0, 0.6);
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18),
+        0 0 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .eco-delta-percentage--increase {
+      background: linear-gradient(to bottom right, #ff9f43, #e02424);
+    }
+
+    .eco-delta-percentage--reduction {
+      background: linear-gradient(to bottom right, #86efac, #166534);
     }
 
     .eco-outcome-bucket {
@@ -2212,7 +2239,7 @@
           node.setAttribute('paint-order', 'stroke');
           node.setAttribute('font-family', '"Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif');
           node.setAttribute('font-weight', '700');
-          node.setAttribute('font-size', '13');
+          node.setAttribute('font-size', '15');
           if (node.hasAttribute('y')) {
             var currentY = Number(node.getAttribute('y'));
             if (Number.isFinite(currentY)) {
@@ -2248,21 +2275,20 @@
         }
 
         var options = {
-          height: 230,
+          height: 260,
           backgroundColor: 'transparent',
           legend: { position: 'none' },
-          chartArea: { width: '60%', height: '68%', top: 16, left: 64 },
+          chartArea: { width: '80%', height: '74%', top: 8, left: 56, right: 12 },
           hAxis: {
-            textStyle: { color: '#111827', fontSize: 12 },
-            textPosition: 'none',
-            baselineColor: '#111111',
+            textStyle: { color: 'transparent' },
+            baselineColor: 'transparent',
             gridlines: { color: 'transparent' },
             ticks: []
           },
           vAxis: {
-            textStyle: { color: '#111827', fontSize: 12 },
-            baselineColor: '#111111',
-            gridlines: { color: '#111111' },
+            textStyle: { color: '#0f172a', fontSize: 12 },
+            baselineColor: '#e2e8f0',
+            gridlines: { color: '#cbd5e1' },
             minorGridlines: { color: '#e2e8f0', count: 1 },
             viewWindow: {
               min: 0,
@@ -2273,17 +2299,17 @@
             textPosition: 'out'
           },
           annotations: {
-            textStyle: { color: '#111827', fontSize: 12, bold: true, auraColor: 'transparent' },
+            textStyle: { color: '#0f172a', fontSize: 13, bold: true, auraColor: 'transparent' },
             alwaysOutside: true,
             stem: { length: 0, color: 'transparent' }
           },
-          bar: { groupWidth: '28%' },
+          bar: { groupWidth: '55%' },
           animation: {
             startup: true,
             duration: 320,
             easing: 'out'
           },
-          tooltip: { textStyle: { color: '#111827' } }
+          tooltip: { textStyle: { color: '#0f172a' } }
         };
 
         console.log('[eco-chart] ticks', {
