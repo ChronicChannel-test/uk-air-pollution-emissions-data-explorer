@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mini Chart – Benzo[a]pyrene (2023)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .mini-shell {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 14px 16px 22px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+      line-height: 1.35;
+    }
+
+    .title-note {
+      display: block;
+      font-size: 0.9rem;
+      color: #475569;
+      margin-top: 2px;
+    }
+
+    .chart-container {
+      width: 100%;
+      min-height: 260px;
+    }
+  </style>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="../SharedResources/emission-units.js?v=v4-40-CIC-testdb"></script>
+  <script>
+    const UNIT_LABEL = (window.EmissionUnits && window.EmissionUnits.formatAxisLabel('kg')) || 'kilograms';
+    const UNIT_SHORT = (window.EmissionUnits && window.EmissionUnits.formatAbbreviation('kg')) || 'kg';
+
+    function formatValue(value) {
+      if (!Number.isFinite(value)) {
+        return '—';
+      }
+      const abs = Math.abs(value);
+      const maxFrac = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 3;
+      const formatter = new Intl.NumberFormat('en-GB', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: maxFrac
+      });
+      return formatter.format(value);
+    }
+
+    const COLORS = {
+      eco: '#F58231',          // Ecodesign - Ready To Burn
+      fireplace: '#E42020',    // Current fireplace / stove
+      replacement: '#911EB4',  // Replacement scenario
+    };
+
+    const DATA_2023 = [
+      // label, value, color (style)
+      ['Ecodesign - Ready To Burn', 659.021, COLORS.eco],
+      ['Fireplaces / All stoves, all fuels', 2830.907, COLORS.fireplace],
+      ['Replacement scenario', 5226.852, COLORS.replacement],
+    ];
+
+    function drawMiniChart() {
+      const dataTable = new google.visualization.DataTable();
+      dataTable.addColumn('string', 'Scenario');
+      dataTable.addColumn('number', 'Benzo[a]pyrene (2023)');
+      dataTable.addColumn({ type: 'string', role: 'style' });
+      dataTable.addColumn({ type: 'string', role: 'annotation' });
+      dataTable.addRows(
+        DATA_2023.map(([label, value, color]) => [
+          label,
+          value,
+          `color: ${color}`,
+          `${formatValue(value)} ${UNIT_SHORT}`,
+        ])
+      );
+
+      const options = {
+        backgroundColor: 'transparent',
+        legend: { position: 'none' },
+        chartArea: { width: '70%', height: '68%' },
+        colors: [COLORS.eco, COLORS.fireplace, COLORS.replacement],
+        vAxis: {
+          title: '',
+          gridlines: { color: '#cbd5e1' },
+          minorGridlines: { color: '#e2e8f0' },
+          textStyle: { color: '#0f172a' },
+          titleTextStyle: { color: '#475569', fontSize: 12 },
+        },
+        hAxis: {
+          textStyle: { color: 'transparent' },
+          ticks: [],
+          baselineColor: 'transparent',
+          gridlines: { color: 'transparent' },
+        },
+        annotations: {
+          alwaysOutside: true,
+          stem: { length: 0, color: 'transparent' },
+          textStyle: { color: '#0f172a', fontSize: 13, bold: true, auraColor: 'transparent' },
+        },
+        bar: { groupWidth: '55%' },
+      };
+
+      const container = document.getElementById('miniChart');
+      const chart = new google.visualization.ColumnChart(container);
+      google.visualization.events.addListener(chart, 'ready', () => {
+        try {
+          const labels = DATA_2023.map(([_, value]) => `${formatValue(value)} ${UNIT_SHORT}`);
+          const svg = container.querySelector('svg');
+          const texts = svg ? Array.from(svg.querySelectorAll('text')) : [];
+          texts.forEach(node => {
+            const content = (node.textContent || '').trim();
+            const idx = labels.indexOf(content);
+            if (idx === -1) {
+              return;
+            }
+            const color = DATA_2023[idx][2];
+            node.setAttribute('fill', color);
+            node.setAttribute('stroke', '#ffffff');
+            node.setAttribute('stroke-width', '3');
+            node.setAttribute('paint-order', 'stroke');
+            node.setAttribute('font-family', '"Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif');
+            node.setAttribute('font-weight', '700');
+            node.setAttribute('font-size', '14');
+            if (node.hasAttribute('y')) {
+              const currentY = Number(node.getAttribute('y'));
+              if (Number.isFinite(currentY)) {
+                node.setAttribute('y', String(currentY - 6));
+              }
+            }
+          });
+        } catch (err) {
+          console.warn('Annotation restyle failed', err);
+        }
+      });
+      chart.draw(dataTable, options);
+    }
+
+    google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(() => {
+      const unitEl = document.getElementById('unitLabel');
+      if (unitEl) {
+        unitEl.textContent = UNIT_LABEL;
+      }
+      const chartContainer = document.getElementById('miniChart');
+      if (chartContainer) {
+        chartContainer.setAttribute('aria-label', `Column chart comparing Benzo[a]pyrene emissions (${UNIT_LABEL}) for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in 2023.`);
+      }
+      drawMiniChart();
+    });
+  </script>
+</head>
+<body>
+  <div class="mini-shell">
+    <h1>
+      Benzo[a]pyrene (<span id="unitLabel">kg</span>)
+      <span class="title-note" id="yearLabel">2023</span>
+    </h1>
+    <div class="chart-container" id="miniChart" role="img" aria-label="Column chart comparing Benzo[a]pyrene emissions (kg) for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in 2023."></div>
+  </div>
+</body>
+</html>

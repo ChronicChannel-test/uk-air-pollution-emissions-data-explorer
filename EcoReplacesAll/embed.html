@@ -354,6 +354,11 @@
       color: #ffffff;
     }
 
+    .eco-pollutant-class {
+      white-space: nowrap;
+      display: inline-block;
+    }
+
     .eco-outcome-summary-count {
       margin: 0;
       font-size: clamp(2.8rem, 5.2vw, 4.2rem);
@@ -719,6 +724,21 @@
       min-height: 230px;
     }
 
+    .eco-google-chart svg text {
+      fill: #111827;
+    }
+
+    /* Force Google Charts axis labels to render visibly within mini charts */
+    .eco-google-chart .google-visualization-axis text {
+      fill: #111827 !important;
+      opacity: 1 !important;
+    }
+
+    /* Allow axis labels to render outside the plot clip if needed */
+    .eco-google-chart svg {
+      overflow: visible;
+    }
+
     .eco-google-chart--empty {
       display: flex;
       align-items: center;
@@ -769,6 +789,8 @@
       flex-direction: column;
       font-size: 2.1rem;
       font-weight: 700;
+
+    }
 
     .eco-chart-bar {
       display: grid;
@@ -972,7 +994,7 @@
           <article class="eco-energy-card eco-energy-card--replacement eco-outcome-card is-idle" id="ecoOutcomeCard">
             <div class="eco-outcome-summary" id="ecoOutcomePollutantSummary">
               <div class="eco-outcome-summary-head">
-                <p class="eco-outcome-summary-title" id="ecoPollutantCardTitle">TOTAL POLLUTANTS</p>
+                <p class="eco-outcome-summary-title" id="ecoPollutantCardTitle">TOTAL POLLUTANTS IN<br><span class="eco-pollutant-class" id="ecoPollutantCardClass"></span></p>
                 <p class="eco-outcome-summary-count eco-pollutant-count" id="ecoPollutantCardCount">—</p>
               </div>
               <p class="eco-outcome-summary-inline" id="ecoPollutantCardInlineNote" hidden>16PAH is excluded from the total because it combines 16 pollutants already counted</p>
@@ -1075,6 +1097,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="../SharedResources/supabase-env.js?v=v4-40-CIC-testdb"></script>
   <script src="../SharedResources/supabase-config.js?v=v4-40-CIC-testdb"></script>
+  <script src="../SharedResources/emission-units.js?v=v4-40-CIC-testdb"></script>
   <script src="../SharedResources/shared-data-loader.js?v=v4-40-CIC-testdb"></script>
   <script src="../SharedResources/colors.js?v=v4-40-CIC-testdb"></script>
   <script src="../SharedResources/eco-replacement-utils.js?v=v4-40-CIC-testdb"></script>
@@ -1104,6 +1127,80 @@
       }
       var scale = targetWidth / width;
       return baseSize * scale;
+    }
+
+    function escapeHtml(value) {
+      if (value === undefined || value === null) {
+        return '';
+      }
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getPluralUnitLabel(unit) {
+      var sharedPlural = null;
+      if (window.EmissionUnits && typeof EmissionUnits.formatValueLabel === 'function') {
+        sharedPlural = EmissionUnits.formatValueLabel(unit, 2);
+      }
+      if (sharedPlural) {
+        return sharedPlural;
+      }
+      // Fallback for unmapped units if shared helper is unavailable
+      var trimmed = (unit || '').trim();
+      if (!trimmed) {
+        return '';
+      }
+      var lower = trimmed.toLowerCase();
+      var invariantUnits = ['kg', 'g', 'mg', 'µg', 'ug', 'kt', 't', 'tj', 'gj', 'mj', 'kwh', 'mwh', 'gwh'];
+      if (invariantUnits.indexOf(lower) >= 0) {
+        return trimmed;
+      }
+      if (lower.endsWith('s')) {
+        return trimmed;
+      }
+      if (lower.endsWith('y') && lower.length > 1) {
+        var penultimate = lower.charAt(lower.length - 2);
+        if ('aeiou'.indexOf(penultimate) === -1) {
+          return trimmed.slice(0, -1) + 'ies';
+        }
+      }
+      return trimmed + 's';
+    }
+
+    function buildValueTicks(maxValue) {
+      var max = Number(maxValue);
+      if (!Number.isFinite(max) || max <= 0) {
+        return [];
+      }
+      var magnitude = Math.pow(10, Math.floor(Math.log10(max)));
+      var candidates = [1, 2, 2.5, 5, 10].map(function (m) { return (m * magnitude) / 4; });
+      var step = candidates.find(function (c) { return max / c <= 4; }) || magnitude;
+      var upper = Math.ceil(max / step) * step;
+      var ticks = [];
+      for (var v = 0; v <= upper + 1e-9; v += step) {
+        ticks.push(Number(v.toFixed(6)));
+      }
+      return ticks;
+    }
+
+    function buildValueTicks(maxValue) {
+      var max = Number(maxValue);
+      if (!Number.isFinite(max) || max <= 0) {
+        return [];
+      }
+      var magnitude = Math.pow(10, Math.floor(Math.log10(max)));
+      var candidates = [1, 2, 2.5, 5, 10].map(function (m) { return (m * magnitude) / 5; });
+      var step = candidates.find(function (c) { return max / c <= 6; }) || magnitude;
+      var upper = Math.ceil(max / step) * step;
+      var ticks = [];
+      for (var v = 0; v <= upper + 1e-9; v += step) {
+        ticks.push(Number(v.toFixed(6)));
+      }
+      return ticks;
     }
 
     function measureEcoCardWidths() {
@@ -1761,7 +1858,11 @@
         }
         var summary = buildPollutantSummary(state.selection.pollutant);
         if (dom.pollutantSummary.title) {
-          dom.pollutantSummary.title.textContent = summary.title;
+          if (summary.classLabel) {
+            dom.pollutantSummary.title.innerHTML = 'TOTAL POLLUTANTS IN<br><span class="eco-pollutant-class" id="ecoPollutantCardClass">' + escapeHtml(summary.classLabel) + '</span>';
+          } else {
+            dom.pollutantSummary.title.textContent = summary.title;
+          }
         }
         if (dom.pollutantSummary.count) {
           dom.pollutantSummary.count.textContent = summary.countDisplay;
@@ -1800,18 +1901,15 @@
         var count = counted.size;
         var note;
 
-        if (excludedSixteenPAH) {
+        if (excludedSixteenPAH && counted.size > 0) {
           note = EXCLUDED_POLLUTANT_NOTE;
-        } else if (count > 1 && meta.multiNote) {
-          note = meta.multiNote.replace('{count}', count);
-        } else if (count === 1 && meta.singleNote) {
-          note = meta.singleNote;
         } else {
-          note = meta.emptyNote || 'No pollutants are available for this selection yet.';
+          note = '';
         }
 
         return {
           title: meta.title,
+          classLabel: meta.classLabel,
           count: count,
           countDisplay: state.numberFormatter.format(count),
           ariaLabel: count === 1 ? '1 pollutant in scope' : count + ' pollutants in scope',
@@ -1823,6 +1921,7 @@
         if (selectionValue === 'preset-all') {
           return {
             title: 'TOTAL POLLUTANTS',
+            classLabel: null,
             multiNote: 'Counting {count} tracked pollutants across all classes.',
             singleNote: 'Counting 1 tracked pollutant across all classes.',
             emptyNote: 'No pollutants are available across the tracked classes yet.'
@@ -1833,7 +1932,8 @@
         });
         if (preset && selectionValue !== 'preset-all') {
           return {
-            title: 'Total Pollutants in ' + preset.label,
+            title: 'TOTAL POLLUTANTS',
+            classLabel: preset.label,
             multiNote: 'Counting {count} pollutants in ' + preset.label + '.',
             singleNote: 'Counting 1 pollutant in ' + preset.label + '.',
             emptyNote: 'No pollutants are available for ' + preset.label + '.'
@@ -1841,6 +1941,7 @@
         }
         return {
           title: 'Selected pollutant',
+          classLabel: null,
           multiNote: 'Counting {count} pollutants in this selection.',
           singleNote: 'One pollutant selected for comparison.',
           emptyNote: 'Select a pollutant to see how many are in scope.'
@@ -2015,7 +2116,8 @@
         var card = document.createElement('article');
         card.className = 'eco-chart-card';
         var pollutantName = entry.meta?.pollutant || 'Unknown pollutant';
-        var unit = entry.meta?.emission_unit || 'tonnes';
+        var unit = entry.meta?.emission_unit || 'tonne';
+        var pluralUnit = getPluralUnitLabel(unit || 'tonne');
         var hasData = [entry.result.ecoEmission, entry.result.fireplaceEmission, entry.result.replacementEmission]
           .some(function (value) { return Number.isFinite(value) && value >= 0; });
         if (!hasData) {
@@ -2026,12 +2128,12 @@
         header.className = 'eco-card-header';
         var title = document.createElement('h4');
         title.className = 'eco-card-title';
-        title.textContent = pollutantName;
+        title.textContent = pollutantName + ' (' + pluralUnit + ')';
         header.appendChild(title);
-        var unitLine = document.createElement('p');
-        unitLine.className = 'eco-card-unit';
-        unitLine.textContent = 'Emissions (' + unit + ') · ' + state.selection.year;
-        header.appendChild(unitLine);
+        var yearLine = document.createElement('p');
+        yearLine.className = 'eco-card-unit';
+        yearLine.textContent = state.selection.year;
+        header.appendChild(yearLine);
         card.appendChild(header);
 
         var chartContainer = document.createElement('div');
@@ -2065,6 +2167,61 @@
         return card;
       }
 
+      function getUnitAbbreviation(unit) {
+        if (window.EmissionUnits && typeof window.EmissionUnits.formatAbbreviation === 'function') {
+          return window.EmissionUnits.formatAbbreviation(unit) || unit || '';
+        }
+        return unit || '';
+      }
+
+      function formatBarValue(value) {
+        if (!Number.isFinite(value)) {
+          return '—';
+        }
+        var abs = Math.abs(value);
+        var maxFrac = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 3;
+        return state.numberFormatter.format(Number(value).toFixed(maxFrac));
+      }
+
+      function styleBarAnnotations(container, labels, colors) {
+        var svg = container ? container.querySelector('svg') : null;
+        if (!svg) {
+          return;
+        }
+        function normalize(text) {
+          return (text || '')
+            .replace(/\u00a0/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        }
+        var normalizedLabels = labels.map(normalize);
+        var texts = Array.from(svg.querySelectorAll('text'));
+        texts.forEach(function (node) {
+          if (node.getAttribute('text-anchor') !== 'middle') {
+            return;
+          }
+          var content = normalize(node.textContent || '');
+          var idx = normalizedLabels.indexOf(content);
+          if (idx === -1) {
+            return;
+          }
+          var color = colors[idx] || '#111827';
+          node.setAttribute('fill', color);
+          node.setAttribute('stroke', '#ffffff');
+          node.setAttribute('stroke-width', '3');
+          node.setAttribute('paint-order', 'stroke');
+          node.setAttribute('font-family', '"Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif');
+          node.setAttribute('font-weight', '700');
+          node.setAttribute('font-size', '13');
+          if (node.hasAttribute('y')) {
+            var currentY = Number(node.getAttribute('y'));
+            if (Number.isFinite(currentY)) {
+              node.setAttribute('y', String(currentY - 6));
+            }
+          }
+        });
+      }
+
       function renderGoogleBarChart(container, entry, unit) {
         if (!googleChartsReady || !window.google || !window.google.visualization) {
           container.classList.add('eco-google-chart--empty');
@@ -2076,17 +2233,25 @@
         data.addColumn('number', 'Emissions');
         data.addColumn({ type: 'string', role: 'annotation' });
         data.addColumn({ type: 'string', role: 'style' });
-        data.addRows([
+        var rows = [
           buildChartRow('Ecodesign - Ready To Burn', entry.result.ecoEmission, unit, BAR_COLORS.eco),
           buildChartRow('Current fireplace / stove', entry.result.fireplaceEmission, unit, BAR_COLORS.fireplace),
           buildChartRow('Replacement scenario', entry.result.replacementEmission, unit, BAR_COLORS.replacement)
-        ]);
+        ];
+        data.addRows(rows);
+
+        var maxValue = Math.max.apply(Math, rows.map(function (r) { return Number(r[1]) || 0; }));
+        var ticks = buildValueTicks(maxValue);
+        var tickMax = ticks.length ? ticks[ticks.length - 1] : null;
+        if (!ticks.length) {
+          ticks = undefined;
+        }
 
         var options = {
           height: 230,
           backgroundColor: 'transparent',
           legend: { position: 'none' },
-          chartArea: { width: '60%', height: '68%', top: 16, left: 10 },
+          chartArea: { width: '60%', height: '68%', top: 16, left: 64 },
           hAxis: {
             textStyle: { color: '#111827', fontSize: 12 },
             textPosition: 'none',
@@ -2098,11 +2263,19 @@
             textStyle: { color: '#111827', fontSize: 12 },
             baselineColor: '#111111',
             gridlines: { color: '#111111' },
-            viewWindow: { min: 0 }
+            minorGridlines: { color: '#e2e8f0', count: 1 },
+            viewWindow: {
+              min: 0,
+              max: Number.isFinite(tickMax) ? tickMax : undefined
+            },
+            viewWindowMode: ticks ? 'explicit' : 'pretty',
+            ticks: ticks,
+            textPosition: 'out'
           },
           annotations: {
-            textStyle: { color: '#111827', fontSize: 11, bold: true },
-            alwaysOutside: true
+            textStyle: { color: '#111827', fontSize: 12, bold: true, auraColor: 'transparent' },
+            alwaysOutside: true,
+            stem: { length: 0, color: 'transparent' }
           },
           bar: { groupWidth: '28%' },
           animation: {
@@ -2113,7 +2286,21 @@
           tooltip: { textStyle: { color: '#111827' } }
         };
 
+        console.log('[eco-chart] ticks', {
+          pollutant: entry?.meta?.pollutant,
+          unit: unit,
+          values: rows.map(function (r) { return r[1]; }),
+          maxValue: maxValue,
+          ticks: ticks,
+          tickMax: tickMax
+        });
+
         var chart = new google.visualization.ColumnChart(container);
+        google.visualization.events.addListener(chart, 'ready', function () {
+          var labels = rows.map(function (row) { return row[2]; });
+          var colors = rows.map(function (row) { return row[3] && row[3].replace('color: ', ''); });
+          styleBarAnnotations(container, labels, colors);
+        });
         chart.draw(data, options);
       }
 
@@ -2205,7 +2392,8 @@
 
       function buildChartRow(label, value, unit, color) {
         var hasValue = Number.isFinite(value) && value >= 0;
-        var annotation = hasValue ? formatEmissionValue(value, unit) : 'No data';
+        var unitShort = getUnitAbbreviation(unit);
+        var annotation = hasValue ? formatBarValue(value) + (unitShort ? ' ' + unitShort : '') : 'No data';
         return [label, hasValue ? value : null, annotation, 'color: ' + color];
       }
 
