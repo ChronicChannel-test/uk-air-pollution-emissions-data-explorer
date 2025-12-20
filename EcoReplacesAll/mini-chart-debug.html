@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mini Chart Debug – Embed vs Mini</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.2rem;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1280px) {
+      .compare-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+    }
+
+    .mini-shell {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 14px 16px 22px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      position: relative;
+    }
+
+    .title-note {
+      display: block;
+      font-size: 0.9rem;
+      color: #475569;
+      margin-top: 2px;
+    }
+
+    .chart-container {
+      width: 100%;
+      min-height: 260px;
+      position: relative;
+    }
+
+    .chart-host {
+      width: 100%;
+      min-height: 260px;
+    }
+
+    .delta-line {
+      margin: 0;
+      padding: 0;
+      position: absolute;
+      left: 6px;
+      bottom: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 6px;
+      padding: 2px 8px;
+      pointer-events: none;
+    }
+
+    .mini-delta-tile {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      padding: 8px 0px;
+      min-width: 7ch;
+      border-radius: 12px;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.32rem;
+      letter-spacing: -0.015em;
+      text-align: center;
+      line-height: 1.05;
+      text-shadow:
+        0 0 1px rgba(0, 0, 0, 0.7),
+        0 0 2px rgba(0, 0, 0, 0.7),
+        0 1px 2px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18),
+        0 0 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .mini-delta-tile.is-positive {
+      background: linear-gradient(to bottom right, #ffda57, #e6390a);
+    }
+
+    .mini-delta-tile.is-negative {
+      background: linear-gradient(to bottom right, #8ef86a, #1e7b17);
+    }
+
+    .mini-delta-tile.is-neutral {
+      background: linear-gradient(to bottom right, #cbd5e1, #94a3b8);
+    }
+
+    /* Embed chart card visuals should mirror mini */
+    .embed-shell {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 14px 16px 22px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      position: relative;
+    }
+
+    .embed-chart-shell {
+      position: relative;
+      width: 100%;
+      min-height: 260px;
+    }
+
+    .embed-delta-line {
+      margin: 0;
+      padding: 0;
+      position: absolute;
+      left: 6px;
+      bottom: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 6px;
+      padding: 2px 8px;
+      pointer-events: none;
+    }
+
+    .embed-delta-pill {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      padding: 8px 0px;
+      min-width: 7ch;
+      border-radius: 12px;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.32rem;
+      letter-spacing: -0.015em;
+      text-align: center;
+      line-height: 1.05;
+      text-shadow:
+        0 0 1px rgba(0, 0, 0, 0.7),
+        0 0 2px rgba(0, 0, 0, 0.7),
+        0 1px 2px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18),
+        0 0 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .embed-pill-positive { background: linear-gradient(to bottom right, #ffda57, #e6390a); }
+    .embed-pill-negative { background: linear-gradient(to bottom right, #8ef86a, #1e7b17); }
+    .embed-pill-neutral { background: linear-gradient(to bottom right, #cbd5e1, #94a3b8); }
+  </style>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="../SharedResources/emission-units.js?v=v4-40-CIC-testdb"></script>
+  <script>
+    const COLORS = {
+      eco: '#F58231',
+      fireplace: '#E42020',
+      replacement: '#911EB4',
+    };
+
+    function formatValue(value) {
+      if (!Number.isFinite(value)) {
+        return '—';
+      }
+      const abs = Math.abs(value);
+      const maxFrac = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 3;
+      const formatter = new Intl.NumberFormat('en-GB', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: maxFrac
+      });
+      return formatter.format(value);
+    }
+
+    const SAMPLE = {
+      title: '13-butadiene',
+      year: '2023',
+      unitKey: 'kilotonne',
+      unitFallbackLabel: 'kilotonnes',
+      unitFallbackShort: 'kt',
+      data: [
+        ['Ecodesign - Ready To Burn', 0.05, COLORS.eco],
+        ['Fireplaces / All stoves, all fuels', 0.39, COLORS.fireplace],
+        ['Replacement scenario', 0.41, COLORS.replacement],
+      ],
+      deltaText: 'Increase: 0.34 kt',
+      tileValue: '+17.2%',
+      tileTrend: 'positive',
+    };
+
+    function buildMiniChart(cfg) {
+      const unitLabel = (window.EmissionUnits && window.EmissionUnits.formatAxisLabel(cfg.unitKey)) || cfg.unitFallbackLabel || '';
+      const unitShort = (window.EmissionUnits && window.EmissionUnits.formatAbbreviation(cfg.unitKey)) || cfg.unitFallbackShort || '';
+
+      const dataTable = new google.visualization.DataTable();
+      dataTable.addColumn('string', 'Scenario');
+      dataTable.addColumn('number', `${cfg.title} (${cfg.year})`);
+      dataTable.addColumn({ type: 'string', role: 'style' });
+      dataTable.addColumn({ type: 'string', role: 'annotation' });
+      dataTable.addRows(
+        cfg.data.map(([label, value, color]) => [
+          label,
+          value,
+          `color: ${color}`,
+          `${formatValue(value)} ${unitShort}`,
+        ])
+      );
+
+      const options = {
+        backgroundColor: 'transparent',
+        legend: { position: 'none' },
+        chartArea: { width: '80%', height: '74%', top: 8, left: 56, right: 12 },
+        colors: [COLORS.eco, COLORS.fireplace, COLORS.replacement],
+        vAxis: {
+          title: '',
+          gridlines: { color: '#cbd5e1' },
+          minorGridlines: { color: '#e2e8f0' },
+          textStyle: { color: '#0f172a' },
+          titleTextStyle: { color: '#475569', fontSize: 12 },
+        },
+        hAxis: {
+          textStyle: { color: 'transparent' },
+          ticks: [],
+          baselineColor: 'transparent',
+          gridlines: { color: 'transparent' },
+        },
+        annotations: {
+          alwaysOutside: true,
+          stem: { length: 0, color: 'transparent' },
+          textStyle: { color: '#0f172a', fontSize: 13, bold: true, auraColor: 'transparent' },
+        },
+        bar: { groupWidth: '55%' },
+      };
+
+      const container = document.getElementById('miniChartHost');
+      const chart = new google.visualization.ColumnChart(container);
+      google.visualization.events.addListener(chart, 'ready', () => {
+        try {
+          const labels = cfg.data.map(([_, value]) => `${formatValue(value)} ${unitShort}`);
+          const svg = container.querySelector('svg');
+          const texts = svg ? Array.from(svg.querySelectorAll('text')) : [];
+          texts.forEach(node => {
+            const content = (node.textContent || '').trim();
+            const idx = labels.indexOf(content);
+            if (idx === -1) return;
+            const color = cfg.data[idx][2];
+            node.setAttribute('fill', color);
+            node.setAttribute('stroke', '#ffffff');
+            node.setAttribute('stroke-width', '3');
+            node.setAttribute('paint-order', 'stroke');
+            node.setAttribute('font-family', '"Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif');
+            node.setAttribute('font-weight', '700');
+            node.setAttribute('font-size', '15');
+            if (node.hasAttribute('y')) {
+              const currentY = Number(node.getAttribute('y'));
+              if (Number.isFinite(currentY)) {
+                node.setAttribute('y', String(currentY - 6));
+              }
+            }
+          });
+        } catch (err) {
+          console.warn('Mini annotation restyle failed', err);
+        }
+      });
+      chart.draw(dataTable, options);
+    }
+
+    function buildEmbedChart(cfg, hostId, variant) {
+      const unitShort = (window.EmissionUnits && window.EmissionUnits.formatAbbreviation(cfg.unitKey)) || cfg.unitFallbackShort || '';
+      const container = document.getElementById(hostId);
+
+      const data = new google.visualization.DataTable();
+        data.addColumn('string', 'Scenario');
+        data.addColumn('number', 'Emissions');
+        data.addColumn({ type: 'string', role: 'style' });
+        data.addColumn({ type: 'string', role: 'annotation' });
+      const rows = cfg.data.map(([label, value, color]) => {
+          return [label, value, `color: ${color}`, `${formatValue(value)} ${unitShort}`];
+      });
+      data.addRows(rows);
+
+      const options = {
+        height: 260,
+        backgroundColor: 'transparent',
+        legend: { position: 'none' },
+        colors: [COLORS.eco, COLORS.fireplace, COLORS.replacement],
+        chartArea: { width: '80%', height: '74%', top: 8, left: 56, right: 12 },
+        hAxis: {
+          textStyle: { color: 'transparent' },
+          baselineColor: 'transparent',
+          gridlines: { color: 'transparent' },
+          ticks: []
+        },
+        vAxis: {
+          textStyle: { color: '#0f172a', fontSize: 12 },
+          baselineColor: '#e2e8f0',
+          gridlines: { color: '#cbd5e1' },
+          minorGridlines: { color: '#e2e8f0', count: 1 },
+          viewWindowMode: 'pretty',
+          viewWindow: { min: 0 },
+          ticks: undefined,
+          textPosition: 'out'
+        },
+        annotations: {
+          textStyle: {
+            color: '#0f172a',
+            fontSize: 15,
+            bold: true,
+            auraColor: 'transparent',
+            fontName: 'Tiresias Infofont, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+          },
+          alwaysOutside: true,
+          stem: { length: 0, color: 'transparent' }
+        },
+        bar: { groupWidth: '55%' },
+        animation: {
+          startup: true,
+          duration: 320,
+          easing: 'out'
+        },
+        tooltip: { textStyle: { color: '#0f172a' } }
+      };
+
+      console.info('[debug-embed] opts', { values: rows.map(r => r[1]) });
+
+      const chart = new google.visualization.ColumnChart(container);
+      google.visualization.events.addListener(chart, 'ready', function () {
+        const labels = rows.map(row => row[3]);
+        const colors = cfg.data.map(d => d[2]);
+        styleBarAnnotations(container, labels, colors);
+        try {
+          const applied = Array.from(container.querySelectorAll('text'))
+            .filter(n => n.getAttribute('text-anchor') === 'middle')
+            .map(n => ({ text: n.textContent, fill: n.getAttribute('fill'), stroke: n.getAttribute('stroke') }));
+          console.info('[debug-embed] annotations', applied);
+        } catch (err) {
+          console.warn('annotation log failed', err);
+        }
+        // Re-apply once more after render to beat any internal paint overrides
+        requestAnimationFrame(() => styleBarAnnotations(container, labels, colors));
+
+        // Variant-specific fixes
+        if (variant === 'svg-style') {
+          const svg = container.querySelector('svg');
+          if (svg) {
+            const styleTag = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+            styleTag.textContent = `text[text-anchor="middle"] { paint-order: stroke!important; stroke: #ffffff!important; stroke-width: 3!important; font-family: "Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif!important; font-weight: 700!important; font-size: 15px!important; }
+              text[text-anchor="middle"]:nth-of-type(1) { fill: ${colors[0]}!important; }
+              text[text-anchor="middle"]:nth-of-type(2) { fill: ${colors[1]}!important; }
+              text[text-anchor="middle"]:nth-of-type(3) { fill: ${colors[2]}!important; }`;
+            svg.appendChild(styleTag);
+          }
+        } else if (variant === 'observer') {
+          const svg = container.querySelector('svg');
+          if (svg && !svg.__annoObserver) {
+            const obs = new MutationObserver(() => styleBarAnnotations(container, labels, colors));
+            obs.observe(svg, { subtree: true, attributes: true, childList: true, characterData: true });
+            svg.__annoObserver = obs;
+          }
+        } else if (variant === 'external-css') {
+          ensureExternalCssFix(hostId, colors);
+        } else if (variant === 'custom-overlay') {
+          renderOverlayLabels(chart, data, container, colors, unitShort);
+        }
+      });
+      chart.draw(data, options);
+    }
+
+    function renderOverlayLabels(chart, data, container, colors, unitShort) {
+      const svg = container.querySelector('svg');
+      if (!svg) return;
+      // remove any previous overlays
+      const old = container.querySelectorAll('.overlay-anno');
+      old.forEach(el => el.remove());
+      const cli = chart.getChartLayoutInterface();
+      for (let r = 0; r < data.getNumberOfRows(); r++) {
+        const val = data.getValue(r, 1);
+        if (!Number.isFinite(val)) continue;
+        const barX = cli.getXLocation(r);
+        const barY = cli.getYLocation(val);
+        const text = document.createElement('div');
+        text.className = 'overlay-anno';
+        text.textContent = `${formatValue(val)} ${unitShort}`;
+        const color = colors[r] || '#111827';
+        Object.assign(text.style, {
+          position: 'absolute',
+          left: `${barX}px`,
+          top: `${barY - 14}px`,
+          transform: 'translate(-50%, -6px)',
+          color,
+          fontFamily: '"Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontWeight: '700',
+          fontSize: '15px',
+          WebkitTextStroke: '3px #ffffff',
+          paintOrder: 'stroke',
+          pointerEvents: 'none',
+          textShadow: '0 0 0 #ffffff'
+        });
+        container.style.position = 'relative';
+        container.appendChild(text);
+      }
+    }
+
+    function ensureExternalCssFix(hostId, colors) {
+      const id = 'embed-anno-css-fix';
+      let styleEl = document.getElementById(id);
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = id;
+        document.head.appendChild(styleEl);
+      }
+      styleEl.textContent = `
+        #${hostId} svg text[text-anchor="middle"] { paint-order: stroke!important; stroke: #ffffff!important; stroke-width: 3!important; font-family: "Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif!important; font-weight: 700!important; font-size: 15px!important; }
+        #${hostId} svg text[text-anchor="middle"]:nth-of-type(1) { fill: ${colors[0]}!important; }
+        #${hostId} svg text[text-anchor="middle"]:nth-of-type(2) { fill: ${colors[1]}!important; }
+        #${hostId} svg text[text-anchor="middle"]:nth-of-type(3) { fill: ${colors[2]}!important; }
+      `;
+    }
+
+    function styleBarAnnotations(container, labels, colors) {
+      const svg = container ? container.querySelector('svg') : null;
+      if (!svg) return;
+      const cleanColor = (val) => (val || '').replace(/^color:\s*/i, '').trim();
+      function normalize(text) {
+        return (text || '')
+          .replace(/[\u00a0\u2009\u202f]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+      const texts = Array.from(svg.querySelectorAll('text')).filter(node => node.getAttribute('text-anchor') === 'middle');
+      texts.forEach((node, i) => {
+        const color = cleanColor(colors[i % colors.length]) || '#111827';
+        const apply = (el) => {
+          const styleString = `fill:${color};stroke:#ffffff;stroke-width:3;paint-order:stroke;font-family:"Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;font-weight:700;font-size:15px;`;
+          el.setAttribute('fill', color);
+          el.setAttribute('stroke', '#ffffff');
+          el.setAttribute('stroke-width', '3');
+          el.setAttribute('paint-order', 'stroke');
+          el.setAttribute('font-family', '"Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif');
+          el.setAttribute('font-weight', '700');
+          el.setAttribute('font-size', '15');
+          el.setAttribute('style', styleString);
+        };
+        apply(node);
+        const tspans = node.querySelectorAll('tspan');
+        tspans.forEach(span => apply(span));
+        if (node.hasAttribute('y')) {
+          const currentY = Number(node.getAttribute('y'));
+          if (Number.isFinite(currentY)) {
+            node.setAttribute('y', String(currentY - 6));
+          }
+        }
+      });
+    }
+
+    function buildValueTicks(maxValue) {
+      if (!Number.isFinite(maxValue) || maxValue <= 0) return [];
+      const step = maxValue <= 1 ? 0.2 : maxValue <= 5 ? 1 : maxValue <= 10 ? 2 : Math.ceil(maxValue / 5);
+      const ticks = [];
+      for (let v = 0; v <= maxValue + step; v += step) {
+        ticks.push(Number(v.toFixed(2)));
+      }
+      return ticks;
+    }
+
+    function computePercentTrend(fireplace, replacement) {
+      const baseline = Math.abs(fireplace);
+      let change;
+      if (baseline === 0) {
+        change = replacement === fireplace ? 0 : (replacement > fireplace ? Infinity : -Infinity);
+      } else {
+        change = ((replacement - fireplace) / baseline) * 100;
+      }
+      const absChange = Math.abs(change);
+      const isFiniteChange = Number.isFinite(absChange);
+      const formatted = isFiniteChange ? absChange.toFixed(1) : '∞';
+      const display = change > 0 ? `+${formatted}%` : change < 0 ? `-${formatted}%` : '0%';
+      const trend = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+      return { display, trend };
+    }
+
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(() => {
+      const miniShell = document.getElementById('miniTile');
+      miniShell.querySelector('.title-note').textContent = SAMPLE.year;
+      miniShell.querySelector('.unit').textContent = (window.EmissionUnits && window.EmissionUnits.formatAxisLabel(SAMPLE.unitKey)) || SAMPLE.unitFallbackLabel;
+      miniShell.querySelector('.delta-line').textContent = SAMPLE.deltaText;
+      const tileTrendMini = computePercentTrend(SAMPLE.data[1][1], SAMPLE.data[2][1]);
+      const tileMini = miniShell.querySelector('.mini-delta-tile');
+      tileMini.textContent = tileTrendMini.display;
+      tileMini.classList.toggle('is-positive', tileTrendMini.trend === 'positive');
+      tileMini.classList.toggle('is-negative', tileTrendMini.trend === 'negative');
+      tileMini.classList.toggle('is-neutral', tileTrendMini.trend === 'neutral');
+      buildMiniChart(SAMPLE);
+
+      const embedTiles = [
+        { shellId: 'embedTile1', chartId: 'embedChartHost1', variant: 'svg-style' },
+        { shellId: 'embedTile2', chartId: 'embedChartHost2', variant: 'external-css' },
+        { shellId: 'embedTile3', chartId: 'embedChartHost3', variant: 'observer' },
+        { shellId: 'embedTile4', chartId: 'embedChartHost4', variant: 'custom-overlay' },
+      ];
+
+      embedTiles.forEach(tile => {
+        const embedShell = document.getElementById(tile.shellId);
+        embedShell.querySelector('.title-note').textContent = SAMPLE.year;
+        embedShell.querySelector('.unit').textContent = (window.EmissionUnits && window.EmissionUnits.formatAxisLabel(SAMPLE.unitKey)) || SAMPLE.unitFallbackLabel;
+        embedShell.querySelector('.embed-delta-line').textContent = SAMPLE.deltaText;
+        const tileTrendEmbed = computePercentTrend(SAMPLE.data[1][1], SAMPLE.data[2][1]);
+        const pill = embedShell.querySelector('.embed-delta-pill');
+        pill.textContent = tileTrendEmbed.display;
+        pill.classList.toggle('embed-pill-positive', tileTrendEmbed.trend === 'positive');
+        pill.classList.toggle('embed-pill-negative', tileTrendEmbed.trend === 'negative');
+        pill.classList.toggle('embed-pill-neutral', tileTrendEmbed.trend === 'neutral');
+        buildEmbedChart(SAMPLE, tile.chartId, tile.variant);
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>Mini vs Embed Debug (single pollutant)</h1>
+  <p>All charts use the same sample data. Left is the mini renderer; the other three are embed renderers. Check pills, delta line overlays, axis hiding, annotations, and gridlines.</p>
+
+  <div class="compare-grid">
+    <div class="mini-shell" id="miniTile">
+      <h2 style="margin:0 0 6px; font-size:1.1rem;">Mini renderer (<span class="unit">kt</span>)</h2>
+      <span class="title-note">2023</span>
+      <div class="chart-container">
+        <div id="miniChartHost" class="chart-host"></div>
+        <p class="delta-line">Increase: 0.34 kt</p>
+        <div class="mini-delta-tile is-positive">+0.0%</div>
+      </div>
+    </div>
+
+    <div class="embed-shell" id="embedTile1">
+      <h2 style="margin:0 0 6px; font-size:1.1rem;">Embed renderer 1 (<span class="unit">kt</span>)</h2>
+      <span class="title-note">2023</span>
+      <div class="embed-chart-shell">
+        <div id="embedChartHost1" class="chart-host"></div>
+        <p class="embed-delta-line">Increase: 0.34 kt</p>
+        <div class="embed-delta-pill embed-pill-positive">+0.0%</div>
+      </div>
+    </div>
+
+    <div class="embed-shell" id="embedTile2">
+      <h2 style="margin:0 0 6px; font-size:1.1rem;">Embed renderer 2 (<span class="unit">kt</span>)</h2>
+      <span class="title-note">2023</span>
+      <div class="embed-chart-shell">
+        <div id="embedChartHost2" class="chart-host"></div>
+        <p class="embed-delta-line">Increase: 0.34 kt</p>
+        <div class="embed-delta-pill embed-pill-positive">+0.0%</div>
+      </div>
+    </div>
+
+    <div class="embed-shell" id="embedTile3">
+      <h2 style="margin:0 0 6px; font-size:1.1rem;">Embed renderer 3 (<span class="unit">kt</span>)</h2>
+      <span class="title-note">2023</span>
+      <div class="embed-chart-shell">
+        <div id="embedChartHost3" class="chart-host"></div>
+        <p class="embed-delta-line">Increase: 0.34 kt</p>
+        <div class="embed-delta-pill embed-pill-positive">+0.0%</div>
+      </div>
+    </div>
+
+    <div class="embed-shell" id="embedTile4">
+      <h2 style="margin:0 0 6px; font-size:1.1rem;">Embed renderer 4 (<span class="unit">kt</span>)</h2>
+      <span class="title-note">2023</span>
+      <div class="embed-chart-shell">
+        <div id="embedChartHost4" class="chart-host"></div>
+        <p class="embed-delta-line">Increase: 0.34 kt</p>
+        <div class="embed-delta-pill embed-pill-positive">+0.0%</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

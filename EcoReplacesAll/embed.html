@@ -703,8 +703,14 @@
 
     .eco-class-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    @media (min-width: 1400px) {
+      .eco-class-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
     }
 
     .eco-chart-card {
@@ -721,13 +727,15 @@
       position: relative;
     }
 
-    .eco-google-chart {
+    .eco-chart-shell {
+      position: relative;
       width: 100%;
       min-height: 260px;
     }
 
-    .eco-google-chart svg text {
-      fill: inherit;
+    .eco-google-chart {
+      width: 100%;
+      min-height: 260px;
     }
 
     /* Allow axis labels to render outside the plot clip if needed */
@@ -741,7 +749,7 @@
       justify-content: center;
       color: #111827;
       font-size: 0.9rem;
-      height: 230px;
+      height: 260px;
       border: 1px dashed rgba(15, 23, 42, 0.25);
       border-radius: 12px;
     }
@@ -765,18 +773,18 @@
 
     .eco-delta-percentage {
       position: absolute;
-      right: 8px;
-      bottom: 8px;
+      right: 6px;
+      bottom: 6px;
       margin: 0;
-      padding: 10px 12px;
+      padding: 8px 0px;
       min-width: 7ch;
       border-radius: 12px;
       color: #ffffff;
       font-weight: 800;
-      font-size: 1.12rem;
-      letter-spacing: -0.01em;
+      font-size: 1.32rem;
+      letter-spacing: -0.015em;
       text-align: center;
-      line-height: 1.1;
+      line-height: 1.05;
       text-shadow:
         0 0 1px rgba(0, 0, 0, 0.7),
         0 0 2px rgba(0, 0, 0, 0.7),
@@ -784,14 +792,34 @@
       box-shadow:
         0 8px 24px rgba(0, 0, 0, 0.18),
         0 0 12px rgba(0, 0, 0, 0.12);
+      pointer-events: none;
     }
 
     .eco-delta-percentage--increase {
-      background: linear-gradient(to bottom right, #ff9f43, #e02424);
+      background: linear-gradient(to bottom right, #ffda57, #e6390a);
     }
 
     .eco-delta-percentage--reduction {
-      background: linear-gradient(to bottom right, #86efac, #166534);
+      background: linear-gradient(to bottom right, #8ef86a, #1e7b17);
+    }
+
+    .eco-delta-percentage--neutral {
+      background: linear-gradient(to bottom right, #cbd5e1, #94a3b8);
+    }
+
+    .eco-delta-line {
+      margin: 0;
+      padding: 0;
+      position: absolute;
+      left: 6px;
+      bottom: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 6px;
+      padding: 2px 8px;
+      pointer-events: none;
     }
 
     .eco-outcome-bucket {
@@ -1130,6 +1158,7 @@
   <script src="../SharedResources/eco-replacement-utils.js?v=v4-40-CIC-testdb"></script>
   <script>
     (function initializeEcoReplacementsExperience() {
+    console.info('[eco-embed] mini-style patch active');
     var ecoTextMeasureCanvas = null;
 
     function measureTextWidth(text, font) {
@@ -1556,7 +1585,8 @@
         numberFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }),
         percentFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 }),
         energyFormatter: new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 }),
-        latestEnergyProfile: null
+        latestEnergyProfile: null,
+        lastChartItems: []
       };
 
       function buildEnergyDomRefs() {
@@ -2086,6 +2116,7 @@
         if (!dom.chartGrid) {
           return;
         }
+        state.lastChartItems = (items || []).slice();
         dom.chartGrid.innerHTML = '';
         if (!items.length) {
           return;
@@ -2163,9 +2194,15 @@
         header.appendChild(yearLine);
         card.appendChild(header);
 
+        var percentDelta = computeReplacementPercent(entry.result);
+        var deltaText = formatDeltaText(entry.result, unit);
+
+        var chartShell = document.createElement('div');
+        chartShell.className = 'eco-chart-shell';
+
         var chartContainer = document.createElement('div');
         chartContainer.className = 'eco-google-chart';
-        card.appendChild(chartContainer);
+        chartShell.appendChild(chartContainer);
 
         if (hasData) {
           renderGoogleBarChart(chartContainer, entry, unit);
@@ -2174,22 +2211,29 @@
           chartContainer.textContent = 'No emissions data available';
         }
 
-        var percentDelta = computeReplacementPercent(entry.result);
-        if (percentDelta) {
-          var percentNode = document.createElement('p');
-          percentNode.className = 'eco-delta-percentage eco-delta-percentage--' + percentDelta.trend;
-          percentNode.textContent = percentDelta.display;
-          percentNode.setAttribute('aria-label', percentDelta.ariaLabel);
-          card.appendChild(percentNode);
-        }
-
-        var deltaText = formatDeltaText(entry.result, unit);
         if (deltaText) {
           var delta = document.createElement('p');
-          delta.className = 'eco-card-unit';
+          delta.className = 'eco-delta-line';
           delta.textContent = deltaText;
-          card.appendChild(delta);
+          chartShell.appendChild(delta);
         }
+
+        if (percentDelta) {
+          var percentNode = document.createElement('div');
+          percentNode.className = 'eco-delta-percentage';
+          if (percentDelta.trend === 'increase') {
+            percentNode.classList.add('eco-delta-percentage--increase');
+          } else if (percentDelta.trend === 'reduction') {
+            percentNode.classList.add('eco-delta-percentage--reduction');
+          } else {
+            percentNode.classList.add('eco-delta-percentage--neutral');
+          }
+          percentNode.textContent = percentDelta.display;
+          percentNode.setAttribute('aria-label', percentDelta.ariaLabel);
+          chartShell.appendChild(percentNode);
+        }
+
+        card.appendChild(chartShell);
 
         return card;
       }
@@ -2207,7 +2251,11 @@
         }
         var abs = Math.abs(value);
         var maxFrac = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 3;
-        return state.numberFormatter.format(Number(value).toFixed(maxFrac));
+        var formatter = new Intl.NumberFormat('en-GB', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: maxFrac
+        });
+        return formatter.format(value);
       }
 
       function styleBarAnnotations(container, labels, colors) {
@@ -2258,8 +2306,8 @@
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Scenario');
         data.addColumn('number', 'Emissions');
-        data.addColumn({ type: 'string', role: 'annotation' });
         data.addColumn({ type: 'string', role: 'style' });
+        data.addColumn({ type: 'string', role: 'annotation' });
         var rows = [
           buildChartRow('Ecodesign - Ready To Burn', entry.result.ecoEmission, unit, BAR_COLORS.eco),
           buildChartRow('Current fireplace / stove', entry.result.fireplaceEmission, unit, BAR_COLORS.fireplace),
@@ -2289,7 +2337,7 @@
             textStyle: { color: '#0f172a', fontSize: 12 },
             baselineColor: '#e2e8f0',
             gridlines: { color: '#cbd5e1' },
-            minorGridlines: { color: '#e2e8f0', count: 1 },
+            minorGridlines: { color: '#e2e8f0', count: 4 },
             viewWindow: {
               min: 0,
               max: Number.isFinite(tickMax) ? tickMax : undefined
@@ -2323,8 +2371,8 @@
 
         var chart = new google.visualization.ColumnChart(container);
         google.visualization.events.addListener(chart, 'ready', function () {
-          var labels = rows.map(function (row) { return row[2]; });
-          var colors = rows.map(function (row) { return row[3] && row[3].replace('color: ', ''); });
+          var labels = rows.map(function (row) { return row[3]; });
+          var colors = rows.map(function (row) { return row[2] && row[2].replace('color: ', ''); });
           styleBarAnnotations(container, labels, colors);
         });
         chart.draw(data, options);
@@ -2420,7 +2468,7 @@
         var hasValue = Number.isFinite(value) && value >= 0;
         var unitShort = getUnitAbbreviation(unit);
         var annotation = hasValue ? formatBarValue(value) + (unitShort ? ' ' + unitShort : '') : 'No data';
-        return [label, hasValue ? value : null, annotation, 'color: ' + color];
+        return [label, hasValue ? value : null, 'color: ' + color, annotation];
       }
 
       function formatDeltaText(result, unit) {
@@ -2489,6 +2537,20 @@
           ariaLabel: ariaLabel
         };
       }
+
+      // Redraw responsive charts on resize using the last rendered items
+      var chartResizeTimer = null;
+      window.addEventListener('resize', function () {
+        if (!state.lastChartItems || !state.lastChartItems.length) {
+          return;
+        }
+        if (chartResizeTimer) {
+          clearTimeout(chartResizeTimer);
+        }
+        chartResizeTimer = setTimeout(function () {
+          renderChartGrid(state.lastChartItems);
+        }, 160);
+      });
 
       function getPollutantClassId(pollutantId) {
         if (!Number.isFinite(pollutantId)) {
