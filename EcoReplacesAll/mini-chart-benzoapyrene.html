@@ -17,9 +17,18 @@
       color: #0f172a;
     }
 
-    .mini-shell {
-      max-width: 520px;
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      max-width: 1400px;
       margin: 0 auto;
+      padding: 0 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .mini-shell {
       background: #ffffff;
       border-radius: 16px;
       padding: 14px 16px 22px;
@@ -43,14 +52,63 @@
     .chart-container {
       width: 100%;
       min-height: 260px;
+      position: relative;
+    }
+
+    .chart-host {
+      width: 100%;
+      min-height: 260px;
+    }
+
+    .delta-line {
+      margin: 0;
+      padding: 0;
+      position: absolute;
+      left: 6px;
+      bottom: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 6px;
+      padding: 2px 8px;
+      pointer-events: none;
+    }
+
+    .mini-delta-tile {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      padding: 8px 0px;
+      min-width: 7ch;
+      border-radius: 12px;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.32rem;
+      letter-spacing: -0.015em;
+      text-align: center;
+      line-height: 1.05;
+      text-shadow:
+        0 0 1px rgba(0, 0, 0, 0.7),
+        0 0 2px rgba(0, 0, 0, 0.7),
+        0 1px 2px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18),
+        0 0 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .mini-delta-tile.is-positive {
+      background: linear-gradient(to bottom right, #ffda57, #e6390a);
+    }
+
+    .mini-delta-tile.is-negative {
+      background: linear-gradient(to bottom right, #8ef86a, #1e7b17);
     }
   </style>
   <script src="https://www.gstatic.com/charts/loader.js"></script>
   <script src="../SharedResources/emission-units.js?v=v4-40-CIC-testdb"></script>
   <script>
-    const UNIT_LABEL = (window.EmissionUnits && window.EmissionUnits.formatAxisLabel('kg')) || 'kilograms';
-    const UNIT_SHORT = (window.EmissionUnits && window.EmissionUnits.formatAbbreviation('kg')) || 'kg';
-
     function formatValue(value) {
       if (!Number.isFinite(value)) {
         return '—';
@@ -70,32 +128,138 @@
       replacement: '#911EB4',  // Replacement scenario
     };
 
-    const DATA_2023 = [
-      // label, value, color (style)
-      ['Ecodesign - Ready To Burn', 659.021, COLORS.eco],
-      ['Fireplaces / All stoves, all fuels', 2830.907, COLORS.fireplace],
-      ['Replacement scenario', 5226.852, COLORS.replacement],
+    const CHART_CONFIGS = [
+      {
+        title: 'Benzo[a]pyrene',
+        year: '2023',
+        unitKey: 'kg',
+        unitFallbackLabel: 'kilograms',
+        unitFallbackShort: 'kg',
+        data: [
+          ['Ecodesign - Ready To Burn', 659.021, COLORS.eco],
+          ['Fireplaces / All stoves, all fuels', 2830.907, COLORS.fireplace],
+          ['Replacement scenario', 5226.852, COLORS.replacement],
+        ],
+        deltaText: 'Increase: 2,396 kg',
+        tileValue: '+84.6%',
+        tileTrend: 'positive',
+        containerId: 'miniChart',
+        deltaId: 'deltaLine',
+        tileId: 'tileBadge',
+        unitSpanId: 'unitLabel',
+        yearSpanId: 'yearLabel',
+        ariaLabelId: 'miniChartContainer'
+      },
+      {
+        title: 'Benzo[a]pyrene',
+        year: '2023',
+        unitKey: 'kg',
+        unitFallbackLabel: 'kilograms',
+        unitFallbackShort: 'kg',
+        data: [
+          ['Ecodesign - Ready To Burn', 659.021, COLORS.eco],
+          ['Fireplaces / All stoves, all fuels', 2830.907, COLORS.fireplace],
+          ['Replacement scenario', 5226.852, COLORS.replacement],
+        ],
+        deltaText: 'Increase: 2,396 kg',
+        tileValue: '-435%',
+        tileTrend: 'negative',
+        containerId: 'miniChart2',
+        deltaId: 'deltaLine2',
+        tileId: 'tileBadge2',
+        unitSpanId: 'unitLabel2',
+        yearSpanId: 'yearLabel2',
+        ariaLabelId: 'miniChartContainer2'
+      },
+      {
+        title: 'Black Smoke',
+        year: '2023',
+        unitKey: 'kilotonne',
+        unitFallbackLabel: 'kilotonnes',
+        unitFallbackShort: 'kt',
+        data: [
+          ['Ecodesign - Ready To Burn', 0.37, COLORS.eco],
+          ['Fireplaces / All stoves, all fuels', 9.23, COLORS.fireplace],
+          ['Replacement scenario', 2.94, COLORS.replacement],
+        ],
+        deltaText: 'Decrease 6.29 kt',
+        tileValue: '-68.1%',
+        tileTrend: 'negative',
+        containerId: 'miniChartBlack',
+        deltaId: 'deltaLineBlack',
+        tileId: 'tileBadgeBlack',
+        unitSpanId: 'unitLabelBlack',
+        yearSpanId: 'yearLabelBlack',
+        ariaLabelId: 'miniChartContainerBlack'
+      },
+      {
+        title: 'Black Smoke',
+        year: '2023',
+        unitKey: 'kilotonne',
+        unitFallbackLabel: 'kilotonnes',
+        unitFallbackShort: 'kt',
+        data: [
+          ['Ecodesign - Ready To Burn', 0.37, COLORS.eco],
+          ['Fireplaces / All stoves, all fuels', 9.23, COLORS.fireplace],
+          ['Replacement scenario', 2.94, COLORS.replacement],
+        ],
+        deltaText: 'Decrease 6.29 kt',
+        tileValue: '-68.1%',
+        tileTrend: 'negative',
+        containerId: 'miniChartBlack2',
+        deltaId: 'deltaLineBlack2',
+        tileId: 'tileBadgeBlack2',
+        unitSpanId: 'unitLabelBlack2',
+        yearSpanId: 'yearLabelBlack2',
+        ariaLabelId: 'miniChartContainerBlack2'
+      }
     ];
 
-    function drawMiniChart() {
+    function drawConfiguredChart(cfg) {
+      const unitLabel = (window.EmissionUnits && window.EmissionUnits.formatAxisLabel(cfg.unitKey)) || cfg.unitFallbackLabel || '';
+      const unitShort = (window.EmissionUnits && window.EmissionUnits.formatAbbreviation(cfg.unitKey)) || cfg.unitFallbackShort || '';
+
+      const unitEl = document.getElementById(cfg.unitSpanId);
+      if (unitEl) {
+        unitEl.textContent = unitLabel;
+      }
+      const yearEl = document.getElementById(cfg.yearSpanId);
+      if (yearEl) {
+        yearEl.textContent = cfg.year;
+      }
+      const deltaEl = document.getElementById(cfg.deltaId);
+      if (deltaEl) {
+        deltaEl.textContent = cfg.deltaText || '';
+      }
+      var tileEl = document.getElementById(cfg.tileId);
+      if (tileEl) {
+        tileEl.textContent = cfg.tileValue || '';
+        tileEl.classList.toggle('is-positive', cfg.tileTrend === 'positive');
+        tileEl.classList.toggle('is-negative', cfg.tileTrend === 'negative');
+      }
+      const ariaContainer = document.getElementById(cfg.ariaLabelId);
+      if (ariaContainer) {
+        ariaContainer.setAttribute('aria-label', `${cfg.title} emissions (${unitLabel}) comparison for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in ${cfg.year}.`);
+      }
+
       const dataTable = new google.visualization.DataTable();
       dataTable.addColumn('string', 'Scenario');
-      dataTable.addColumn('number', 'Benzo[a]pyrene (2023)');
+      dataTable.addColumn('number', `${cfg.title} (${cfg.year})`);
       dataTable.addColumn({ type: 'string', role: 'style' });
       dataTable.addColumn({ type: 'string', role: 'annotation' });
       dataTable.addRows(
-        DATA_2023.map(([label, value, color]) => [
+        cfg.data.map(([label, value, color]) => [
           label,
           value,
           `color: ${color}`,
-          `${formatValue(value)} ${UNIT_SHORT}`,
+          `${formatValue(value)} ${unitShort}`,
         ])
       );
 
       const options = {
         backgroundColor: 'transparent',
         legend: { position: 'none' },
-        chartArea: { width: '70%', height: '68%' },
+        chartArea: { width: '80%', height: '74%', top: 8, left: 56, right: 12 },
         colors: [COLORS.eco, COLORS.fireplace, COLORS.replacement],
         vAxis: {
           title: '',
@@ -118,11 +282,11 @@
         bar: { groupWidth: '55%' },
       };
 
-      const container = document.getElementById('miniChart');
+      const container = document.getElementById(cfg.containerId);
       const chart = new google.visualization.ColumnChart(container);
       google.visualization.events.addListener(chart, 'ready', () => {
         try {
-          const labels = DATA_2023.map(([_, value]) => `${formatValue(value)} ${UNIT_SHORT}`);
+          const labels = cfg.data.map(([_, value]) => `${formatValue(value)} ${unitShort}`);
           const svg = container.querySelector('svg');
           const texts = svg ? Array.from(svg.querySelectorAll('text')) : [];
           texts.forEach(node => {
@@ -131,14 +295,14 @@
             if (idx === -1) {
               return;
             }
-            const color = DATA_2023[idx][2];
+            const color = cfg.data[idx][2];
             node.setAttribute('fill', color);
             node.setAttribute('stroke', '#ffffff');
             node.setAttribute('stroke-width', '3');
             node.setAttribute('paint-order', 'stroke');
             node.setAttribute('font-family', '"Tiresias Infofont", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif');
             node.setAttribute('font-weight', '700');
-            node.setAttribute('font-size', '14');
+            node.setAttribute('font-size', '15');
             if (node.hasAttribute('y')) {
               const currentY = Number(node.getAttribute('y'));
               if (Number.isFinite(currentY)) {
@@ -154,26 +318,73 @@
     }
 
     google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(() => {
-      const unitEl = document.getElementById('unitLabel');
-      if (unitEl) {
-        unitEl.textContent = UNIT_LABEL;
-      }
-      const chartContainer = document.getElementById('miniChart');
-      if (chartContainer) {
-        chartContainer.setAttribute('aria-label', `Column chart comparing Benzo[a]pyrene emissions (${UNIT_LABEL}) for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in 2023.`);
-      }
-      drawMiniChart();
+    google.charts.setOnLoadCallback(() => {
+      CHART_CONFIGS.forEach(drawConfiguredChart);
+
+      // Redraw charts on resize so widths stay responsive
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        if (resizeTimer) {
+          clearTimeout(resizeTimer);
+        }
+        resizeTimer = setTimeout(() => {
+          if (window.google && window.google.visualization) {
+            CHART_CONFIGS.forEach(drawConfiguredChart);
+          }
+        }, 150);
+      });
     });
   </script>
 </head>
 <body>
-  <div class="mini-shell">
-    <h1>
-      Benzo[a]pyrene (<span id="unitLabel">kg</span>)
-      <span class="title-note" id="yearLabel">2023</span>
-    </h1>
-    <div class="chart-container" id="miniChart" role="img" aria-label="Column chart comparing Benzo[a]pyrene emissions (kg) for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in 2023."></div>
+  <div class="mini-grid">
+    <div class="mini-shell">
+      <h1>
+        Benzo[a]pyrene (<span id="unitLabel">kg</span>)
+        <span class="title-note" id="yearLabel">2023</span>
+      </h1>
+      <div id="miniChartContainer" class="chart-container" role="img" aria-label="Column chart comparing Benzo[a]pyrene emissions (kg) for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in 2023.">
+        <div id="miniChart" class="chart-host"></div>
+        <p class="delta-line" id="deltaLine">Increase: 2,396 kg</p>
+        <div class="mini-delta-tile is-positive" id="tileBadge">+84.6%</div>
+      </div>
+    </div>
+
+    <div class="mini-shell">
+      <h1>
+        Benzo[a]pyrene (<span id="unitLabel2">kg</span>)
+        <span class="title-note" id="yearLabel2">2023</span>
+      </h1>
+      <div id="miniChartContainer2" class="chart-container" role="img" aria-label="Column chart comparing Benzo[a]pyrene emissions (kg) for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in 2023.">
+        <div id="miniChart2" class="chart-host"></div>
+        <p class="delta-line" id="deltaLine2">Increase: 2,396 kg</p>
+        <div class="mini-delta-tile is-negative" id="tileBadge2">-435%</div>
+      </div>
+    </div>
+
+    <div class="mini-shell">
+      <h1>
+        Black Smoke (<span id="unitLabelBlack">kt</span>)
+        <span class="title-note" id="yearLabelBlack">2023</span>
+      </h1>
+      <div id="miniChartContainerBlack" class="chart-container" role="img" aria-label="Column chart comparing Black Smoke emissions (kt) for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in 2023.">
+        <div id="miniChartBlack" class="chart-host"></div>
+        <p class="delta-line" id="deltaLineBlack">Decrease 6.29 kt</p>
+        <div class="mini-delta-tile is-negative" id="tileBadgeBlack">-68.1%</div>
+      </div>
+    </div>
+
+    <div class="mini-shell">
+      <h1>
+        Black Smoke (<span id="unitLabelBlack2">kt</span>)
+        <span class="title-note" id="yearLabelBlack2">2023</span>
+      </h1>
+      <div id="miniChartContainerBlack2" class="chart-container" role="img" aria-label="Column chart comparing Black Smoke emissions (kt) for Ecodesign Ready To Burn versus Fireplaces and Stoves (all fuels) and replacement scenario in 2023.">
+        <div id="miniChartBlack2" class="chart-host"></div>
+        <p class="delta-line" id="deltaLineBlack2">Decrease 6.29 kt</p>
+        <div class="mini-delta-tile is-negative" id="tileBadgeBlack2">-68.1%</div>
+      </div>
+    </div>
   </div>
 </body>
 </html>
