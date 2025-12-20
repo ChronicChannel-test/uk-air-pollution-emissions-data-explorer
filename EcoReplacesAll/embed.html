@@ -342,7 +342,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 4px;
+      gap: 8px;
     }
 
     .eco-outcome-summary-title {
@@ -381,7 +381,7 @@
     }
 
     .eco-outcome-card {
-      padding: 18px 22px;
+      padding: 16px 14px;
       gap: 12px;
       min-height: 210px;
       border-radius: 22px;
@@ -415,11 +415,12 @@
 
     .eco-outcome-buckets {
       display: grid;
-      grid-template-columns: 1.02fr 0.98fr;
-      gap: 8px 10px;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 6px 8px;
       width: 100%;
       margin-top: 8px;
       --eco-tile-width: auto;
+      align-items: start;
     }
 
     .eco-outcome-column {
@@ -488,21 +489,21 @@
 
     .eco-outcome-bucket-label {
       position: absolute;
-      left: 12px;
+      left: var(--eco-label-left, 3px);
       top: 50%;
       transform: translateY(-50%);
       margin: 0;
       font-size: var(--eco-tile-label-size, 24px);
       display: inline-flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 4px;
       color: #ffffff;
       -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.5);
       text-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
       paint-order: stroke fill;
-      min-width: 92px;
-      text-align: center;
+      min-width: auto;
+      text-align: left;
     }
 
     .eco-outcome-bucket--lower.eco-outcome-bucket--lt50 {
@@ -748,9 +749,10 @@
 
     .eco-outcome-bucket {
       position: relative;
-      border-radius: 14px;
+      border-radius: 10px;
       padding: var(--eco-tile-pad-y, 8px) var(--eco-tile-pad-x, 12px);
-      min-height: var(--eco-tile-height, 72px);
+      min-height: var(--eco-tile-height, 32px);
+      align-self: start;
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -1078,6 +1080,32 @@
   <script src="../SharedResources/eco-replacement-utils.js?v=v4-40-CIC-testdb"></script>
   <script>
     (function initializeEcoReplacementsExperience() {
+    var ecoTextMeasureCanvas = null;
+
+    function measureTextWidth(text, font) {
+      if (!ecoTextMeasureCanvas) {
+        ecoTextMeasureCanvas = document.createElement('canvas');
+      }
+      var ctx = ecoTextMeasureCanvas.getContext('2d');
+      if (!ctx) {
+        return 0;
+      }
+      ctx.font = font;
+      var metrics = ctx.measureText(text || '');
+      return metrics && metrics.width ? metrics.width : 0;
+    }
+
+    function computeFontSizeForWidth(text, targetWidth, fontFamily, fontWeight) {
+      var baseSize = 100;
+      var font = (fontWeight || '700') + ' ' + baseSize + 'px ' + (fontFamily || 'Arial, sans-serif');
+      var width = measureTextWidth(text, font);
+      if (!width || width <= 0 || !targetWidth) {
+        return targetWidth ? Math.max(12, targetWidth / 6) : 18;
+      }
+      var scale = targetWidth / width;
+      return baseSize * scale;
+    }
+
     function measureEcoCardWidths() {
       try {
         // Energy card
@@ -1109,13 +1137,20 @@
         });
 
         if (maxTileWidth > 0) {
-          var usable = maxTileWidth - 14; // preserve a small inset
-          var labelSize = usable / 6; // slightly smaller labels
-          var valueSize = usable / 4.5; // slightly smaller values
-          var lineGap = 4;
-          var padY = 6;
-          var padX = 10;
-          var tileHeight = padY + (labelSize + lineGap) + (valueSize + lineGap) + padY;
+          var usable = maxTileWidth; // use full measured width
+          var styleSample = tiles.length ? getComputedStyle(tiles[0]) : null;
+          var fontFamily = styleSample ? styleSample.fontFamily : 'Arial, sans-serif';
+
+          // Value: fit 7 chars to width
+          var valueSize = computeFontSizeForWidth('8888888', usable, fontFamily, '700');
+          // Label: 15% smaller than value
+          var labelSize = valueSize * 0.85;
+          // Symmetric side gaps: 20% of value font size
+          var padX = valueSize * 0.2;
+          var padY = 0;
+          var lineGap = 0;
+          // Tile height: 1.5x value font size
+          var tileHeight = valueSize * 1.5;
 
           // Apply shared sizes to root
           document.documentElement.style.setProperty('--eco-tile-width', maxTileWidth + 'px');
@@ -1124,6 +1159,13 @@
           document.documentElement.style.setProperty('--eco-tile-height', tileHeight.toFixed(2) + 'px');
           document.documentElement.style.setProperty('--eco-tile-pad-y', padY + 'px');
           document.documentElement.style.setProperty('--eco-tile-pad-x', padX + 'px');
+          document.documentElement.style.setProperty('--eco-label-left', padX + 'px');
+
+          // Measure fit at applied sizes for visibility in logs
+          var labelFont = '700 ' + labelSize.toFixed(2) + 'px ' + fontFamily;
+          var valueFont = '700 ' + valueSize.toFixed(2) + 'px ' + fontFamily;
+          var labelFitWidth = measureTextWidth('MMMMMMM', labelFont);
+          var valueFitWidth = measureTextWidth('8888888', valueFont);
 
           // Apply to each tile (same sizes)
           tiles.forEach(function(tile) {
@@ -1133,6 +1175,7 @@
             tile.style.setProperty('--eco-tile-height', tileHeight.toFixed(2) + 'px');
             tile.style.setProperty('--eco-tile-pad-y', padY + 'px');
             tile.style.setProperty('--eco-tile-pad-x', padX + 'px');
+            tile.style.setProperty('--eco-label-left', padX + 'px');
 
             var labelEl = tile.querySelector('.eco-outcome-bucket-label');
             var valueEl = tile.querySelector('.eco-outcome-bucket-value');
@@ -1151,7 +1194,12 @@
               valueSize: valueSize,
               tileHeight: tileHeight,
               labelFont: labelSize + 'px',
-              valueFont: valueSize + 'px'
+              valueFont: valueSize + 'px',
+              labelFitWidth: labelFitWidth,
+              valueFitWidth: valueFitWidth,
+              usableWidth: usable,
+              padX: padX,
+              padY: padY
             });
           });
         }
