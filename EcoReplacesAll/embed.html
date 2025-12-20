@@ -189,13 +189,13 @@
       margin-top: auto;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .eco-energy-calculation {
       font-size: 0.85rem;
       color: #475569;
-      margin: 8px 0 0;
+      margin: 2px 0 0;
     }
 
     .eco-energy-total {
@@ -553,7 +553,7 @@
 
     .eco-energy-note {
       font-size: 0.9rem;
-      margin: 8px 0 0;
+      margin: 4px 0 0;
       color: inherit;
       opacity: 0.9;
     }
@@ -1115,11 +1115,30 @@
           document.documentElement.style.setProperty('--eco-card-width', w + 'px');
           var energyTotal = card.querySelector('.eco-energy-total');
           if (energyTotal) {
-            var energySize = w / 4.5; // bump headline energy font
+            var energyText = (energyTotal.textContent || '').trim();
+            var energyStyle = getComputedStyle(energyTotal);
+            var energyFamily = energyStyle ? energyStyle.fontFamily : 'Arial, sans-serif';
+            var cardStyle = getComputedStyle(card);
+            var padL = cardStyle ? parseFloat(cardStyle.paddingLeft) || 0 : 0;
+            var padR = cardStyle ? parseFloat(cardStyle.paddingRight) || 0 : 0;
+            var targetWidth = Math.max(0, w - padL - padR);
+            var energySize = computeFontSizeForWidth(energyText || '0000', targetWidth, energyFamily, energyStyle ? energyStyle.fontWeight : '700');
             energyTotal.style.fontSize = energySize + 'px';
+            energyTotal.style.lineHeight = '1.05';
+            energyTotal.style.maxWidth = '100%';
+            console.log('[eco-measure] energy fit', {
+              cardWidth: w,
+              targetWidth: targetWidth,
+              paddingLeft: padL,
+              paddingRight: padR,
+              text: energyText,
+              charCount: energyText.length,
+              fontFamily: energyFamily,
+              fontWeight: energyStyle ? energyStyle.fontWeight : '700',
+              fontSize: energySize,
+              measuredWidth: measureTextWidth(energyText, (energyStyle ? energyStyle.fontWeight : '700') + ' ' + energySize + 'px ' + energyFamily)
+            });
           }
-          var energyFont = energyTotal ? getComputedStyle(energyTotal).fontSize : 'n/a';
-          console.log('[eco-measure] card width', w, 'energy font', energyFont, 'set', energyTotal ? energyTotal.style.fontSize : 'n/a');
         }
 
         // Outcome tiles (use widest tile to size all)
