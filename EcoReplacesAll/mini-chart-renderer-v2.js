@@ -10,23 +10,12 @@
       return '—';
     }
     var abs = Math.abs(value);
-    if (abs === 0) {
-      return '0';
-    }
-    if (abs >= 1) {
-      var maxFrac = abs >= 1000 ? 0
-        : abs >= 100 ? 1
-        : 2;
-      var formatter = new Intl.NumberFormat('en-GB', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: maxFrac
-      });
-      return formatter.format(value);
-    }
-    var exp = Math.floor(Math.log10(abs));
-    var decimals = Math.min(8, Math.max(3, -exp + 2));
-    var fixed = value.toFixed(decimals);
-    return fixed.replace(/(?:\.0+|(\.\d*?[1-9])0+)$/, '$1');
+    var maxFrac = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 3;
+    var formatter = new Intl.NumberFormat('en-GB', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: maxFrac
+    });
+    return formatter.format(value);
   }
 
   function computePercentTrend(fireplace, replacement) {
@@ -288,22 +277,12 @@
       });
     }
 
-    var hasKLabel = axisNodes.some(function (node) {
-      var label = (node.textContent || '').trim().toLowerCase();
-      return label.endsWith('k');
-    });
-
     axisNodes.forEach(function (node) {
       node.setAttribute('fill', vAxisColor);
       node.setAttribute('font-size', String(axisFontSize));
       node.setAttribute('font-weight', '600');
       node.removeAttribute('aria-hidden');
       node.style.opacity = '1';
-      if (hasKLabel) {
-        node.setAttribute('dx', '-10');
-      } else {
-        node.removeAttribute('dx');
-      }
       maxWidth = Math.max(maxWidth, measureTextWidth(node.textContent || '', axisFontSize, '600'));
     });
 
@@ -498,9 +477,6 @@
       container.appendChild(layer);
     }
     layer.innerHTML = '';
-    var containerBox = container.getBoundingClientRect ? container.getBoundingClientRect() : null;
-    var containerWidth = containerBox ? containerBox.width : (container.clientWidth || 0);
-    var edgePad = 6;
 
     rows.forEach(function (row, idx) {
       var value = Number(row && row.value);
@@ -562,9 +538,6 @@
       container.appendChild(layer);
     }
     layer.innerHTML = '';
-    var containerBox = container.getBoundingClientRect ? container.getBoundingClientRect() : null;
-    var containerWidth = containerBox ? containerBox.width : (container.clientWidth || 0);
-    var edgePad = 6;
 
     rows.forEach(function (row, idx) {
       var value = Number(row && row.value);
@@ -581,11 +554,9 @@
       var annotation = row.annotation || (formatValue(value) + (unitShort ? ' ' + unitShort : ''));
       span.textContent = annotation;
       var color = row.color || MiniColors.eco;
-      var isEdge = idx === rows.length - 1 && Number.isFinite(containerWidth) && containerWidth > 0;
-      var left = x;
       Object.assign(span.style, {
         position: 'absolute',
-        left: left + 'px',
+        left: x + 'px',
         top: y + 'px',
         transform: 'translate(-50%, -18px)',
         color: color,
@@ -595,19 +566,9 @@
         WebkitTextStroke: '3px #ffffff',
         textShadow: '1px 1px 0 #ffffff, -1px -1px 0 #ffffff, -1px 1px 0 #ffffff, 1px -1px 0 #ffffff, 0 1px 0 #ffffff, 0 -1px 0 #ffffff, 1px 0 0 #ffffff, -1px 0 0 #ffffff, 0 0 3px rgba(255,255,255,0.9)',
         paintOrder: 'stroke',
-        whiteSpace: isEdge ? 'nowrap' : 'normal',
         pointerEvents: 'none'
       });
       layer.appendChild(span);
-      if (isEdge && containerBox && span.getBoundingClientRect) {
-        var spanBox = span.getBoundingClientRect();
-        var maxRight = containerBox.right - edgePad;
-        if (spanBox.right > maxRight) {
-          var overflow = spanBox.right - maxRight;
-          var currentLeft = parseFloat(span.style.left) || left;
-          span.style.left = (currentLeft - overflow) + 'px';
-        }
-      }
     });
   }
 
@@ -855,7 +816,7 @@
         duration: 320,
         easing: 'out'
       },
-      tooltip: { trigger: 'none' }
+      tooltip: { textStyle: { color: '#0f172a' } }
     };
 
     var chart = new global.google.visualization.ColumnChart(config.container);

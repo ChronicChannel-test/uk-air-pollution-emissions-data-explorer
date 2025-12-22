@@ -772,158 +772,6 @@
       border-radius: 12px;
     }
 
-    .eco-chart-shell.eco-mini-tooltip-target {
-      cursor: pointer;
-    }
-
-    .eco-mini-tooltip {
-      position: absolute;
-      bottom: calc(100% + 14px);
-      left: 50%;
-      transform: translate(-50%, 10px);
-      width: min(360px, 92vw);
-      padding: 14px 16px;
-      border-radius: 12px;
-      background: #ffffff;
-      color: #101828;
-      box-shadow: 0 18px 40px rgba(20, 32, 50, 0.28);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.18s ease, transform 0.18s ease;
-      z-index: 30;
-      text-align: left;
-      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
-    }
-
-    .eco-mini-tooltip::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      border-width: 10px 10px 0 10px;
-      border-style: solid;
-      border-color: #ffffff transparent transparent transparent;
-    }
-
-    .eco-mini-tooltip-target:hover .eco-mini-tooltip,
-    .eco-mini-tooltip-target:focus-within .eco-mini-tooltip {
-      opacity: 1;
-      transform: translate(-50%, 0);
-      pointer-events: auto;
-    }
-
-    .eco-mini-tooltip__heading {
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #475467;
-      margin-bottom: 8px;
-    }
-
-    .eco-mini-tooltip__grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .eco-mini-tooltip__entry {
-      background: #f5f7fb;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
-    }
-
-    .eco-mini-tooltip__name {
-      font-size: 0.85rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: #111827;
-    }
-
-    .eco-mini-tooltip__entry dl {
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .eco-mini-tooltip__entry dl div {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .eco-mini-tooltip__entry dt {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #667085;
-      margin: 0;
-    }
-
-    .eco-mini-tooltip__entry dd {
-      margin: 0;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #0f172a;
-    }
-
-    .eco-mini-tooltip__calc {
-      border-top: 1px solid rgba(15, 23, 42, 0.12);
-      padding-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .eco-mini-tooltip__calc-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 0.82rem;
-      color: #1d2939;
-      font-weight: 600;
-    }
-
-    .eco-mini-tooltip__calc-detail {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      text-align: right;
-      gap: 2px;
-    }
-
-    .eco-mini-tooltip__calc-detail-line--primary {
-      font-weight: 700;
-      white-space: normal;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-    }
-
-    .eco-mini-tooltip__note {
-      font-size: 0.85rem;
-      color: #1d2939;
-      font-weight: 700;
-      padding: 6px 8px;
-      border-radius: 8px;
-      background: #fff4e5;
-      text-align: left;
-      margin-bottom: 6px;
-    }
-
-    @media (max-width: 640px) {
-      .eco-mini-tooltip {
-        width: min(320px, 96vw);
-      }
-
-      .eco-mini-tooltip__grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
     .eco-chart-card.is-empty {
       opacity: 0.6;
     }
@@ -931,7 +779,7 @@
     .eco-card-header {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 4px;
     }
 
     .eco-card-title {
@@ -939,23 +787,6 @@
       font-size: 1.15rem;
       font-weight: 600;
       color: #111827;
-      line-height: 1.25;
-      min-height: calc(1.25em * 2);
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      overflow: hidden;
-      overflow-wrap: break-word;
-      word-break: normal;
-    }
-
-    .eco-title-unit {
-      white-space: normal;
-    }
-
-    .eco-card-unit {
-      margin: 0;
-      line-height: 1.2;
     }
 
     .eco-delta-percentage {
@@ -982,28 +813,21 @@
       pointer-events: none;
     }
 
+    .eco-delta-percentage--increase {
+      background: linear-gradient(to bottom right, #ffda57, #e6390a);
+    }
+
+    .eco-delta-percentage--reduction {
+      background: linear-gradient(to bottom right, #8ef86a, #1e7b17);
+    }
+
     .eco-delta-percentage--neutral {
       background: linear-gradient(to bottom right, #cbd5e1, #94a3b8);
     }
 
-    .eco-delta-percentage--higher.eco-delta-percentage--gte50 {
-      background: linear-gradient(135deg, #ffb347, #e6390a);
-    }
-
-    .eco-delta-percentage--higher.eco-delta-percentage--lt50 {
-      background: linear-gradient(135deg, #ffda57, #f0941f);
-    }
-
-    .eco-delta-percentage--lower.eco-delta-percentage--gte50 {
-      background: linear-gradient(135deg, #8ef86a, #1e7b17);
-    }
-
-    .eco-delta-percentage--lower.eco-delta-percentage--lt50 {
-      background: linear-gradient(135deg, #d1ff7e, #4fdc30);
-    }
-
     .eco-delta-line {
       margin: 0;
+      padding: 0;
       position: absolute;
       left: 6px;
       bottom: 6px;
@@ -1014,23 +838,6 @@
       border-radius: 6px;
       padding: 2px 8px;
       pointer-events: none;
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-      white-space: nowrap;
-      max-width: calc(100% - 12px);
-      box-sizing: border-box;
-    }
-
-    .eco-delta-line--stacked {
-      bottom: 8px;
-      flex-direction: column;
-      align-items: flex-start;
-      line-height: 1.15;
-    }
-
-    .eco-delta-line--stacked .eco-delta-value {
-      display: block;
     }
 
     .eco-outcome-bucket {
@@ -2372,7 +2179,7 @@
               if (!pending || !pending.container || !pending.container.isConnected) {
                 return;
               }
-              renderGoogleBarChart(pending.container, pending.entry, pending.unit, pending.scale);
+              renderGoogleBarChart(pending.container, pending.entry, pending.unit);
             });
           });
         }
@@ -2426,12 +2233,7 @@
         card.className = 'eco-chart-card';
         var pollutantName = entry.meta?.pollutant || 'Unknown pollutant';
         var unit = entry.meta?.emission_unit || 'tonne';
-        var scaleInfo = computeUnitScale(unit, [
-          entry?.result?.ecoEmission,
-          entry?.result?.fireplaceEmission,
-          entry?.result?.replacementEmission
-        ]);
-        var pluralUnit = (scaleInfo && scaleInfo.unitLabel) || getPluralUnitLabel(unit || 'tonne');
+        var pluralUnit = getPluralUnitLabel(unit || 'tonne');
         var hasData = [entry.result.ecoEmission, entry.result.fireplaceEmission, entry.result.replacementEmission]
           .some(function (value) { return Number.isFinite(value) && value >= 0; });
         if (!hasData) {
@@ -2442,16 +2244,7 @@
         header.className = 'eco-card-header';
         var title = document.createElement('h4');
         title.className = 'eco-card-title';
-        var nameSpan = document.createElement('span');
-        nameSpan.className = 'eco-title-name';
-        nameSpan.textContent = pollutantName;
-        var breakHint = document.createElement('wbr');
-        var unitSpan = document.createElement('span');
-        unitSpan.className = 'eco-title-unit';
-        unitSpan.textContent = ' (' + pluralUnit + ')';
-        title.appendChild(nameSpan);
-        title.appendChild(breakHint);
-        title.appendChild(unitSpan);
+        title.textContent = pollutantName + ' (' + pluralUnit + ')';
         header.appendChild(title);
         var yearLine = document.createElement('p');
         yearLine.className = 'eco-card-unit';
@@ -2460,11 +2253,10 @@
         card.appendChild(header);
 
         var percentDelta = computeReplacementPercent(entry.result);
-        var deltaInfo = formatDeltaText(entry.result, unit, scaleInfo);
+        var deltaText = formatDeltaText(entry.result, unit);
 
         var chartShell = document.createElement('div');
-        chartShell.className = 'eco-chart-shell eco-mini-tooltip-target';
-        chartShell.tabIndex = 0;
+        chartShell.className = 'eco-chart-shell';
 
         var chartContainer = document.createElement('div');
         chartContainer.className = 'eco-google-chart';
@@ -2472,48 +2264,29 @@
 
         if (hasData) {
           if (pendingCharts) {
-            pendingCharts.push({ container: chartContainer, entry: entry, unit: unit, scale: scaleInfo });
+            pendingCharts.push({ container: chartContainer, entry: entry, unit: unit });
           } else {
-            renderGoogleBarChart(chartContainer, entry, unit, scaleInfo);
+            renderGoogleBarChart(chartContainer, entry, unit);
           }
         } else {
           chartContainer.classList.add('eco-google-chart--empty');
           chartContainer.textContent = 'No emissions data available';
         }
 
-        var tooltip = buildMiniTooltip(entry, unit, scaleInfo);
-        if (tooltip) {
-          var tooltipId = 'eco-mini-tooltip-' + String(entry.meta?.id ?? entry.pollutantId ?? '');
-          if (tooltipId && tooltipId !== 'eco-mini-tooltip-') {
-            tooltip.id = tooltipId;
-            chartShell.setAttribute('aria-describedby', tooltipId);
-          }
-          chartShell.appendChild(tooltip);
+        if (deltaText) {
+          var delta = document.createElement('p');
+          delta.className = 'eco-delta-line';
+          delta.textContent = deltaText;
+          chartShell.appendChild(delta);
         }
 
-        var deltaNode = null;
-        if (deltaInfo) {
-          deltaNode = document.createElement('p');
-          deltaNode.className = 'eco-delta-line';
-          var deltaLabel = document.createElement('span');
-          deltaLabel.className = 'eco-delta-label';
-          deltaLabel.textContent = deltaInfo.label;
-          var deltaValue = document.createElement('span');
-          deltaValue.className = 'eco-delta-value';
-          deltaValue.textContent = deltaInfo.value;
-          deltaNode.appendChild(deltaLabel);
-          deltaNode.appendChild(deltaValue);
-          chartShell.appendChild(deltaNode);
-        }
-
-        var percentNode = null;
         if (percentDelta) {
-          percentNode = document.createElement('div');
+          var percentNode = document.createElement('div');
           percentNode.className = 'eco-delta-percentage';
-          var deltaRange = analyzeScenarioDelta(entry && entry.result);
-          if (deltaRange) {
-            percentNode.classList.add('eco-delta-percentage--' + deltaRange.direction);
-            percentNode.classList.add('eco-delta-percentage--' + deltaRange.bucket);
+          if (percentDelta.trend === 'increase') {
+            percentNode.classList.add('eco-delta-percentage--increase');
+          } else if (percentDelta.trend === 'reduction') {
+            percentNode.classList.add('eco-delta-percentage--reduction');
           } else {
             percentNode.classList.add('eco-delta-percentage--neutral');
           }
@@ -2524,10 +2297,6 @@
 
         card.appendChild(chartShell);
 
-        if (deltaNode && percentNode) {
-          scheduleDeltaStack(deltaNode, percentNode);
-        }
-
         return card;
       }
 
@@ -2536,94 +2305,6 @@
           return window.EmissionUnits.formatAbbreviation(unit) || unit || '';
         }
         return unit || '';
-      }
-
-      var UNIT_SCALE_STEPS = {
-        'kt-co2-equivalent': { next: 't-co2-equivalent', factor: 1000 },
-        'kilotonne': { next: 'tonne', factor: 1000 },
-        'tonne': { next: 'kg', factor: 1000 },
-        'kg': { next: 'g', factor: 1000 },
-        'g': { next: 'mg', factor: 1000 },
-        'mg': { next: 'µg', factor: 1000 },
-        'g-i-teq': { next: 'mg-i-teq', factor: 1000 },
-        'mg-i-teq': { next: 'µg-i-teq', factor: 1000 }
-      };
-
-      var UNIT_FALLBACKS = {
-        g: { short: 'g', label: 'grams' },
-        mg: { short: 'mg', label: 'milligrams' },
-        'µg': { short: 'µg', label: 'micrograms' },
-        't-co2-equivalent': { short: 't CO₂-e', label: 'tonnes CO₂-equivalent' },
-        'mg-i-teq': { short: 'mg I-TEQ', label: 'milligrams International Toxic Equivalent' },
-        'µg-i-teq': { short: 'µg I-TEQ', label: 'micrograms International Toxic Equivalent' }
-      };
-
-      function getUnitKey(unit) {
-        if (window.EmissionUnits && typeof EmissionUnits.getUnitMeta === 'function') {
-          var meta = EmissionUnits.getUnitMeta(unit);
-          if (meta && meta.key) {
-            return meta.key;
-          }
-        }
-        return String(unit || '').trim().toLowerCase();
-      }
-
-      function resolveUnitLabel(unitKey, fallbackUnit) {
-        if (UNIT_FALLBACKS[unitKey]) {
-          return UNIT_FALLBACKS[unitKey].label;
-        }
-        if (window.EmissionUnits && typeof EmissionUnits.getUnitMeta === 'function') {
-          var meta = EmissionUnits.getUnitMeta(unitKey);
-          if (meta && typeof EmissionUnits.formatValueLabel === 'function') {
-            return EmissionUnits.formatValueLabel(unitKey, 2) || fallbackUnit || unitKey || '';
-          }
-        }
-        return fallbackUnit || unitKey || '';
-      }
-
-      function resolveUnitShort(unitKey, fallbackUnit) {
-        if (UNIT_FALLBACKS[unitKey]) {
-          return UNIT_FALLBACKS[unitKey].short;
-        }
-        if (window.EmissionUnits && typeof EmissionUnits.getUnitMeta === 'function') {
-          var meta = EmissionUnits.getUnitMeta(unitKey);
-          if (meta && typeof EmissionUnits.formatAbbreviation === 'function') {
-            return EmissionUnits.formatAbbreviation(unitKey) || fallbackUnit || unitKey || '';
-          }
-        }
-        return fallbackUnit || unitKey || '';
-      }
-
-      function computeUnitScale(unit, values) {
-        var maxValue = 0;
-        (values || []).forEach(function (value) {
-          var num = Math.abs(Number(value));
-          if (Number.isFinite(num)) {
-            maxValue = Math.max(maxValue, num);
-          }
-        });
-        var baseLabel = getPluralUnitLabel(unit);
-        var baseShort = getUnitAbbreviation(unit);
-        var unitKey = getUnitKey(unit);
-        if (!Number.isFinite(maxValue) || maxValue <= 0) {
-          return { factor: 1, unitKey: unitKey, unitLabel: baseLabel, unitShort: baseShort };
-        }
-        var factor = 1;
-        var scaledMax = maxValue;
-        var safety = 0;
-        while (scaledMax < 0.01 && UNIT_SCALE_STEPS[unitKey] && safety < 6) {
-          var step = UNIT_SCALE_STEPS[unitKey];
-          factor *= step.factor;
-          unitKey = step.next;
-          scaledMax = maxValue * factor;
-          safety += 1;
-        }
-        return {
-          factor: factor,
-          unitKey: unitKey,
-          unitLabel: resolveUnitLabel(unitKey, baseLabel),
-          unitShort: resolveUnitShort(unitKey, baseShort)
-        };
       }
 
       function formatBarValue(value) {
@@ -2698,7 +2379,7 @@
         }
       }
 
-      function renderGoogleBarChart(container, entry, unit, scaleInfo) {
+      function renderGoogleBarChart(container, entry, unit) {
         if (!googleChartsReady || !window.google || !window.google.visualization) {
           container.classList.add('eco-google-chart--empty');
           container.textContent = 'Charts are still loading…';
@@ -2709,17 +2390,10 @@
           container.textContent = 'Chart renderer missing.';
           return;
         }
-        var scale = scaleInfo || computeUnitScale(unit, [
-          entry?.result?.ecoEmission,
-          entry?.result?.fireplaceEmission,
-          entry?.result?.replacementEmission
-        ]);
-        var factor = scale && Number.isFinite(scale.factor) ? scale.factor : 1;
-        var unitShort = scale && scale.unitShort ? scale.unitShort : getUnitAbbreviation(unit);
         var rows = [
-          buildChartRow('Ecodesign - Ready To Burn', entry.result.ecoEmission * factor, unit, BAR_COLORS.eco, unitShort),
-          buildChartRow('Current fireplace / stove', entry.result.fireplaceEmission * factor, unit, BAR_COLORS.fireplace, unitShort),
-          buildChartRow('Replacement scenario', entry.result.replacementEmission * factor, unit, BAR_COLORS.replacement, unitShort)
+          buildChartRow('Ecodesign - Ready To Burn', entry.result.ecoEmission, unit, BAR_COLORS.eco),
+          buildChartRow('Current fireplace / stove', entry.result.fireplaceEmission, unit, BAR_COLORS.fireplace),
+          buildChartRow('Replacement scenario', entry.result.replacementEmission, unit, BAR_COLORS.replacement)
         ];
 
         var maxValue = Math.max.apply(Math, rows.map(function (r) { return Number(r[1]) || 0; }));
@@ -2737,6 +2411,7 @@
             annotation: row[3]
           };
         });
+        var unitShort = getUnitAbbreviation(unit);
         var useExplicitAxis = axisVariant === 'explicit' || axisVariant === 'native-explicit';
         var useAutoAxis = axisVariant === 'native-auto';
 
@@ -2933,315 +2608,26 @@
         }
       }
 
-      function buildChartRow(label, value, unit, color, unitShortOverride) {
+      function buildChartRow(label, value, unit, color) {
         var hasValue = Number.isFinite(value) && value >= 0;
-        var unitShort = unitShortOverride || getUnitAbbreviation(unit);
+        var unitShort = getUnitAbbreviation(unit);
         var annotation = hasValue ? formatBarValue(value) + (unitShort ? ' ' + unitShort : '') : 'No data';
         return [label, hasValue ? value : null, 'color: ' + color, annotation];
       }
 
-      function scaleEmissionValue(value, factor) {
-        var num = Number(value);
-        if (!Number.isFinite(num)) {
-          return NaN;
-        }
-        var safeFactor = Number.isFinite(factor) ? factor : 1;
-        var scaled = num * safeFactor;
-        if (Math.abs(scaled) < 1e-12) {
-          return 0;
-        }
-        return scaled;
-      }
-
-      function formatTooltipEmission(value, unitShort, factor) {
-        var scaled = scaleEmissionValue(value, factor);
-        if (!Number.isFinite(scaled)) {
-          return '—';
-        }
-        var base = formatBarValue(scaled);
-        return unitShort ? base + ' ' + unitShort : base;
-      }
-
-      function formatDynamicNumber(value) {
-        if (!Number.isFinite(value)) {
-          return null;
-        }
-        var abs = Math.abs(value);
-        var maxFractionDigits = 3;
-        if (abs > 0 && abs < 0.001) {
-          maxFractionDigits = 9;
-        } else if (abs < 1) {
-          maxFractionDigits = 6;
-        }
-        return value.toLocaleString(undefined, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: maxFractionDigits
-        });
-      }
-
-      function getEmissionFactorConversionFactor(pollutantUnit) {
-        var helperFactor = window.EmissionUnits && typeof window.EmissionUnits.getConversionFactor === 'function'
-          ? window.EmissionUnits.getConversionFactor(pollutantUnit)
-          : null;
-        if (Number.isFinite(helperFactor)) {
-          return helperFactor;
-        }
-        var unit = typeof pollutantUnit === 'string' ? pollutantUnit.toLowerCase() : '';
-        switch (unit) {
-          case 't':
-          case 'tonnes':
-            return 1000;
-          case 'grams international toxic equivalent':
-            return 1000;
-          case 'kilotonne':
-          case 'kilotonne/kt co2 equivalent':
-          case 'kt co2 equivalent':
-            return 1000000;
-          case 'kg':
-            return 1;
-          default:
-            console.warn('Unknown pollutant unit for EF conversion:', pollutantUnit);
-            return 1000000;
-        }
-      }
-
-      function convertEmissionFactorToGramsPerGJ(emissionFactor, pollutantUnit) {
-        if (!Number.isFinite(emissionFactor)) {
-          return null;
-        }
-        var factor = getEmissionFactorConversionFactor(pollutantUnit);
-        return emissionFactor * factor;
-      }
-
-      function formatEmissionFactorDetailed(value, pollutantUnit) {
-        var converted = convertEmissionFactorToGramsPerGJ(value, pollutantUnit);
-        if (!Number.isFinite(converted)) {
-          return '—';
-        }
-        var formatted = formatDynamicNumber(converted);
-        return formatted ? formatted + ' g/GJ' : '—';
-      }
-
-      function getCalcEnergyUnitLabel() {
-        var unitLabel = state.activityUnitLabel || 'TJ';
-        var calcLabel = '';
-        if (window.EmissionUnits && typeof EmissionUnits.formatValueLabel === 'function') {
-          calcLabel = EmissionUnits.formatValueLabel(unitLabel, null, { context: 'calc' });
-        }
-        if (!calcLabel) {
-          calcLabel = sanitizeUnitLabel(unitLabel).replace(/\(net\)/i, '').trim();
-        }
-        return calcLabel || 'TJ';
-      }
-
-      function formatActivityValueForCalcLine(value) {
-        var unitLabel = getCalcEnergyUnitLabel();
-        var formatter = state.energyFormatter || state.numberFormatter;
-        if (!Number.isFinite(value) || value < 0) {
-          return '—';
-        }
-        if (value === 0) {
-          return '0 ' + unitLabel;
-        }
-        return formatter.format(value) + ' ' + unitLabel;
-      }
-
-      function buildMiniTooltipEntry(name, pollutantLabel, emissionValue, energyValue, emissionFactor, unitShort, factor, pollutantUnit) {
-        var pollutionText = formatTooltipEmission(emissionValue, unitShort, factor);
-        var energyText = formatActivityValueForCalculation(energyValue);
-        var emissionFactorText = formatEmissionFactorDetailed(emissionFactor, pollutantUnit);
-        return [
-          '<div class="eco-mini-tooltip__entry">',
-          '<div class="eco-mini-tooltip__name">' + escapeHtml(name) + '</div>',
-          '<dl>',
-          '<div>',
-          '<dt class="eco-mini-tooltip__pollution-label">' + escapeHtml(pollutantLabel) + '</dt>',
-          '<dd>' + escapeHtml(pollutionText) + '</dd>',
-          '</div>',
-          '<div>',
-          '<dt>Energy</dt>',
-          '<dd>' + escapeHtml(energyText) + '</dd>',
-          '</div>',
-          '<div>',
-          '<dt>Emission factor</dt>',
-          '<dd>' + escapeHtml(emissionFactorText) + '</dd>',
-          '</div>',
-          '</dl>',
-          '</div>'
-        ].join('');
-      }
-
-      function buildMiniCalcRow(label, detailLines) {
-        if (!Array.isArray(detailLines) || !detailLines.length) {
-          return '';
-        }
-        var detailHtml = detailLines.map(function (line, index) {
-          var lineClass = index === 0 ? ' eco-mini-tooltip__calc-detail-line--primary' : '';
-          return '<span class="eco-mini-tooltip__calc-detail-line' + lineClass + '">' + escapeHtml(line) + '</span>';
-        }).join('');
-        return [
-          '<div class="eco-mini-tooltip__calc-row">',
-          '<span>' + escapeHtml(label) + '</span>',
-          '<span class="eco-mini-tooltip__calc-detail">' + detailHtml + '</span>',
-          '</div>'
-        ].join('');
-      }
-
-      function buildMiniCalcNote(message) {
-        if (!message) {
-          return '';
-        }
-        return '<div class="eco-mini-tooltip__note"><strong>Note: ' + escapeHtml(message) + '</strong></div>';
-      }
-
-      function buildMiniTooltip(entry, unit, scaleInfo) {
-        if (!entry || !entry.result) {
-          return null;
-        }
-        var profile = entry.result.energyProfile || state.latestEnergyProfile;
-        var pollutantName = entry.meta?.pollutant || 'Pollutant';
-        var pollutantLabel = pollutantName ? pollutantName + ' pollution' : 'Pollution';
-        var factor = scaleInfo && Number.isFinite(scaleInfo.factor) ? scaleInfo.factor : 1;
-        var unitShort = scaleInfo && scaleInfo.unitShort ? scaleInfo.unitShort : getUnitAbbreviation(unit);
-        var ecoLabel = getCategoryLabel(state.ecoCategoryId);
-        if (!ecoLabel || ecoLabel.indexOf('Select a fireplace') === 0) {
-          ecoLabel = 'Ecodesign - Ready To Burn';
-        }
-        var fireplaceLabel = state.selection.fireplace
-          ? getCategoryLabel(state.selection.fireplace)
-          : 'Fireplace / stove category';
-
-        var fireplaceFactor = NaN;
-        if (window.EcoReplacementUtils && typeof window.EcoReplacementUtils.calculateEmissionFactor === 'function') {
-          fireplaceFactor = window.EcoReplacementUtils.calculateEmissionFactor({
-            pollutantValue: entry.result.fireplaceEmission,
-            actDataValue: profile && profile.fireplaceEnergy
-          });
-        } else if (Number.isFinite(entry.result.fireplaceEmission) && Number.isFinite(profile && profile.fireplaceEnergy) && profile.fireplaceEnergy !== 0) {
-          fireplaceFactor = entry.result.fireplaceEmission / profile.fireplaceEnergy;
-        }
-
-        var gridHtml = [
-          buildMiniTooltipEntry(
-            ecoLabel,
-            pollutantLabel,
-            entry.result.ecoEmission,
-            profile && profile.ecoEnergy,
-            entry.result.ecoEmissionFactor,
-            unitShort,
-            factor,
-            unit
-          ),
-          buildMiniTooltipEntry(
-            fireplaceLabel,
-            pollutantLabel,
-            entry.result.fireplaceEmission,
-            profile && profile.fireplaceEnergy,
-            fireplaceFactor,
-            unitShort,
-            factor,
-            unit
-          )
-        ].join('');
-
-        var energyDetail = { lines: [], note: '' };
-        var assessment = profile ? (profile.inclusion || {}) : {};
-        if (!profile) {
-          energyDetail.note = ENERGY_NOTE_DEFAULT;
-        } else if (assessment.included === null || typeof assessment.included === 'undefined') {
-          energyDetail.note = 'Checking whether Ready To Burn energy overlaps with ' + fireplaceLabel + '.';
-        } else if (assessment.included) {
-          energyDetail.note = 'Ecodesign - Ready To Burn is included in ' + fireplaceLabel + '.';
-        } else {
-          var ecoValue = formatActivityValueForCalcLine(profile.ecoEnergy);
-          var fireplaceValue = formatActivityValueForCalcLine(profile.fireplaceEnergy);
-          var totalValue = formatActivityValueForCalcLine(profile.replacementEnergy);
-          if (ecoValue === '—' || fireplaceValue === '—' || totalValue === '—') {
-            energyDetail.note = 'Waiting for energy totals…';
-          } else {
-            energyDetail.lines = [ecoValue + ' + ' + fireplaceValue + ' = ' + totalValue];
-          }
-        }
-
-        var replacementEnergy = profile ? profile.replacementEnergy : null;
-        var emissionFactor = entry.result.ecoEmissionFactor;
-        var replacementEmission = entry.result.replacementEmission;
-        var pollutionLines = [];
-        if (Number.isFinite(replacementEnergy)
-          && Number.isFinite(emissionFactor)
-          && Number.isFinite(replacementEmission)) {
-          var energyText = formatActivityValueForCalcLine(replacementEnergy);
-          var factorText = formatEmissionFactorDetailed(emissionFactor, unit);
-          var emissionText = formatTooltipEmission(replacementEmission, unitShort, factor);
-          if (energyText !== '—' && factorText !== '—' && emissionText !== '—') {
-            pollutionLines.push(energyText + ' x ' + factorText + ' = ' + emissionText);
-          }
-        }
-        if (!pollutionLines.length) {
-          pollutionLines = ['Calculation unavailable for this selection'];
-        }
-
-        var calcRows = [
-          energyDetail.note ? buildMiniCalcNote(energyDetail.note) : buildMiniCalcRow('Energy', energyDetail.lines),
-          buildMiniCalcRow('Pollution estimate', pollutionLines)
-        ].filter(Boolean).join('');
-
-        var tooltip = document.createElement('div');
-        tooltip.className = 'eco-mini-tooltip';
-        tooltip.setAttribute('role', 'tooltip');
-        tooltip.innerHTML = [
-          '<div class="eco-mini-tooltip__heading">Replacement calculation</div>',
-          '<div class="eco-mini-tooltip__grid">' + gridHtml + '</div>',
-          calcRows ? '<div class="eco-mini-tooltip__calc">' + calcRows + '</div>' : ''
-        ].join('');
-        return tooltip;
-      }
-
-      function formatDeltaText(result, unit, scaleInfo) {
+      function formatDeltaText(result, unit) {
         if (!result) {
-          return null;
+          return '';
         }
         if (!Number.isFinite(result.fireplaceEmission) || !Number.isFinite(result.replacementEmission)) {
-          return null;
+          return '';
         }
-        var factor = scaleInfo && Number.isFinite(scaleInfo.factor) ? scaleInfo.factor : 1;
-        var unitLabel = scaleInfo && scaleInfo.unitShort ? scaleInfo.unitShort : getUnitAbbreviation(unit);
-        var delta = (result.fireplaceEmission - result.replacementEmission) * factor;
+        var delta = result.fireplaceEmission - result.replacementEmission;
         if (!Number.isFinite(delta) || delta === 0) {
-          return null;
+          return '';
         }
-        var direction = delta > 0 ? 'Decrease' : 'Increase';
-        return {
-          label: direction + ':',
-          value: formatEmissionValue(Math.abs(delta), unitLabel)
-        };
-      }
-
-      function scheduleDeltaStack(deltaNode, percentNode) {
-        if (!deltaNode || !percentNode) {
-          return;
-        }
-        var attempts = 0;
-        function check() {
-          if (!deltaNode.isConnected || !percentNode.isConnected) {
-            if (attempts < 5) {
-              attempts += 1;
-              requestAnimationFrame(check);
-            }
-            return;
-          }
-          var deltaBox = deltaNode.getBoundingClientRect();
-          var percentBox = percentNode.getBoundingClientRect();
-          var overlap = deltaBox.right > percentBox.left - 4 && deltaBox.bottom > percentBox.top - 4;
-          deltaNode.classList.toggle('eco-delta-line--stacked', overlap);
-          var maxWidth = percentBox.left - deltaBox.left - 8;
-          if (Number.isFinite(maxWidth) && maxWidth > 0) {
-            deltaNode.style.maxWidth = Math.floor(maxWidth) + 'px';
-          } else {
-            deltaNode.style.maxWidth = '';
-          }
-        }
-        requestAnimationFrame(check);
+        var direction = delta > 0 ? 'Potential reduction' : 'Potential increase';
+        return direction + ': ' + formatEmissionValue(Math.abs(delta), unit);
       }
 
       function computeReplacementPercent(result) {
