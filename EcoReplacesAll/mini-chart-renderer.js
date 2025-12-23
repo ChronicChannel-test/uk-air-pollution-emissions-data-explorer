@@ -106,6 +106,42 @@
     return formatter.format(value);
   }
 
+  function getRowTotal(row) {
+    if (!row) {
+      return NaN;
+    }
+    var explicit = Number(row.value);
+    if (Number.isFinite(explicit)) {
+      return explicit;
+    }
+    if (Array.isArray(row.values)) {
+      return row.values.reduce(function (sum, value) {
+        var num = Number(value);
+        return Number.isFinite(num) ? sum + num : sum;
+      }, 0);
+    }
+    return NaN;
+  }
+
+  function getRowAnnotationColor(row, fallback) {
+    if (row && row.annotationColor) {
+      return row.annotationColor;
+    }
+    if (row && row.color) {
+      return row.color;
+    }
+    return fallback || MiniColors.eco;
+  }
+
+  function resolveSeriesColors(seriesCount, provided) {
+    var defaults = [MiniColors.eco, MiniColors.fireplace, MiniColors.replacement];
+    var colors = Array.isArray(provided) && provided.length ? provided.slice(0, seriesCount) : defaults.slice(0, seriesCount);
+    while (colors.length < seriesCount) {
+      colors.push(MiniColors.eco);
+    }
+    return colors;
+  }
+
   function styleBarAnnotations(container, labels, colors) {
     var svg = container ? container.querySelector('svg') : null;
     if (!svg) {
@@ -434,7 +470,9 @@
   }
 
   function buildTicksFromRows(rows, viewWindowMax) {
-    var values = Array.isArray(rows) ? rows.map(function (r) { return Number(r && r.value) || 0; }) : [];
+    var values = Array.isArray(rows)
+      ? rows.map(function (row) { return getRowTotal(row); }).filter(Number.isFinite)
+      : [];
     var max = Math.max.apply(Math, [0].concat(values, [Number(viewWindowMax) || 0]));
     if (!Number.isFinite(max) || max <= 0) {
       return [];
@@ -500,10 +538,10 @@
     layer.innerHTML = '';
     var containerBox = container.getBoundingClientRect ? container.getBoundingClientRect() : null;
     var containerWidth = containerBox ? containerBox.width : (container.clientWidth || 0);
-    var edgePad = 6;
+    var edgePad = 0;
 
     rows.forEach(function (row, idx) {
-      var value = Number(row && row.value);
+      var value = getRowTotal(row);
       if (!Number.isFinite(value)) {
         return;
       }
@@ -516,7 +554,7 @@
       text.className = 'mini-anno';
       var annotation = row.annotation || (formatValue(value) + (unitShort ? ' ' + unitShort : ''));
       text.textContent = annotation;
-      var color = row.color || MiniColors.eco;
+      var color = getRowAnnotationColor(row, MiniColors.eco);
       Object.assign(text.style, {
         position: 'absolute',
         left: x + 'px',
@@ -567,7 +605,7 @@
     var edgePad = 6;
 
     rows.forEach(function (row, idx) {
-      var value = Number(row && row.value);
+      var value = getRowTotal(row);
       if (!Number.isFinite(value)) {
         return;
       }
@@ -580,7 +618,7 @@
       span.className = 'mini-anno';
       var annotation = row.annotation || (formatValue(value) + (unitShort ? ' ' + unitShort : ''));
       span.textContent = annotation;
-      var color = row.color || MiniColors.eco;
+      var color = getRowAnnotationColor(row, MiniColors.eco);
       var isEdge = idx === rows.length - 1 && Number.isFinite(containerWidth) && containerWidth > 0;
       var left = x;
       Object.assign(span.style, {
@@ -664,7 +702,7 @@
     target.forEach(function (bar, idx) {
       var box = bar.getBBox();
       var row = rows[idx] || {};
-      var value = Number(row.value);
+      var value = getRowTotal(row);
       if (!Number.isFinite(value)) {
         return;
       }
@@ -672,7 +710,7 @@
       var annotation = row.annotation || (formatValue(value) + (unitShort ? ' ' + unitShort : ''));
       text.className = 'mini-anno';
       text.textContent = annotation;
-      var color = row.color || MiniColors.eco;
+      var color = getRowAnnotationColor(row, MiniColors.eco);
 
       var mapped = mapPoint ? mapPoint(box.x + box.width / 2, box.y) : null;
       var absoluteLeft = mapped ? mapped.x - containerBox.left : (svgBox.left + box.x + box.width / 2 - containerBox.left);
@@ -709,6 +747,18 @@
     var height = Number(config.height) || 260;
     var ticks = Array.isArray(config.ticks) && config.ticks.length ? config.ticks : undefined;
     var viewWindowMax = Number.isFinite(config.viewWindowMax) ? config.viewWindowMax : undefined;
+    var useMultiSeries = rows.some(function (row) { return Array.isArray(row && row.values); }) || Array.isArray(config.seriesColors);
+    var seriesCount = useMultiSeries
+      ? Math.max(
+        Array.isArray(config.seriesColors) ? config.seriesColors.length : 0,
+        rows.reduce(function (max, row) {
+          return Math.max(max, Array.isArray(row && row.values) ? row.values.length : 0);
+        }, 0)
+      )
+      : 1;
+    if (seriesCount < 1) {
+      seriesCount = 1;
+    }
     if (!ticks || !ticks.length) {
       ticks = buildTicksFromRows(config.rows, viewWindowMax);
     }
@@ -723,7 +773,7 @@
     var nativeAxisAuto = !!config.nativeAxisAuto;
     var nativeTicksOverride = Array.isArray(config.nativeAxisTicks) && config.nativeAxisTicks.length ? config.nativeAxisTicks : undefined;
     var nativeViewWindowMax = Number.isFinite(config.nativeAxisViewWindowMax) ? config.nativeAxisViewWindowMax : undefined;
-    var nativeViewWindowMin = Number.isFinite(config.nativeAxisViewWindowMin) ? config.nativeAxisViewWindowMin : undefined;
+    var nativeViewWindowMin = Number.isFinite(config.nativeAxisViewWindowMin) ? config.nativeAxisViewWindowMin : 0;
     var nativeGridlineOverride = Number.isFinite(config.nativeGridlineCount) ? config.nativeGridlineCount : undefined;
     var nativeMinorGridOverride = Number.isFinite(config.nativeMinorGridlineCount) ? config.nativeMinorGridlineCount : undefined;
     var debugLabel = config.debugLabel || '';
@@ -734,27 +784,43 @@
     var axisViewWindowMax = useNativeAxis
       ? (useAutoTicks ? undefined : (nativeViewWindowMax !== undefined ? nativeViewWindowMax : (axisTicks && axisTicks.length ? axisTicks[axisTicks.length - 1] : undefined)))
       : viewWindowMax;
-    var axisViewWindowMin = useNativeAxis
-      ? (useAutoTicks ? undefined : (nativeViewWindowMin !== undefined ? nativeViewWindowMin : 0))
-      : 0;
+    var axisViewWindowMin = useNativeAxis ? nativeViewWindowMin : 0;
     var gridlineCount = nativeGridlineOverride !== undefined ? nativeGridlineOverride : (ticks && ticks.length ? Math.max(2, ticks.length) : 5);
     var minorGridlineCount = nativeMinorGridOverride !== undefined ? nativeMinorGridOverride : Math.max(1, Math.min(4, gridlineCount - 1));
 
     var dataTable = new global.google.visualization.DataTable();
     dataTable.addColumn('string', 'Scenario');
-    dataTable.addColumn('number', 'Emissions');
-    dataTable.addColumn({ type: 'string', role: 'style' });
-    dataTable.addColumn({ type: 'string', role: 'annotation' });
-    var isOverlay = !!config.overlayAnnotations;
-    dataTable.addRows(
-      rows.map(function (row) {
-        var value = Number.isFinite(row.value) ? row.value : null;
-        var label = row.label || '';
-        var color = row.color || MiniColors.eco;
-        var annotation = isOverlay ? '' : (row.annotation || (formatValue(row.value) + (unitShort ? ' ' + unitShort : '')));
-        return [label, value, 'color: ' + color, annotation];
-      })
-    );
+    var isOverlay = !!config.overlayAnnotations || useMultiSeries;
+    if (useMultiSeries) {
+      for (var s = 0; s < seriesCount; s++) {
+        dataTable.addColumn('number', 'Emissions ' + (s + 1));
+      }
+      dataTable.addRows(
+        rows.map(function (row) {
+          var values = Array.isArray(row && row.values) ? row.values : [];
+          var label = row && row.label ? row.label : '';
+          var columns = [label];
+          for (var i = 0; i < seriesCount; i++) {
+            var value = Number(values[i]);
+            columns.push(Number.isFinite(value) ? value : 0);
+          }
+          return columns;
+        })
+      );
+    } else {
+      dataTable.addColumn('number', 'Emissions');
+      dataTable.addColumn({ type: 'string', role: 'style' });
+      dataTable.addColumn({ type: 'string', role: 'annotation' });
+      dataTable.addRows(
+        rows.map(function (row) {
+          var value = Number.isFinite(row.value) ? row.value : null;
+          var label = row.label || '';
+          var color = row.color || MiniColors.eco;
+          var annotation = isOverlay ? '' : (row.annotation || (formatValue(row.value) + (unitShort ? ' ' + unitShort : '')));
+          return [label, value, 'color: ' + color, annotation];
+        })
+      );
+    }
 
     var containerWidth = (config.container && config.container.clientWidth) ? config.container.clientWidth : 320;
     var resolvedChartArea = config.chartArea || { width: '78%', height: '74%', top: 8, left: 56, right: 18 };
@@ -762,7 +828,7 @@
     var axisLabelMinLeft = Number.isFinite(config.axisLabelMinLeft) ? config.axisLabelMinLeft : 0;
     var widthTicks = useNativeAxis ? (nativeTicksOverride || ticks) : ticks;
     var maxRowValue = rows.reduce(function (acc, row) {
-      var value = Number(row && row.value);
+      var value = getRowTotal(row);
       return Number.isFinite(value) ? Math.max(acc, value) : acc;
     }, 0);
     if (useNativeAxis && widthTicks && widthTicks.length) {
@@ -804,9 +870,10 @@
       height: height,
       width: Math.max(240, Math.round(containerWidth)),
       backgroundColor: 'transparent',
+      isStacked: useMultiSeries,
       legend: { position: 'none' },
       chartArea: resolvedChartArea,
-      colors: rows.map(function (r) { return r.color || MiniColors.eco; }),
+      colors: useMultiSeries ? resolveSeriesColors(seriesCount, config.seriesColors) : rows.map(function (r) { return r.color || MiniColors.eco; }),
       hAxis: {
         textStyle: { color: 'transparent' },
         baselineColor: 'transparent',
@@ -818,7 +885,7 @@
         baselineColor: majorColor,
         gridlines: { color: majorColor, count: gridlineCount },
         minorGridlines: { color: minorColor, count: minorGridlineCount },
-        viewWindow: axisViewWindowMax === undefined ? undefined : { min: axisViewWindowMin !== undefined ? axisViewWindowMin : 0, max: axisViewWindowMax },
+        viewWindow: axisViewWindowMax === undefined ? { min: axisViewWindowMin } : { min: axisViewWindowMin, max: axisViewWindowMax },
         viewWindowMode: axisTicks ? 'explicit' : 'pretty',
         ticks: axisDisplayTicks,
         format: axisFormat,
@@ -828,13 +895,13 @@
         baselineColor: 'transparent',
         gridlines: { color: 'transparent', count: gridlineCount },
         minorGridlines: { color: 'transparent', count: minorGridlineCount },
-        viewWindow: { min: 0, max: viewWindowMax },
+        viewWindow: viewWindowMax === undefined ? { min: 0 } : { min: 0, max: viewWindowMax },
         viewWindowMode: ticks ? 'explicit' : 'pretty',
         ticks: ticks,
         format: axisFormat,
         textPosition: 'out'
       },
-      annotations: config.overlayAnnotations ? {
+      annotations: isOverlay ? {
         textStyle: { color: 'transparent' },
         alwaysOutside: true,
         stem: { length: 0, color: 'transparent' }
@@ -861,9 +928,9 @@
     var chart = new global.google.visualization.ColumnChart(config.container);
     global.google.visualization.events.addListener(chart, 'ready', function () {
       var labels = rows.map(function (row) {
-        return row.annotation || (formatValue(row.value) + (unitShort ? ' ' + unitShort : ''));
+        return row.annotation || (formatValue(getRowTotal(row)) + (unitShort ? ' ' + unitShort : ''));
       });
-      var colors = rows.map(function (row) { return row.color || MiniColors.eco; });
+      var colors = rows.map(function (row) { return getRowAnnotationColor(row, MiniColors.eco); });
 
       var applyAnnotations = function () {
         if (config.overlayAnnotations) {

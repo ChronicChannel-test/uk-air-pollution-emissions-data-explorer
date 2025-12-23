@@ -25,7 +25,7 @@
     body {
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       margin: 0;
-      background: #ffffff;
+      background: #f8fafc;
       color: #0f172a;
     }
 
@@ -35,7 +35,8 @@
       display: flex;
       flex-direction: column;
       gap: 32px;
-      background: #ffffff;
+      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.2), transparent 60%),
+                  linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(14, 165, 233, 0.12));
     }
 
     .eco-hero-head {
@@ -1176,6 +1177,31 @@
         grid-template-columns: 1fr;
       }
     }
+
+    body {
+      background: #ffffff;
+    }
+
+    .eco-shell {
+      background: #ffffff;
+    }
+
+    .eco-results {
+      background: #fff6c2;
+    }
+
+    .eco-controls,
+    .eco-energy-card,
+    .eco-energy-card--replacement,
+    .eco-pm-card,
+    .eco-chart-card,
+    .eco-results,
+    .eco-mini-tooltip,
+    .eco-status-card,
+    .eco-delta-percentage,
+    .eco-class-group {
+      box-shadow: none !important;
+    }
   </style>
 </head>
 <body data-page-slug="eco-replaces-all">
@@ -1189,7 +1215,7 @@
       </div>
       <section class="eco-subtitle" aria-label="Ecodesign stove replacement context">
       <p><strong>Upgrading stoves can change emissions, but it does not automatically guarantee cleaner air.</strong></p>
-      <p>Although the <strong>Stove Industry Association (SIA)</strong> and its members suggest that replacing fireplaces and older stoves with modern Ecodesign models will improve air quality, evidence does not always support this. Some claims about reductions in pollutants like PM2.5 and PAHs are overstated. Not all stove replacements lead to meaningful emission reductions, and <strong>the promotion of Ready to Burn wood and new stoves will not, in all cases, deliver the air quality improvements the industry claims.</strong> Consumers and policymakers need to consider all relevant factors, including stove efficiency, maintenance, and usage, when assessing environmental impact.</p>
+      <p>Although the <strong>Stove Industry Association (SIA)</strong> and its members suggest that replacing older stoves with modern Ecodesign models will improve air quality, evidence does not always support this. Some claims about reductions in pollutants like PM2.5 and PAHs are overstated. Not all stove replacements lead to meaningful emission reductions, and <strong>the promotion of Ready to Burn wood and new stoves will not, in all cases, deliver the air quality improvements the industry claims.</strong> Consumers and policymakers need to consider all relevant factors, including stove efficiency, maintenance, and usage, when assessing environmental impact.</p>
       <p>This page shows how emissions can change when different types of fireplaces and stoves are replaced with <strong>Ecodesign-compliant stoves using Ready to Burn certified wood.</strong></p>
       <p>Different stove types produce different emission profiles for various pollutants. While Ecodesign stoves meet regulatory limits for some pollutants under test conditions, <strong>this does not mean emissions are lower for every pollutant in every case.</strong> Real-world emissions from <strong>Ecodesign stoves are typically higher than laboratory test results</strong> and vary with fuel and use conditions. Emission factors for Ecodesign stoves using Ready to Burn wood can vary from year to year depending on the mix of wood fuels burned.</p>
       <p>By selecting a <strong>fireplace or stove category</strong>, you can compare its emissions with an <strong>Ecodesign stove burning Ready to Burn wood.</strong> In some cases, emissions may decrease; in others, they may stay the same or increase for some pollutants, such as PAHs or PM2.5.</p>
@@ -1659,7 +1685,6 @@
       var MIN_ECO_YEAR = 2017;
       var DEFAULT_FIREPLACE_ID = 27;
       var ECO_READY_CATEGORY_ID = 20;
-      var EXCLUDED_FIREPLACE_CATEGORY_IDS = [20, 65];
       var ECO_CATEGORY_PATTERN = /ecodesign.+ready.+burn/i;
       var FIREPLACE_PATTERN = /(fireplace|stove|chiminea|burner|grate|open fire|log burner)/i;
       var POLLUTANT_PRESETS = [
@@ -1755,8 +1780,7 @@
       var FALLBACK_CLASS_ID = 'other';
       var FALLBACK_CLASS_META = { label: 'Other pollutants' };
       var EXCLUDED_POLLUTANT_TAG = '16PAH';
-      var EXCLUDED_POLLUTANT_NAME = 'Carbon Dioxide as Carbon';
-      var EXCLUDED_POLLUTANT_ID = 62;
+      var EXCLUDED_POLLUTANT_NAME = 'Carbon as CO2';
       var EXCLUDED_POLLUTANT_NOTE = '16PAH is excluded from the total because it combines 16 pollutants already counted';
       var ENERGY_NOTE_DEFAULT = 'Select a fireplace / stove category to compare activity totals.';
       var BAR_COLORS = {
@@ -1953,7 +1977,7 @@
           if (!pollutant || pollutant.id == null || !pollutant.pollutant) {
             return;
           }
-          if (shouldExcludeFromDropdown(pollutant)) {
+          if (isExcludedPollutant(pollutant)) {
             return;
           }
           if (isActivityDataPollutant(pollutant)) {
@@ -1969,10 +1993,7 @@
         dom.fireplace.innerHTML = '';
         var matches = sortByName(state.categories.filter(function (category) {
           var title = category && (category.category_title || category.group_name || '');
-          if (!FIREPLACE_PATTERN.test(String(title))) {
-            return false;
-          }
-          return !EXCLUDED_FIREPLACE_CATEGORY_IDS.includes(Number(category && category.id));
+          return FIREPLACE_PATTERN.test(String(title));
         }), 'category_title');
         if (!matches.length) {
           dom.fireplace.appendChild(buildOption('', 'No fireplace / stove categories available'));
@@ -2177,10 +2198,8 @@
         ids.forEach(function (id) {
           var numericId = Number(id);
           var pollutant = state.pollutantMap.get(numericId);
-          if (isSixteenPahPollutant(pollutant)) {
-            excludedSixteenPAH = true;
-          }
           if (shouldExcludeFromTotal(pollutant)) {
+            excludedSixteenPAH = true;
             return;
           }
           if (Number.isFinite(numericId)) {
@@ -2240,17 +2259,11 @@
       }
 
       function shouldExcludeFromTotal(pollutant) {
-        if (!pollutant) {
+        if (!pollutant || !pollutant.pollutant) {
           return false;
         }
-        return isSixteenPahPollutant(pollutant) || isCarbonDioxideAsCarbonPollutant(pollutant);
-      }
-
-      function shouldExcludeFromDropdown(pollutant) {
-        if (!pollutant) {
-          return false;
-        }
-        return isCarbonDioxideAsCarbonPollutant(pollutant);
+        var normalized = pollutant.pollutant.replace(/[^a-z0-9]/gi, '').toUpperCase();
+        return normalized === EXCLUDED_POLLUTANT_TAG;
       }
 
       function updateOutcomeCard(items) {
@@ -2302,7 +2315,7 @@
         return summary;
       }
 
-      function resolveScenarioBaseline(result) {
+      function analyzeScenarioDelta(result) {
         if (!result) {
           return null;
         }
@@ -2311,33 +2324,14 @@
         if (!Number.isFinite(fireplace) || !Number.isFinite(replacement)) {
           return null;
         }
-        var inclusion = result.energyProfile && result.energyProfile.inclusion;
-        var isExcluded = inclusion && inclusion.included === false;
-        var ecoEmission = Number(result.ecoEmission);
-        var baseline = fireplace;
-        var useAbsolute = true;
-        if (isExcluded && Number.isFinite(ecoEmission)) {
-          baseline = ecoEmission + fireplace;
-          useAbsolute = false;
-        }
-        return { baseline: baseline, replacement: replacement, useAbsolute: useAbsolute };
-      }
-
-      function analyzeScenarioDelta(result) {
-        var comparison = resolveScenarioBaseline(result);
-        if (!comparison) {
-          return null;
-        }
-        var baseline = comparison.baseline;
-        var replacement = comparison.replacement;
-        var delta = replacement - baseline;
+        var delta = replacement - fireplace;
         if (delta === 0) {
           return null;
         }
-        var magnitude = Math.abs(baseline);
+        var magnitude = Math.abs(fireplace);
         var ratio;
         if (magnitude === 0) {
-          ratio = replacement === baseline ? 0 : Infinity;
+          ratio = replacement === fireplace ? 0 : Infinity;
         } else {
           ratio = Math.abs(delta) / magnitude;
         }
@@ -2739,40 +2733,34 @@
         ]);
         var factor = scale && Number.isFinite(scale.factor) ? scale.factor : 1;
         var unitShort = scale && scale.unitShort ? scale.unitShort : getUnitAbbreviation(unit);
-        var inclusion = entry.result.energyProfile && entry.result.energyProfile.inclusion;
-        var ecoIncluded = inclusion && inclusion.included === true;
-        var ecoScaled = scaleEmissionValue(entry.result.ecoEmission, factor);
-        var fireplaceScaled = scaleEmissionValue(entry.result.fireplaceEmission, factor);
-        var replacementScaled = scaleEmissionValue(entry.result.replacementEmission, factor);
-        var ecoSegment = Number.isFinite(ecoScaled) ? Math.max(0, ecoScaled) : 0;
-        var fireplaceSegment = Number.isFinite(fireplaceScaled) ? Math.max(0, fireplaceScaled) : 0;
-        if (ecoIncluded && Number.isFinite(fireplaceScaled)) {
-          var fireplaceTotal = Math.max(0, fireplaceScaled);
-          ecoSegment = Math.min(ecoSegment, fireplaceTotal);
-          fireplaceSegment = Math.max(0, fireplaceTotal - ecoSegment);
-        }
-        var leftTotal = ecoSegment + fireplaceSegment;
-        var leftAnnotationColor = Number.isFinite(fireplaceScaled) && fireplaceScaled <= 0 ? BAR_COLORS.eco : BAR_COLORS.fireplace;
-        var replacementValue = Number.isFinite(replacementScaled) ? Math.max(0, replacementScaled) : NaN;
-
         var rows = [
-          buildStackedChartRow('Current fireplace / stove', [ecoSegment, fireplaceSegment, 0], leftTotal, leftAnnotationColor, unit, unitShort),
-          buildStackedChartRow('Replacement scenario', [0, 0, replacementValue], replacementValue, BAR_COLORS.replacement, unit, unitShort)
+          buildChartRow('Ecodesign - Ready To Burn', entry.result.ecoEmission * factor, unit, BAR_COLORS.eco, unitShort),
+          buildChartRow('Current fireplace / stove', entry.result.fireplaceEmission * factor, unit, BAR_COLORS.fireplace, unitShort),
+          buildChartRow('Replacement scenario', entry.result.replacementEmission * factor, unit, BAR_COLORS.replacement, unitShort)
         ];
 
-        var maxValue = Math.max.apply(Math, rows.map(function (r) { return Number(r.value) || 0; }));
+        var maxValue = Math.max.apply(Math, rows.map(function (r) { return Number(r[1]) || 0; }));
         var ticks = buildValueTicks(maxValue);
         var tickMax = ticks.length ? ticks[ticks.length - 1] : null;
         if (!ticks.length) {
           ticks = undefined;
         }
+
+        var miniRows = rows.map(function (row) {
+          return {
+            label: row[0],
+            value: row[1],
+            color: (row[2] || '').replace('color:', '').trim(),
+            annotation: row[3]
+          };
+        });
         var useExplicitAxis = axisVariant === 'explicit' || axisVariant === 'native-explicit';
         var useAutoAxis = axisVariant === 'native-auto';
 
         console.log('[eco-chart] ticks', {
           pollutant: entry?.meta?.pollutant,
           unit: unit,
-          values: rows.map(function (r) { return r.value; }),
+          values: miniRows.map(function (r) { return r.value; }),
           maxValue: maxValue,
           ticks: ticks,
           tickMax: tickMax
@@ -2803,7 +2791,7 @@
             try {
               chartInstance = EcoMiniCharts.renderMiniBarChart({
                 container: container,
-                rows: rows,
+                rows: miniRows,
                 unitShort: unitShort,
                 ticks: useAutoAxis ? undefined : ticks,
                 viewWindowMax: useAutoAxis ? undefined : (Number.isFinite(tickMax) ? tickMax : undefined),
@@ -2818,10 +2806,9 @@
                 vAxisLabelColor: '#0f172a',
                 vAxisGridColor: '#cbd5e1',
                 vAxisMinorGridColor: '#e2e8f0',
-                seriesColors: [BAR_COLORS.eco, BAR_COLORS.fireplace, BAR_COLORS.replacement],
                 nativeAxisTicks: useExplicitAxis ? ticks : undefined,
                 nativeAxisViewWindowMax: useExplicitAxis && Number.isFinite(tickMax) ? tickMax : undefined,
-                nativeAxisViewWindowMin: 0,
+                nativeAxisViewWindowMin: useExplicitAxis ? 0 : undefined,
                 nativeAxisAuto: useAutoAxis,
                 nativeGridlineCount: Number.isFinite(gridlineOverride) && gridlineOverride > 0 ? gridlineOverride : undefined,
                 nativeMinorGridlineCount: minorOverride === 'none' ? 0 : (Number.isFinite(minorOverride) && minorOverride >= 0 ? minorOverride : undefined),
@@ -3143,22 +3130,6 @@
         return [label, hasValue ? value : null, 'color: ' + color, annotation];
       }
 
-      function buildStackedChartRow(label, values, totalValue, annotationColor, unit, unitShortOverride) {
-        var unitShort = unitShortOverride || getUnitAbbreviation(unit);
-        var safeValues = Array.isArray(values) ? values.map(function (value) {
-          return Number.isFinite(value) && value >= 0 ? value : 0;
-        }) : [];
-        var hasValue = Number.isFinite(totalValue) && totalValue >= 0;
-        var annotation = hasValue ? formatBarValue(totalValue) + (unitShort ? ' ' + unitShort : '') : 'No data';
-        return {
-          label: label,
-          values: safeValues,
-          value: hasValue ? totalValue : NaN,
-          annotation: annotation,
-          annotationColor: annotationColor
-        };
-      }
-
       function scaleEmissionValue(value, factor) {
         var num = Number(value);
         if (!Number.isFinite(num)) {
@@ -3417,13 +3388,15 @@
       }
 
       function formatDeltaText(result, unit, scaleInfo) {
-        var comparison = resolveScenarioBaseline(result);
-        if (!comparison) {
+        if (!result) {
+          return null;
+        }
+        if (!Number.isFinite(result.fireplaceEmission) || !Number.isFinite(result.replacementEmission)) {
           return null;
         }
         var factor = scaleInfo && Number.isFinite(scaleInfo.factor) ? scaleInfo.factor : 1;
         var unitLabel = scaleInfo && scaleInfo.unitShort ? scaleInfo.unitShort : getUnitAbbreviation(unit);
-        var delta = (comparison.baseline - comparison.replacement) * factor;
+        var delta = (result.fireplaceEmission - result.replacementEmission) * factor;
         if (!Number.isFinite(delta) || delta === 0) {
           return null;
         }
@@ -3462,22 +3435,24 @@
       }
 
       function computeReplacementPercent(result) {
-        var comparison = resolveScenarioBaseline(result);
-        if (!comparison) {
+        if (!result) {
           return null;
         }
-        var baseline = comparison.baseline;
-        var replacement = comparison.replacement;
-        var denominator = comparison.useAbsolute ? Math.abs(baseline) : baseline;
+        var fireplace = Number(result.fireplaceEmission);
+        var replacement = Number(result.replacementEmission);
+        if (!Number.isFinite(fireplace) || !Number.isFinite(replacement)) {
+          return null;
+        }
+        var baseline = Math.abs(fireplace);
         var change;
-        if (denominator === 0) {
-          if (replacement === baseline) {
+        if (baseline === 0) {
+          if (replacement === fireplace) {
             change = 0;
           } else {
-            change = replacement > baseline ? Infinity : -Infinity;
+            change = replacement > fireplace ? Infinity : -Infinity;
           }
         } else {
-          change = ((replacement - baseline) / denominator) * 100;
+          change = ((replacement - fireplace) / baseline) * 100;
         }
         var absChange = Math.abs(change);
         var isFiniteChange = Number.isFinite(absChange);
@@ -3680,31 +3655,11 @@
       }
 
       function isExcludedPollutant(pollutant) {
-        if (!pollutant) {
-          return false;
-        }
-        return shouldExcludeFromDropdown(pollutant);
-      }
-
-      function normalizePollutantLabel(label) {
-        return String(label || '').replace(/[^a-z0-9]/gi, '').toUpperCase();
-      }
-
-      function isSixteenPahPollutant(pollutant) {
         if (!pollutant || !pollutant.pollutant) {
           return false;
         }
-        return normalizePollutantLabel(pollutant.pollutant) === EXCLUDED_POLLUTANT_TAG;
-      }
-
-      function isCarbonDioxideAsCarbonPollutant(pollutant) {
-        if (!pollutant || !pollutant.pollutant) {
-          return false;
-        }
-        if (Number.isFinite(EXCLUDED_POLLUTANT_ID) && Number(pollutant.id) === Number(EXCLUDED_POLLUTANT_ID)) {
-          return true;
-        }
-        return normalizePollutantLabel(pollutant.pollutant) === normalizePollutantLabel(EXCLUDED_POLLUTANT_NAME);
+        var normalized = String(pollutant.pollutant).replace(/[^a-z0-9]/gi, '').toUpperCase();
+        return normalized === 'CARBONASCO2';
       }
 
       function isExcludedPollutantId(pollutantId) {
