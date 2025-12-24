@@ -922,6 +922,7 @@
         duration: 320,
         easing: 'out'
       },
+      enableInteractivity: false,
       tooltip: { trigger: 'none' }
     };
 
