@@ -1,8 +1,8 @@
 (function (global) {
   var MiniColors = {
     eco: '#F58231',
-    fireplace: '#911EB4',
-    replacement: '#F58231'
+    fireplace: '#E42020',
+    replacement: '#911EB4'
   };
 
   function formatValue(value) {
@@ -111,16 +111,13 @@
       return NaN;
     }
     var explicit = Number(row.value);
-    if (Number.isFinite(explicit) && explicit > 0) {
+    if (Number.isFinite(explicit)) {
       return explicit;
     }
     if (Array.isArray(row.values)) {
       return row.values.reduce(function (sum, value) {
         var num = Number(value);
-        if (!Number.isFinite(num) || num <= 0) {
-          return sum;
-        }
-        return sum + num;
+        return Number.isFinite(num) ? sum + num : sum;
       }, 0);
     }
     return NaN;
@@ -805,7 +802,7 @@
           var columns = [label];
           for (var i = 0; i < seriesCount; i++) {
             var value = Number(values[i]);
-            columns.push(Number.isFinite(value) && value > 0 ? value : null);
+            columns.push(Number.isFinite(value) ? value : 0);
           }
           return columns;
         })

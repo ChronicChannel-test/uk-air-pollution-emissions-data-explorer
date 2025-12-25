@@ -21,3 +21,8 @@ The only file outside EcoReplacesAll you are allowed to edit is:
 You can also make any changes needed in the testing harness.
 
 Never try an overlay fallback for the mini chart gridlines.
+
+## Abbreviations used in this workspace
+- FPS-All: Fireplaces & All Stoves
+- AllDomComb: All Domestic Combustion
+- Eco-rtb: Ecodesign - Ready To Burn
