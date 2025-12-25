@@ -500,8 +500,7 @@
       'g[aria-label="annotation"]',
       'g[aria-label="annotations"]',
       'g[aria-label="annotation"] text',
-      'g[clip-path*="annotation"] text',
-      'text[text-anchor="middle"]'
+      'g[clip-path*="annotation"] text'
     ];
     selectors.forEach(function (sel) {
       Array.from(svg.querySelectorAll(sel)).forEach(function (node) {
@@ -780,6 +779,7 @@
     var nativeGridlineOverride = Number.isFinite(config.nativeGridlineCount) ? config.nativeGridlineCount : undefined;
     var nativeMinorGridOverride = Number.isFinite(config.nativeMinorGridlineCount) ? config.nativeMinorGridlineCount : undefined;
     var debugLabel = config.debugLabel || '';
+    var categoryTicks = Array.isArray(config.categoryTicks) && config.categoryTicks.length ? config.categoryTicks : undefined;
 
     var useAutoTicks = useNativeAxis && nativeAxisAuto && !nativeTicksOverride;
     var axisTicks = useNativeAxis ? (useAutoTicks ? undefined : (nativeTicksOverride || ticks)) : ticks;
@@ -878,10 +878,11 @@
       chartArea: resolvedChartArea,
       colors: useMultiSeries ? resolveSeriesColors(seriesCount, config.seriesColors) : rows.map(function (r) { return r.color || MiniColors.eco; }),
       hAxis: {
-        textStyle: { color: 'transparent' },
-        baselineColor: 'transparent',
+        textStyle: { color: '#111827', fontSize: 13, bold: true },
+        baselineColor: '#cbd5e1',
         gridlines: { color: 'transparent' },
-        ticks: []
+        ticks: categoryTicks,
+        slantedText: false
       },
       vAxis: useNativeAxis ? {
         textStyle: { color: labelColor, fontSize: 12, fontWeight: 600 },
