@@ -3279,13 +3279,15 @@
         return Number.isFinite(num) && num > 1e-6;
       }
 
-      function markColorUsage(key, hasValue) {
-        if (!key) {
+      function mergeLegendVisibility(map) {
+        if (!map || !state.colorUsage) {
           return;
         }
-        if (hasValue) {
-          state.colorUsage[key] = true;
-        }
+        Object.keys(map).forEach(function (key) {
+          if (key in state.colorUsage) {
+            state.colorUsage[key] = state.colorUsage[key] || !!map[key];
+          }
+        });
       }
 
       function updateGlobalLegend() {
@@ -3941,9 +3943,11 @@
         var useExplicitAxis = axisVariant === 'explicit' || axisVariant === 'native-explicit';
         var useAutoAxis = axisVariant === 'native-auto';
 
-        markColorUsage('eco', isPositiveValue(displayEco) || isPositiveValue(displayReplacement));
-        markColorUsage('selected', isPositiveValue(displayFireplace));
-        markColorUsage('remaining', isPositiveValue(displayFireplace));
+        mergeLegendVisibility({
+          eco: isPositiveValue(displayEco) || isPositiveValue(displayReplacement),
+          selected: isPositiveValue(displayFireplace),
+          remaining: false
+        });
         updateGlobalLegend();
 
         var renderWithAxis = function (useNative) {
@@ -4289,11 +4293,13 @@
         }) : undefined;
         var gridlineCount = ticks.length ? Math.max(2, ticks.length - 1) : undefined;
 
-        markColorUsage('gas', isPositiveValue(gasBoilers));
-        markColorUsage('other', isPositiveValue(other));
-        markColorUsage('eco', isPositiveValue(ecoRtb) || isPositiveValue(replacementEcoScaled));
-        markColorUsage('selected', isPositiveValue(fireplacesExceptEco));
-        markColorUsage('remaining', isPositiveValue(fireplacesExceptEco));
+        mergeLegendVisibility({
+          gas: isPositiveValue(gasBoilers),
+          other: isPositiveValue(other),
+          eco: isPositiveValue(ecoRtb) || isPositiveValue(replacementEcoScaled),
+          selected: isPositiveValue(fireplacesExceptEco),
+          remaining: isPositiveValue(fireplacesExceptEco)
+        });
 
         var options = {
           height: 240,
@@ -4485,12 +4491,11 @@
           var gridlineCount = ticks.length ? Math.max(2, ticks.length - 1) : undefined;
 
         var hasFireplaceNonEco = isPositiveValue(fireplaceNonEco);
-        markColorUsage('eco', isPositiveValue(ecoValue) || isPositiveValue(replacementValue));
-        markColorUsage('selected', hasFireplaceNonEco);
-        markColorUsage('remaining', hasFireplaceNonEco);
-        if (!hasFireplaceNonEco) {
-          state.colorUsage.remaining = false;
-        }
+        mergeLegendVisibility({
+          eco: isPositiveValue(ecoValue) || isPositiveValue(replacementValue),
+          selected: hasFireplaceNonEco,
+          remaining: false
+        });
           var options = {
             height: 240,
             backgroundColor: 'transparent',
