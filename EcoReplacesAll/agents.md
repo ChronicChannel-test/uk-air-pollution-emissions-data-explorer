@@ -8,7 +8,8 @@ any changes there.
 
 You can use anything in SharedResources or any other directory for reference, but do not make any
 changes outside EcoReplacesAll. If you need to amend a function in a SharedResources module, copy
-it and create it in EcoReplacesAll.
+it and create it in EcoReplacesAll. Exception: you may edit `SharedResources/eco-replacement-utils.js`
+when required for this workspace.
 
 Do not change any file that has a "v" suffix in its filename (versioned/archived files), for
 example:
@@ -17,6 +18,7 @@ example:
 
 The only file outside EcoReplacesAll you are allowed to edit is:
 - system_docs/EcoDesignAll-reference.md
+- SharedResources/eco-replacement-utils.js
 
 You can also make any changes needed in the testing harness.
 

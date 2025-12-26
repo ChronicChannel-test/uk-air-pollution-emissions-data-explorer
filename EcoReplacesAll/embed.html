@@ -400,11 +400,11 @@
     }
 
     .eco-pm-tooltip-box--fireplace {
-      background: #e11d48;
+      background: #911EB4;
     }
 
     .eco-pm-tooltip-box--replacement {
-      background: #911EB4;
+      background: #F58231;
     }
 
     .eco-pm-tooltip-box--total {
@@ -413,16 +413,26 @@
     }
 
     .eco-pm-tooltip-box--total .eco-pm-tooltip-value {
-      color: #0f172a;
+      color: inherit;
       text-shadow: none;
     }
 
     .eco-pm-tooltip-box--total-current {
       background: transparent;
+      color: #911EB4;
+    }
+
+    .eco-pm-tooltip-box--total-current .eco-pm-tooltip-value {
+      color: #911EB4;
     }
 
     .eco-pm-tooltip-box--total-replacement {
       background: transparent;
+      color: #F58231;
+    }
+
+    .eco-pm-tooltip-box--total-replacement .eco-pm-tooltip-value {
+      color: #F58231;
     }
 
     .eco-pm-tooltip-box--total-electric {
@@ -430,11 +440,11 @@
     }
 
     .eco-pm-tooltip-box--total-current .eco-pm-tooltip-value {
-      color: #FF2600;
+      color: #911EB4;
     }
 
     .eco-pm-tooltip-box--total-replacement .eco-pm-tooltip-value {
-      color: #911EB4;
+      color: #F58231;
     }
 
     .eco-pm-tooltip-box--total-electric .eco-pm-tooltip-value {
@@ -1017,7 +1027,7 @@
     .eco-legend-chip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
       font-size: 0.95rem;
       color: #111827;
       font-weight: 700;
@@ -1032,7 +1042,7 @@
       border-radius: 999px;
       background: var(--chip-color, #fff);
       box-shadow: none;
-      margin-right: 6px;
+      margin-right: 0;
     }
 
     .eco-legend-note {
@@ -2432,6 +2442,7 @@
       var SCOPE_DOMESTIC = 'domestic';
       var SCOPE_FIREPLACE = 'fireplace';
       var ECO_CATEGORY_PATTERN = /ecodesign.+ready.+burn/i;
+      var FIREPLACES_ALL_CATEGORY_ID = 27;
       var FIREPLACE_PATTERN = /(fireplace|stove|chiminea|burner|grate|open fire|log burner)/i;
       var POLLUTANT_PRESETS = [
         { value: 'preset-all', label: 'All' },
@@ -3256,7 +3267,8 @@
         var categoryLabel = state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : '';
         var showNote = !!state.ecoIncludedInSelection && !!categoryLabel;
         if (showNote) {
-          dom.legendNote.textContent = '(Ecodesign - Ready To Burn is included in ' + categoryLabel + ' so purple block in chart excludes Ecodesign - Ready To Burn)';
+          var safeCategory = escapeHtml(categoryLabel);
+          dom.legendNote.innerHTML = '(<strong>Ecodesign - Ready To Burn</strong> is included in <strong>' + safeCategory + '</strong> so purple segment in chart excludes <strong>Ecodesign - Ready To Burn</strong>)';
           dom.legendNote.classList.remove('is-hidden');
         } else {
           dom.legendNote.textContent = '';
@@ -4379,6 +4391,7 @@
             timeseriesIndex: state.timeseriesIndex,
             ecoCategoryId: state.ecoCategoryId,
             fireplaceCategoryId: state.selection.fireplace,
+            baselineFireplaceCategoryId: FIREPLACES_ALL_CATEGORY_ID,
             activityPollutantId: state.activityPollutantId,
             year: year,
             energyProfile: profile,
@@ -4399,9 +4412,11 @@
           var fireplaceRaw = Number(result.fireplaceEmission);
           var replacementRaw = Number(result.replacementEmission);
           var ecoRaw = Number(result.ecoEmission);
+          var baselineFireplaceRaw = Number(result.baselineFireplaceEmission);
+          var remainderRaw = Number(result.fireplaceRemainderEmission);
 
           var scaleInfo = computeUnitScale(unitLabel, [
-            coerceNonNegative(fireplaceRaw),
+            coerceNonNegative(baselineFireplaceRaw),
             Number.isFinite(replacementRaw) ? coerceNonNegative(replacementRaw) : 0,
             Number.isFinite(ecoRaw) ? coerceNonNegative(ecoRaw) : 0
           ]);
@@ -4412,11 +4427,17 @@
             return;
           }
           var fireplaceValue = coerceNonNegative(fireplaceRaw) * factor;
+          var baselineFireplaceValue = coerceNonNegative(
+            Number.isFinite(baselineFireplaceRaw) ? baselineFireplaceRaw : fireplaceRaw
+          ) * factor;
+          var remainderValue = coerceNonNegative(
+            Number.isFinite(remainderRaw) ? remainderRaw : Math.max(0, baselineFireplaceValue - fireplaceValue)
+          ) * factor;
           var replacementValue = Number.isFinite(replacementRaw) && replacementRaw > 0 ? coerceNonNegative(replacementRaw) * factor : null;
           var ecoValue = Number.isFinite(ecoRaw) ? coerceNonNegative(ecoRaw) * factor : 0;
-          var pmBaselineTotal = coerceNonNegative(fireplaceRaw);
-          var pmReplacementTotal = Number.isFinite(replacementRaw) ? coerceNonNegative(replacementRaw) : 0;
-          var pmElectricTotal = 0;
+          var pmBaselineTotal = baselineFireplaceValue;
+          var pmReplacementTotal = (Number.isFinite(replacementValue) ? replacementValue : 0) + remainderValue;
+          var pmElectricTotal = remainderValue;
           var pmPercentReplacement = computeReplacementPercent({
             fireplaceEmission: pmBaselineTotal,
             replacementEmission: pmReplacementTotal
@@ -4436,16 +4457,16 @@
           var fireplaceNonEco = Math.max(0, fireplaceValue - ecoValue);
           var tooltipValues = {
             'fireplace-current': fireplaceNonEco,
-            'fireplace-replacement': 0,
-            'fireplace-electric': 0,
+            'fireplace-replacement': remainderValue,
+            'fireplace-electric': remainderValue,
             'eco-current': ecoValue,
             'eco-replacement': replacementValue,
             'eco-electric': 0,
             'other-span': null,
             'gas-span': null,
-            'total-current': fireplaceValue,
-            'total-replacement': replacementValue,
-            'total-electric': 0
+            'total-current': pmBaselineTotal,
+            'total-replacement': pmReplacementTotal,
+            'total-electric': pmElectricTotal
           };
           var pollutantName = pollutantMeta && pollutantMeta.pollutant ? pollutantMeta.pollutant : 'PM2.5';
           var pollutantLabel = pollutantName ? pollutantName + ' Pollution' : 'Pollution';
@@ -4469,15 +4490,15 @@
         data.addColumn('number', fireplaceStackLabel);
         data.addColumn('number', 'Remaining FPS-All');
         data.addRows([
-            [String(year), ecoValue > 0 ? ecoValue : null, fireplaceNonEco > 0 ? fireplaceNonEco : null, null],
-            ['Replacement\nscenario', replacementValue > 0 ? replacementValue : null, null, null],
-            ['Replaced with electric\nheating/heat pumps', null, null, null]
+            [String(year), ecoValue > 0 ? ecoValue : null, fireplaceNonEco > 0 ? fireplaceNonEco : null, remainderValue > 0 ? remainderValue : null],
+            ['Replacement\nscenario', replacementValue > 0 ? replacementValue : null, null, remainderValue > 0 ? remainderValue : null],
+            ['Replaced with electric\nheating/heat pumps', null, null, remainderValue > 0 ? remainderValue : null]
         ]);
 
           var totals = [
-            fireplaceValue,
-            replacementValue,
-            0
+            pmBaselineTotal,
+            pmReplacementTotal,
+            pmElectricTotal
           ];
           var maxValue = Math.max.apply(Math, totals.map(function (value) { return Number(value) || 0; }));
           var ticks = buildMiniStyleTicks(totals, maxValue);
@@ -4491,10 +4512,11 @@
           var gridlineCount = ticks.length ? Math.max(2, ticks.length - 1) : undefined;
 
         var hasFireplaceNonEco = isPositiveValue(fireplaceNonEco);
+        var hasRemainder = isPositiveValue(remainderValue);
         mergeLegendVisibility({
           eco: isPositiveValue(ecoValue) || isPositiveValue(replacementValue),
           selected: hasFireplaceNonEco,
-          remaining: false
+          remaining: hasRemainder
         });
           var options = {
             height: 240,

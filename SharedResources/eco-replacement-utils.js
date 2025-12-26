@@ -458,6 +458,7 @@
       timeseriesIndex,
       ecoCategoryId,
       fireplaceCategoryId,
+      baselineFireplaceCategoryId,
       year,
       activityPollutantId,
       energyProfile,
@@ -480,6 +481,22 @@
     const yearKey = resolveYearKey(year);
     const ecoEmission = getTimeseriesValue(timeseriesIndex, pollutantId, ecoCategoryId, yearKey);
     const fireplaceEmission = getTimeseriesValue(timeseriesIndex, pollutantId, fireplaceCategoryId, yearKey);
+    const baselineFireplaceEmission = getTimeseriesValue(
+      timeseriesIndex,
+      pollutantId,
+      Number.isFinite(baselineFireplaceCategoryId) ? baselineFireplaceCategoryId : fireplaceCategoryId,
+      yearKey
+    );
+    const baselineFireplaceEnergy = Number.isFinite(activityPollutantId)
+      ? getTimeseriesValue(
+        timeseriesIndex,
+        activityPollutantId,
+        Number.isFinite(baselineFireplaceCategoryId) ? baselineFireplaceCategoryId : fireplaceCategoryId,
+        yearKey
+      )
+      : NaN;
+    const remainderEmission = Math.max(0, normalizeNumber(baselineFireplaceEmission) - normalizeNumber(fireplaceEmission));
+    const remainderEnergy = Math.max(0, normalizeNumber(baselineFireplaceEnergy) - normalizeNumber(profile.fireplaceEnergy));
     const ecoEmissionFactor = calculateEmissionFactor({
       pollutantValue: ecoEmission,
       actDataValue: profile.ecoEnergy
@@ -495,6 +512,10 @@
       pollutantId: Number(pollutantId),
       ecoEmission: normalizeNumber(ecoEmission),
       fireplaceEmission: normalizeNumber(fireplaceEmission),
+      baselineFireplaceEmission: normalizeNumber(baselineFireplaceEmission),
+      fireplaceRemainderEmission: remainderEmission,
+      baselineFireplaceEnergy: normalizeNumber(baselineFireplaceEnergy),
+      fireplaceRemainderEnergy: remainderEnergy,
       replacementEmission: normalizeNumber(replacementEmission),
       ecoEmissionFactor: Number.isFinite(ecoEmissionFactor) ? ecoEmissionFactor : null,
       energyProfile: profile
