@@ -190,8 +190,8 @@
       width: 100%;
       height: var(--eco-energy-pie-height);
       position: relative;
-      overflow: hidden;
-      background: #f7a3c2;
+      overflow: visible;
+      background: transparent;
     }
 
     .eco-energy-pie-values {
@@ -201,6 +201,7 @@
       justify-content: center;
       align-items: stretch;
       flex: 0 0 auto;
+      margin-left: 3px;
       width: 100%;
     }
 
@@ -222,6 +223,22 @@
         0 0 3px rgba(255, 255, 255, 0.9);
     }
 
+    .eco-energy-pie-value--outlined {
+      display: inline-block;
+      position: relative;
+      transform: scale(0.92);
+      transform-origin: center;
+      text-shadow:
+        0.5px 0 0 #111827,
+        -0.5px 0 0 #111827,
+        0 0.5px 0 #111827,
+        0 -0.5px 0 #111827,
+        0.5px 0.5px 0 #111827,
+        -0.5px 0.5px 0 #111827,
+        0.5px -0.5px 0 #111827,
+        -0.5px -0.5px 0 #111827;
+    }
+
     .eco-energy-pie-overlay {
       position: absolute;
       inset: 0;
@@ -239,7 +256,7 @@
       position: absolute;
       font-family: 'Tiresias Infofont', 'Inter', 'Helvetica Neue', Arial, sans-serif;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: clamp(1.1rem, calc(var(--eco-card-width, 320px) / 15), 1.5rem);
       line-height: 1;
       white-space: nowrap;
       text-shadow:
@@ -252,6 +269,22 @@
         1px 0 0 #ffffff,
         -1px 0 0 #ffffff,
         0 0 3px rgba(255, 255, 255, 0.9);
+    }
+
+    .eco-energy-pie-label--outlined {
+      display: inline-block;
+      position: absolute;
+      transform: scale(0.92);
+      transform-origin: center;
+      text-shadow:
+        0.5px 0 0 #111827,
+        -0.5px 0 0 #111827,
+        0 0.5px 0 #111827,
+        0 -0.5px 0 #111827,
+        0.5px 0.5px 0 #111827,
+        -0.5px 0.5px 0 #111827,
+        0.5px -0.5px 0 #111827,
+        -0.5px -0.5px 0 #111827;
     }
 
     @media (max-width: 720px) {
@@ -511,6 +544,10 @@
 
     .eco-pm-tooltip-box--replacement {
       background: #F58231;
+    }
+
+    .eco-pm-tooltip-box--remaining {
+      background: #E42020;
     }
 
     .eco-pm-tooltip-box--total {
@@ -793,6 +830,11 @@
       font-size: 1.1rem;
       font-weight: 600;
       color: #ffffff;
+    }
+
+    .eco-outcome-label--context {
+      font-weight: 700;
+      margin-top: 2px;
     }
 
     .eco-outcome-count {
@@ -1990,14 +2032,14 @@
         </div>
         <section class="eco-energy-summary" aria-live="polite">
           <article class="eco-energy-card eco-energy-card--comparison is-idle" id="ecoEnergyCard">
-            <p class="eco-energy-label">ENERGY<span class="eco-energy-label-line" id="ecoEnergyScopeLabel">FIREPLACES &amp; ALL STOVES</span></p>
+            <p class="eco-energy-label"><span id="ecoEnergyYearLabel">ENERGY - 2023</span><span class="eco-energy-label-line" id="ecoEnergyScopeLabel">FIREPLACES &amp; ALL STOVES</span></p>
             <div class="eco-energy-pie" id="ecoEnergyPie" aria-label="Energy split">
               <div class="eco-energy-pie-chart" id="ecoEnergyPieChart"></div>
               <div class="eco-energy-pie-values" id="ecoEnergyPieValues" role="list" aria-label="Energy segment values"></div>
             </div>
             <div class="eco-energy-bottom">
               <p class="eco-energy-category">Total Energy</p>
-              <p class="eco-energy-calculation" id="ecoEnergyCalculation">Select a fireplace / stove category to compare activity totals.</p>
+              <p class="eco-energy-calculation" id="ecoEnergyCalculation"></p>
               <p class="eco-energy-total" id="ecoEnergyReplacementValue">—</p>
             </div>
           </article>
@@ -2025,16 +2067,22 @@
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label eco-pm-tooltip-cell--pollutant" id="ecoPmCalcPollutant">PM2.5 Pollution</div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoPmCalcYear">2023</div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header">Replacement scenario</div>
-                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header">Electric heating/heat pumps</div>
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoPmCalcElectricHeader">All Fireplaces &amp; Stoves replaced by electric heating/heat pumps.</div>
                   </div>
                   <div class="eco-pm-tooltip-row">
-                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label">Fireplaces & Stoves exc Ecodesign Ready To Burn</div>
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="remaining">Other Fireplaces &amp; Stoves (Not Replaced)</div>
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--remaining"><span class="eco-pm-tooltip-value" data-pm-value="remaining-current">—</span></div>
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--remaining"><span class="eco-pm-tooltip-value" data-pm-value="remaining-replacement">—</span></div>
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--remaining"><span class="eco-pm-tooltip-value" data-pm-value="remaining-electric">—</span></div>
+                  </div>
+                  <div class="eco-pm-tooltip-row">
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="selected">Selected category</div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--fireplace"><span class="eco-pm-tooltip-value" data-pm-value="fireplace-current">—</span></div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--fireplace"><span class="eco-pm-tooltip-value" data-pm-value="fireplace-replacement">—</span></div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--fireplace"><span class="eco-pm-tooltip-value" data-pm-value="fireplace-electric">—</span></div>
                   </div>
                   <div class="eco-pm-tooltip-row">
-                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label">Ecodesign Ready To Burn</div>
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="eco">Ecodesign Ready To Burn</div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--eco"><span class="eco-pm-tooltip-value" data-pm-value="eco-current">—</span></div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--replacement"><span class="eco-pm-tooltip-value" data-pm-value="eco-replacement">—</span></div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--replacement"><span class="eco-pm-tooltip-value" data-pm-value="eco-electric">—</span></div>
@@ -2077,6 +2125,7 @@
               <p class="eco-outcome-summary-inline" id="ecoPollutantCardInlineNote" hidden>16PAH is excluded from the total because it combines 16 pollutants already counted</p>
               <p class="eco-outcome-summary-note" id="ecoPollutantCardNote">Counting pollutants…</p>
             </div>
+            <p class="eco-outcome-label eco-outcome-label--context" id="ecoOutcomeYearLabel">Replacement scenario vs 2023</p>
             <div class="eco-outcome-main">
               <div class="eco-outcome-column">
                 <p class="eco-outcome-label">Lower</p>
@@ -2147,26 +2196,32 @@
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label eco-pm-tooltip-cell--pollutant" id="ecoOutcomeCalcPollutant">Pollution<span class="eco-pm-tooltip-unit-line" id="ecoOutcomeCalcUnit"></span></div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoOutcomeCalcYear">2023</div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header">Replacement scenario</div>
-                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header">Electric heating/heat pumps</div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoOutcomeCalcElectricHeader">All Fireplaces &amp; Stoves replaced by electric heating/heat pumps.</div>
                 </div>
                 <div class="eco-pm-tooltip-row">
-                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label">Fireplaces & Stoves exc Ecodesign Ready To Burn</div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="remaining">Other Fireplaces &amp; Stoves (Not Replaced)</div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--remaining"><span class="eco-pm-tooltip-value" data-pm-value="remaining-current">—</span></div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--remaining"><span class="eco-pm-tooltip-value" data-pm-value="remaining-replacement">—</span></div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--remaining"><span class="eco-pm-tooltip-value" data-pm-value="remaining-electric">—</span></div>
+                </div>
+                <div class="eco-pm-tooltip-row">
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="selected">Selected category</div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--fireplace"><span class="eco-pm-tooltip-value" data-pm-value="fireplace-current">—</span></div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--fireplace"><span class="eco-pm-tooltip-value" data-pm-value="fireplace-replacement">—</span></div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--fireplace"><span class="eco-pm-tooltip-value" data-pm-value="fireplace-electric">—</span></div>
                 </div>
                 <div class="eco-pm-tooltip-row">
-                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label">Ecodesign Ready To Burn</div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="eco">Ecodesign Ready To Burn</div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--eco"><span class="eco-pm-tooltip-value" data-pm-value="eco-current">—</span></div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--replacement"><span class="eco-pm-tooltip-value" data-pm-value="eco-replacement">—</span></div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--replacement"><span class="eco-pm-tooltip-value" data-pm-value="eco-electric">—</span></div>
                 </div>
                 <div class="eco-pm-tooltip-row">
-                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label">Other</div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="other">Other</div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--other eco-pm-tooltip-box--span"><span class="eco-pm-tooltip-value" data-pm-value="other-span">—</span></div>
                 </div>
                 <div class="eco-pm-tooltip-row">
-                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label">Gas Boilers</div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="gas">Gas Boilers</div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-box eco-pm-tooltip-box--gas eco-pm-tooltip-box--span"><span class="eco-pm-tooltip-value" data-pm-value="gas-span">—</span></div>
                 </div>
                 <div class="eco-pm-tooltip-row">
@@ -2497,7 +2552,7 @@
       var longestText = '';
       var maxWidth = 0;
       valueNodes.forEach(function (node) {
-        var text = (node.textContent || '').trim();
+        var text = (node.getAttribute('data-value-text') || node.textContent || '').trim();
         if (!text) {
           return;
         }
@@ -2565,23 +2620,36 @@
       var overlay = document.createElement('div');
       overlay.className = 'eco-energy-pie-overlay';
       pieChartEl.appendChild(overlay);
-      var leaderSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      leaderSvg.setAttribute('class', 'eco-energy-pie-leaders');
-      leaderSvg.setAttribute('width', width);
-      leaderSvg.setAttribute('height', height);
-      leaderSvg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-      overlay.appendChild(leaderSvg);
 
       var centerX = chartArea.left + chartArea.width / 2;
       var centerY = chartArea.top + chartArea.height / 2;
       var radius = Math.min(chartArea.width, chartArea.height) / 2;
-      var labelOffset = Math.max(12, radius * 0.12);
+      var labelGap = Math.max(8, radius * 0.08);
       var startAngle = 0;
       var currentAngle = startAngle;
       var formatter = state.percentFormatter || new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
       var padding = 6;
       var labelSpacing = 6;
       var labels = [];
+      var bandGap = 4;
+      var bottomBandLift = 15;
+      var topBandMax = height * 0.45;
+      var bottomBandMin = height * 0.55;
+
+      if (dom.energyCard && dom.energyCard.pieValues) {
+        var valuesRect = dom.energyCard.pieValues.getBoundingClientRect();
+        if (valuesRect && valuesRect.height) {
+          var chartRect = pieChartEl.getBoundingClientRect();
+          topBandMax = valuesRect.top - chartRect.top;
+          bottomBandMin = valuesRect.bottom - chartRect.top;
+        }
+      }
+      if (!Number.isFinite(topBandMax) || !Number.isFinite(bottomBandMin) || topBandMax >= bottomBandMin) {
+        topBandMax = height * 0.45;
+        bottomBandMin = height * 0.55;
+      }
+      topBandMax = Math.max(0, Math.min(height, topBandMax - bandGap));
+      bottomBandMin = Math.max(0, Math.min(height, bottomBandMin + bandGap - bottomBandLift));
 
       function clamp(value, min, max) {
         return Math.min(Math.max(value, min), max);
@@ -2609,119 +2677,203 @@
 
         var cos = Math.cos(midAngle);
         var sin = Math.sin(midAngle);
-        var labelX = centerX + cos * (radius + labelOffset);
-        var labelY = centerY + sin * (radius + labelOffset);
         var side = cos >= 0 ? 'right' : 'left';
+        var band = sin < 0 ? 'top' : 'bottom';
 
         var percentText = formatter.format((value / total) * 100) + '%';
         var label = document.createElement('div');
         label.className = 'eco-energy-pie-label';
-        label.textContent = percentText;
-        if (slice[2]) {
-          label.style.color = slice[2];
+        var sliceColor = slice[2] || '';
+        var outlined = false;
+        if (typeof LEGEND_COLORS !== 'undefined' && LEGEND_COLORS && LEGEND_COLORS.other) {
+          outlined = String(sliceColor).toLowerCase() === String(LEGEND_COLORS.other).toLowerCase();
         }
-        label.style.textAlign = side === 'right' ? 'left' : 'right';
+        if (outlined) {
+          label.classList.add('eco-energy-pie-label--outlined');
+          label.textContent = percentText;
+          if (sliceColor) {
+            label.style.color = sliceColor;
+          }
+        } else {
+          label.textContent = percentText;
+          if (sliceColor) {
+            label.style.color = sliceColor;
+          }
+        }
+        label.style.textAlign = 'center';
         overlay.appendChild(label);
 
         var labelRect = label.getBoundingClientRect();
         var labelWidth = labelRect.width || 0;
         var labelHeight = labelRect.height || 0;
-        var labelLeft = side === 'right' ? labelX : labelX - labelWidth;
+        var projection = Math.abs(cos) * (labelWidth / 2) + Math.abs(sin) * (labelHeight / 2);
+        var labelDistance = radius + labelGap + projection;
+        var labelX = centerX + cos * labelDistance;
+        var labelY = centerY + sin * labelDistance;
+        var labelLeft = labelX - labelWidth / 2;
         var labelTop = labelY - labelHeight / 2;
+        var minLeft = padding;
+        var maxLeft = width - labelWidth - padding;
+        var clampedLeft = clamp(labelLeft, minLeft, maxLeft);
+        var labelCenterX = clampedLeft + labelWidth / 2;
+        var dx = labelCenterX - centerX;
+        var maxTop = null;
+        var minTop = null;
+        if (Math.abs(dx) < radius) {
+          var boundaryY = Math.sqrt((radius * radius) - (dx * dx));
+          var circleTop = centerY - boundaryY;
+          var circleBottom = centerY + boundaryY;
+          maxTop = circleTop - labelGap - labelHeight;
+          minTop = circleBottom + labelGap;
+        }
+        if (band === 'top' && Number.isFinite(maxTop)) {
+          labelTop = Math.min(labelTop, maxTop);
+        }
+        if (band === 'bottom' && Number.isFinite(minTop)) {
+          minTop = minTop - bottomBandLift;
+          labelTop = Math.max(labelTop, minTop);
+        }
 
         labels.push({
           label: label,
           color: slice[2],
           side: side,
-          baseLeft: labelLeft,
+          baseLeft: clampedLeft,
           baseTop: labelTop,
           width: labelWidth,
           height: labelHeight,
           anchorX: centerX + cos * radius,
-          anchorY: centerY + sin * radius
+          anchorY: centerY + sin * radius,
+          band: band,
+          maxTop: maxTop,
+          minTop: minTop
         });
       });
 
-      function resolveLabelStack(items) {
+      function resolveLabelStack(items, minY, maxY) {
         if (!items.length) {
           return;
         }
-        var minY = padding;
-        var maxY = height - padding;
-        items.sort(function (a, b) {
-          return (a.baseTop + a.height / 2) - (b.baseTop + b.height / 2);
-        });
-        items.forEach(function (item, index) {
-          var top = item.baseTop;
-          if (index === 0) {
-            top = Math.max(top, minY);
+        var isTopBand = items[0].band === 'top';
+        var bandMin = Number.isFinite(minY) ? minY : padding;
+        var bandMax = Number.isFinite(maxY) ? maxY : (height - padding);
+        var totalHeight = items.reduce(function (sum, item) {
+          return sum + item.height;
+        }, 0);
+        var required = totalHeight + labelSpacing * Math.max(0, items.length - 1);
+        var available = bandMax - bandMin;
+        if (required > available) {
+          var overflow = required - available;
+          var maxExpand = 12;
+          if (isTopBand) {
+            bandMin = Math.max(-maxExpand, bandMin - overflow);
           } else {
-            var prev = items[index - 1];
-            var minTop = prev.finalTop + prev.height + labelSpacing;
-            if (top < minTop) {
-              top = minTop;
-            }
-          }
-          item.finalTop = top;
-        });
-        var last = items[items.length - 1];
-        var overflow = (last.finalTop + last.height) - maxY;
-        if (overflow > 0) {
-          items.forEach(function (item) {
-            item.finalTop -= overflow;
-          });
-          if (items[0].finalTop < minY) {
-            var shiftDown = minY - items[0].finalTop;
-            items.forEach(function (item) {
-              item.finalTop += shiftDown;
-            });
-          }
-          for (var i = 1; i < items.length; i += 1) {
-            var prevItem = items[i - 1];
-            var minimumTop = prevItem.finalTop + prevItem.height + labelSpacing;
-            if (items[i].finalTop < minimumTop) {
-              items[i].finalTop = minimumTop;
-            }
+            bandMax = Math.min(height + maxExpand, bandMax + overflow);
           }
         }
         items.forEach(function (item) {
-          item.finalTop = clamp(item.finalTop, minY, maxY - item.height);
+          var minAllowed = bandMin;
+          var maxAllowed = bandMax - item.height;
+          if (item.band === 'top' && Number.isFinite(item.maxTop)) {
+            maxAllowed = Math.min(maxAllowed, item.maxTop);
+          }
+          if (item.band === 'bottom' && Number.isFinite(item.minTop)) {
+            minAllowed = Math.max(minAllowed, item.minTop);
+          }
+          if (maxAllowed < minAllowed) {
+            maxAllowed = minAllowed;
+          }
+          item.minAllowed = minAllowed;
+          item.maxAllowed = maxAllowed;
+          item.preferredTop = item.baseTop;
         });
+        items.sort(function (a, b) {
+          return (a.preferredTop + a.height / 2) - (b.preferredTop + b.height / 2);
+        });
+        if (isTopBand) {
+          for (var i = items.length - 1; i >= 0; i -= 1) {
+            var item = items[i];
+            var top = clamp(item.preferredTop, item.minAllowed, item.maxAllowed);
+            if (i < items.length - 1) {
+              var next = items[i + 1];
+              var maxTop = next.finalTop - item.height - labelSpacing;
+              if (top > maxTop) {
+                top = maxTop;
+              }
+            }
+            item.finalTop = clamp(top, item.minAllowed, item.maxAllowed);
+          }
+        } else {
+          items.forEach(function (item, index) {
+            var top = clamp(item.preferredTop, item.minAllowed, item.maxAllowed);
+            if (index > 0) {
+              var prev = items[index - 1];
+              var minTop = prev.finalTop + prev.height + labelSpacing;
+              if (top < minTop) {
+                top = minTop;
+              }
+            }
+            item.finalTop = clamp(top, item.minAllowed, item.maxAllowed);
+          });
+        }
       }
 
-      var leftLabels = labels.filter(function (item) { return item.side === 'left'; });
-      var rightLabels = labels.filter(function (item) { return item.side === 'right'; });
-      resolveLabelStack(leftLabels);
-      resolveLabelStack(rightLabels);
+      var topLabels = labels.filter(function (item) { return item.band === 'top'; });
+      var bottomLabels = labels.filter(function (item) { return item.band === 'bottom'; });
+      resolveLabelStack(bottomLabels, bottomBandMin, height - padding);
+      resolveTopRow(topLabels);
 
       labels.forEach(function (item) {
         var minLeft = padding;
         var maxLeft = width - item.width - padding;
-        var finalLeft = clamp(item.baseLeft, minLeft, maxLeft);
+        var finalLeft = Number.isFinite(item.finalLeft) ? item.finalLeft : clamp(item.baseLeft, minLeft, maxLeft);
         var finalTop = Number.isFinite(item.finalTop) ? item.finalTop : item.baseTop;
         item.finalLeft = finalLeft;
         item.finalTop = finalTop;
-        item.needsLine = Math.abs(finalLeft - item.baseLeft) > 1 || Math.abs(finalTop - item.baseTop) > 1;
         item.label.style.left = Math.round(finalLeft) + 'px';
         item.label.style.top = Math.round(finalTop) + 'px';
       });
 
-      labels.forEach(function (item) {
-        if (!item.needsLine) {
+      function resolveTopRow(items) {
+        if (!items.length) {
           return;
         }
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        var endX = item.side === 'right' ? item.finalLeft : item.finalLeft + item.width;
-        var endY = item.finalTop + item.height / 2;
-        line.setAttribute('x1', item.anchorX.toFixed(1));
-        line.setAttribute('y1', item.anchorY.toFixed(1));
-        line.setAttribute('x2', endX.toFixed(1));
-        line.setAttribute('y2', endY.toFixed(1));
-        line.setAttribute('stroke', item.color || '#111827');
-        line.setAttribute('stroke-width', '2');
-        line.setAttribute('stroke-linecap', 'round');
-        leaderSvg.appendChild(line);
-      });
+        var bandMin = -20;
+        var bandMax = Math.max(bandMin, topBandMax);
+        items.sort(function (a, b) {
+          return a.baseLeft - b.baseLeft;
+        });
+        items.forEach(function (item, index) {
+          var left = clamp(item.baseLeft, padding, width - item.width - padding);
+          if (index > 0) {
+            var prev = items[index - 1];
+            var minLeft = prev.finalLeft + prev.width + labelSpacing;
+            if (left < minLeft) {
+              left = minLeft;
+            }
+          }
+          item.finalLeft = left;
+        });
+        var last = items[items.length - 1];
+        var overflow = (last.finalLeft + last.width) - (width - padding);
+        if (overflow > 0) {
+          items.forEach(function (item) {
+            item.finalLeft = Math.max(padding, item.finalLeft - overflow);
+          });
+        }
+        items.forEach(function (item) {
+          var centerXForLabel = item.finalLeft + item.width / 2;
+          var dx = centerXForLabel - centerX;
+          var top = bandMax - item.height;
+          if (Math.abs(dx) < radius) {
+            var boundaryY = Math.sqrt((radius * radius) - (dx * dx));
+            var circleTop = centerY - boundaryY;
+            top = circleTop - labelGap - item.height;
+          }
+          var maxBandTop = Math.max(bandMin, bandMax - item.height);
+          item.finalTop = clamp(top, bandMin, maxBandTop);
+        });
+      }
     }
 
     function renderEnergyPie(profile) {
@@ -2765,6 +2917,7 @@
       var selectedIsAllFireplaces = Number(selectedCategoryId) === Number(FIREPLACES_ALL_CATEGORY_ID);
       var subtractEco = inclusion.included === true || selectedIsAllFireplaces;
       var selectedNonEco = subtractEco ? Math.max(0, selectedEnergy - ecoEnergy) : selectedEnergy;
+      var remainderBase = selectedEnergy + (!subtractEco ? ecoEnergy : 0);
 
       var slices = [];
       function addSlice(label, value, color) {
@@ -2775,12 +2928,12 @@
       }
 
       if (state.scope === SCOPE_FIREPLACE) {
-        var remainderEnergy = Math.max(0, baselineEnergy - selectedEnergy);
+        var remainderEnergy = Math.max(0, baselineEnergy - remainderBase);
         addSlice('Ecodesign - Ready To Burn', ecoEnergy, LEGEND_COLORS.eco);
         addSlice(getCategoryLabel(selectedCategoryId) || 'Selected category', selectedNonEco, LEGEND_COLORS.selected);
         addSlice('Other Fireplaces & Stoves (Not Replaced)', remainderEnergy, LEGEND_COLORS.remaining);
       } else {
-        var remainingFireplaces = Math.max(0, stovesTotalEnergy - selectedEnergy);
+        var remainingFireplaces = Math.max(0, stovesTotalEnergy - remainderBase);
         var otherDomestic = Math.max(0, baselineEnergy - (stovesTotalEnergy + gasEnergy));
         addSlice('Ecodesign - Ready To Burn', ecoEnergy, LEGEND_COLORS.eco);
         addSlice(getCategoryLabel(selectedCategoryId) || 'Selected category', selectedNonEco, LEGEND_COLORS.selected);
@@ -2806,8 +2959,22 @@
           var valueText = formatActivityValueForPie(slice[1]);
           var valueNode = document.createElement('div');
           valueNode.className = 'eco-energy-pie-value';
-          valueNode.textContent = valueText;
-          valueNode.style.color = slice[2];
+          valueNode.setAttribute('data-value-text', valueText);
+          var sliceColor = slice[2] || '';
+          var outlinedValue = false;
+          if (typeof LEGEND_COLORS !== 'undefined' && LEGEND_COLORS && LEGEND_COLORS.other) {
+            outlinedValue = String(sliceColor).toLowerCase() === String(LEGEND_COLORS.other).toLowerCase();
+          }
+          if (outlinedValue) {
+            valueNode.classList.add('eco-energy-pie-value--outlined');
+            valueNode.textContent = valueText;
+            if (sliceColor) {
+              valueNode.style.color = sliceColor;
+            }
+          } else {
+            valueNode.textContent = valueText;
+            valueNode.style.color = sliceColor;
+          }
           valueNode.setAttribute('role', 'listitem');
           valueNode.setAttribute('aria-label', slice[0] + ' ' + valueText);
           pieValuesEl.appendChild(valueNode);
@@ -2858,6 +3025,8 @@
           height: pieSize
         },
         legend: { position: 'none' },
+        tooltip: { trigger: 'none' },
+        enableInteractivity: false,
         pieSliceText: 'none',
         pieSliceTextStyle: { color: '#111827', fontSize: 12, bold: true },
         sliceVisibilityThreshold: 0,
@@ -2889,6 +3058,7 @@
       }
 
       var card = document.querySelector('.eco-energy-card');
+      var pmChart = document.getElementById('ecoPmChart');
       var tiles = document.querySelectorAll('.eco-outcome-bucket');
 
       var observer = new ResizeObserver(function(entries) {
@@ -2907,11 +3077,17 @@
           if (target.classList.contains('eco-energy-pie-values')) {
             sizeEnergyPieValues(target);
           }
+          if (target.id === 'ecoPmChart') {
+            queuePmChartRender(0);
+          }
         });
       });
 
       if (card) {
         observer.observe(card);
+      }
+      if (pmChart) {
+        observer.observe(pmChart);
       }
       if (tiles && tiles.length) {
         tiles.forEach(function(tile) {
@@ -3162,6 +3338,7 @@
           eco: document.getElementById('ecoEnergyEcoValue'),
           calculation: document.getElementById('ecoEnergyCalculation'),
           fireplaceLabel: document.getElementById('ecoEnergyFireplaceLabel'),
+          yearLabel: document.getElementById('ecoEnergyYearLabel'),
           scopeLabel: document.getElementById('ecoEnergyScopeLabel'),
           pie: document.getElementById('ecoEnergyPie'),
           pieChartEl: document.getElementById('ecoEnergyPieChart'),
@@ -3175,6 +3352,7 @@
         return {
           container: document.getElementById('ecoOutcomeCard'),
           note: document.getElementById('ecoOutcomeNote'),
+          yearLabel: document.getElementById('ecoOutcomeYearLabel'),
           totals: {
             lower: collectDualTextRefs('ecoOutcomeLowerCount'),
             higher: collectDualTextRefs('ecoOutcomeHigherCount')
@@ -3228,15 +3406,25 @@
       var googleChartsPromise = loadGoogleCharts();
       googleChartsPromise.then(function () {
         googleChartsReady = true;
-        renderPmStackedChart();
+        queuePmChartRender(0);
       }).catch(function (error) {
         console.warn('Google Charts failed to initialize:', error);
       });
 
       var pmChartResizeTimer = null;
-      window.addEventListener('resize', function () {
+      function queuePmChartRender(delay) {
+        var wait = Number.isFinite(delay) ? delay : 0;
         clearTimeout(pmChartResizeTimer);
-        pmChartResizeTimer = setTimeout(renderPmStackedChart, 200);
+        pmChartResizeTimer = setTimeout(function () {
+          pmChartResizeTimer = null;
+          renderPmStackedChart();
+        }, wait);
+      }
+      window.addEventListener('resize', function () {
+        queuePmChartRender(200);
+      });
+      window.addEventListener('load', function () {
+        queuePmChartRender(0);
       });
 
       if (!dom.pollutant || !window.SharedDataLoader || !window.EcoReplacementUtils) {
@@ -3266,7 +3454,7 @@
             updatePmLegend();
             state.ready = true;
             handleSelectionChange();
-            renderPmStackedChart();
+            queuePmChartRender(0);
             measureEcoCardWidths();
             startEcoResizeObservers();
             window.addEventListener('resize', debounce(measureEcoCardWidths, 150));
@@ -3403,14 +3591,13 @@
         if (!state.ready) {
           return;
         }
-        renderPmStackedChart();
+        pmChartInstance = null;
+        queuePmChartRender(0);
         renderEcoImpacts();
       }
 
       function renderEcoImpacts() {
         var token = ++state.renderToken;
-        resetColorUsage();
-        updateGlobalLegend();
         updateOutcomeCard(null);
         if (!state.ecoCategoryId || !state.activityPollutantId || !state.selection.fireplace) {
           renderEnergySummary(null);
@@ -3447,6 +3634,7 @@
               timeseriesIndex: state.timeseriesIndex,
               ecoCategoryId: state.ecoCategoryId,
               fireplaceCategoryId: state.selection.fireplace,
+              baselineFireplaceCategoryId: FIREPLACES_ALL_CATEGORY_ID,
               activityPollutantId: state.activityPollutantId,
               year: state.selection.year,
               energyProfile: energyProfile,
@@ -3461,6 +3649,13 @@
             var filtered = (scenarios || []).filter(Boolean);
             updateOutcomeCard(filtered);
             renderChartGrid(filtered);
+            window.requestAnimationFrame(function () {
+              if (token !== state.renderToken) {
+                return;
+              }
+              queuePmChartRender(0);
+              renderEnergyPie(state.latestEnergyProfile);
+            });
           }).catch(function (error) {
             console.warn('Eco replacements scenario failed:', error);
             if (token === state.renderToken) {
@@ -3495,6 +3690,10 @@
         var fireplaceLabel = state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : 'Fireplace / stove category';
         if (energyDom.fireplaceLabel) {
           energyDom.fireplaceLabel.textContent = fireplaceLabel;
+        }
+        if (energyDom.yearLabel) {
+          var yearText = Number(state.selection.year) || DEFAULT_YEAR;
+          energyDom.yearLabel.textContent = 'ENERGY - ' + yearText;
         }
         var scopeTotal = getScopeTotalEnergy(state.selection.year || DEFAULT_YEAR);
         if (energyDom.replacement) {
@@ -3656,6 +3855,10 @@
         if (!dom.outcomeCard || !dom.outcomeCard.container) {
           return;
         }
+        if (dom.outcomeCard.yearLabel) {
+          var outcomeYear = Number(state.selection.year) || DEFAULT_YEAR;
+          dom.outcomeCard.yearLabel.textContent = 'Replacement scenario vs ' + outcomeYear;
+        }
         var scenarios = Array.isArray(items) ? items : [];
         var summary = summarizeScenarioOutcomes(scenarios);
         var totalComparisons = summary.total;
@@ -3705,13 +3908,44 @@
         if (!result) {
           return null;
         }
+        var inclusion = result.energyProfile && result.energyProfile.inclusion;
+        if (state.scope === SCOPE_DOMESTIC && state.timeseriesIndex && Number.isFinite(result.pollutantId)) {
+          var year = Number(state.selection.year) || DEFAULT_YEAR;
+          var domesticTotal = coerceNonNegative(getTimeseriesValue(result.pollutantId, 13, year));
+          var gasTotal = coerceNonNegative(getTimeseriesValue(result.pollutantId, 37, year));
+          var fireplacesTotal = coerceNonNegative(getTimeseriesValue(result.pollutantId, FIREPLACES_ALL_CATEGORY_ID, year));
+          var otherTotal = Math.max(0, domesticTotal - (gasTotal + fireplacesTotal));
+          var fireplaceScope = coerceNonNegative(result.fireplaceEmission);
+          var ecoScope = coerceNonNegative(result.ecoEmission);
+          var ecoIncluded = inclusion && inclusion.included === true;
+          var remainderAdjusted = Math.max(0, fireplacesTotal - (fireplaceScope + (ecoIncluded ? 0 : ecoScope)));
+          var replacementValue = coerceNonNegative(result.replacementEmission);
+          if (Number.isFinite(domesticTotal) && Number.isFinite(replacementValue)) {
+            return {
+              baseline: domesticTotal,
+              replacement: gasTotal + otherTotal + replacementValue + remainderAdjusted,
+              useAbsolute: true
+            };
+          }
+        }
+        var baselineScope = Number(result.baselineFireplaceEmission);
+        var replacementScope = Number(result.replacementEmission);
+        if (Number.isFinite(baselineScope) && Number.isFinite(replacementScope)) {
+          var fireplaceScope = Number(result.fireplaceEmission);
+          var ecoScope = Number(result.ecoEmission);
+          var remainderScope = Number(result.fireplaceRemainderEmission);
+          var ecoIncluded = inclusion && inclusion.included === true;
+          var remainderAdjusted = Math.max(0, baselineScope - (coerceNonNegative(fireplaceScope) + (ecoIncluded ? 0 : coerceNonNegative(ecoScope))));
+          var remainderValue = Number.isFinite(remainderAdjusted) ? remainderAdjusted : (Number.isFinite(remainderScope) ? remainderScope : 0);
+          return { baseline: baselineScope, replacement: replacementScope + remainderValue, useAbsolute: true };
+        }
         var fireplace = Number(result.fireplaceEmission);
         var replacement = Number(result.replacementEmission);
         if (!Number.isFinite(fireplace) || !Number.isFinite(replacement)) {
           return null;
         }
-        var inclusion = result.energyProfile && result.energyProfile.inclusion;
-        var isExcluded = inclusion && inclusion.included === false;
+        var inclusionFallback = result.energyProfile && result.energyProfile.inclusion;
+        var isExcluded = inclusionFallback && inclusionFallback.included === false;
         var ecoEmission = Number(result.ecoEmission);
         var baseline = fireplace;
         var useAbsolute = true;
@@ -3820,12 +4054,14 @@
 
       function updateGlobalLegend() {
         var chips = document.querySelectorAll('[data-legend-color]');
+        var showAll = state.scope === SCOPE_DOMESTIC;
         chips.forEach(function (chip) {
           var key = chip.getAttribute('data-legend-color');
-          var visible = state.colorUsage && state.colorUsage[key];
+          var visible = showAll || (state.colorUsage && state.colorUsage[key]);
           chip.classList.toggle('is-hidden', !visible);
           chip.setAttribute('aria-hidden', visible ? 'false' : 'true');
         });
+        updatePmTooltipLegendLabels();
       }
 
       function updateScopeToggleUI() {
@@ -3900,7 +4136,8 @@
         updatePmLegend();
         updatePmTooltipVisibility();
         var expectedKey = buildEnergyProfileKey(state.selection.fireplace, state.selection.year);
-        if (state.latestEnergyProfile && state.latestEnergyProfileKey === expectedKey) {
+        var usesCachedProfile = Boolean(state.latestEnergyProfile && state.latestEnergyProfileKey === expectedKey);
+        if (usesCachedProfile) {
           renderEnergySummary(state.latestEnergyProfile);
         } else {
           renderEcoImpacts();
@@ -3910,7 +4147,11 @@
             renderEnergyPie(state.latestEnergyProfile);
           });
         }
-        renderPmStackedChart();
+        queuePmChartRender(0);
+        if (usesCachedProfile && Array.isArray(state.lastChartItems) && state.lastChartItems.length) {
+          updateOutcomeCard(state.lastChartItems);
+          renderChartGrid(state.lastChartItems);
+        }
       }
 
       function updatePmScopePill(profile) {
@@ -4114,11 +4355,30 @@
         card.className = 'eco-chart-card';
         var pollutantName = entry.meta?.pollutant || 'Unknown pollutant';
         var unit = entry.meta?.emission_unit || 'tonne';
-        var scaleInfo = computeUnitScale(unit, [
+        var pollutantId = Number(entry?.result?.pollutantId ?? entry?.meta?.id ?? entry?.pollutantId);
+        var year = Number(state.selection.year) || DEFAULT_YEAR;
+        var scaleValues = [
           entry?.result?.ecoEmission,
           entry?.result?.fireplaceEmission,
           entry?.result?.replacementEmission
-        ]);
+        ];
+        if (state.scope === SCOPE_DOMESTIC && state.timeseriesIndex && Number.isFinite(pollutantId)) {
+          var domesticTotalRaw = coerceNonNegative(getTimeseriesValue(pollutantId, 13, year));
+          var gasRaw = coerceNonNegative(getTimeseriesValue(pollutantId, 37, year));
+          var fireplacesTotalRaw = coerceNonNegative(getTimeseriesValue(pollutantId, FIREPLACES_ALL_CATEGORY_ID, year));
+          var otherRaw = Math.max(0, domesticTotalRaw - (gasRaw + fireplacesTotalRaw));
+          var inclusion = entry.result && entry.result.energyProfile ? entry.result.energyProfile.inclusion : null;
+          var ecoIncluded = inclusion && inclusion.included === true;
+          var baselineRaw = Number(entry?.result?.baselineFireplaceEmission);
+          var fireplaceRaw = Number(entry?.result?.fireplaceEmission);
+          var ecoRaw = Number(entry?.result?.ecoEmission);
+          var remainderRaw = Number(entry?.result?.fireplaceRemainderEmission);
+          var remainderRawAdjusted = Number.isFinite(baselineRaw)
+            ? Math.max(0, baselineRaw - (coerceNonNegative(fireplaceRaw) + (ecoIncluded ? 0 : coerceNonNegative(ecoRaw))))
+            : remainderRaw;
+          scaleValues = scaleValues.concat([remainderRawAdjusted, domesticTotalRaw, gasRaw, otherRaw]);
+        }
+        var scaleInfo = computeUnitScale(unit, scaleValues);
         var pluralUnit = (scaleInfo && scaleInfo.unitLabel) || getPluralUnitLabel(unit || 'tonne');
         var hasData = [entry.result.ecoEmission, entry.result.fireplaceEmission, entry.result.replacementEmission]
           .some(function (value) { return Number.isFinite(value) && value >= 0; });
@@ -4368,20 +4628,52 @@
           container.textContent = 'Chart renderer missing.';
           return;
         }
-        var scale = scaleInfo || computeUnitScale(unit, [
-          entry?.result?.ecoEmission,
-          entry?.result?.fireplaceEmission,
-          entry?.result?.replacementEmission
-        ]);
-        var factor = scale && Number.isFinite(scale.factor) ? scale.factor : 1;
-        var unitShort = scale && scale.unitShort ? scale.unitShort : getUnitAbbreviation(unit);
+        var miniYear = Number(state.selection.year) || DEFAULT_YEAR;
+        var pollutantId = Number(entry?.result?.pollutantId ?? entry?.meta?.id ?? entry?.pollutantId);
+        var isDomesticScope = state.scope === SCOPE_DOMESTIC;
+        var domesticTotalRaw = NaN;
+        var gasRaw = NaN;
+        var otherRaw = NaN;
+        if (isDomesticScope && state.timeseriesIndex && Number.isFinite(pollutantId)) {
+          domesticTotalRaw = coerceNonNegative(getTimeseriesValue(pollutantId, 13, miniYear));
+          gasRaw = coerceNonNegative(getTimeseriesValue(pollutantId, 37, miniYear));
+          var fireplacesTotalRaw = coerceNonNegative(getTimeseriesValue(pollutantId, FIREPLACES_ALL_CATEGORY_ID, miniYear));
+          otherRaw = Math.max(0, domesticTotalRaw - (gasRaw + fireplacesTotalRaw));
+        }
+        var scale = scaleInfo;
         var inclusion = entry.result.energyProfile && entry.result.energyProfile.inclusion;
         var ecoIncluded = inclusion && inclusion.included === true;
+        var baselineRaw = Number(entry.result.baselineFireplaceEmission);
+        var fireplaceRaw = Number(entry.result.fireplaceEmission);
+        var ecoRaw = Number(entry.result.ecoEmission);
+        var remainderRaw = Number(entry.result.fireplaceRemainderEmission);
+        var remainderRawAdjusted = Number.isFinite(baselineRaw)
+          ? Math.max(0, baselineRaw - (coerceNonNegative(fireplaceRaw) + (ecoIncluded ? 0 : coerceNonNegative(ecoRaw))))
+          : remainderRaw;
+        if (!scale) {
+          scale = computeUnitScale(unit, [
+            entry?.result?.ecoEmission,
+            entry?.result?.fireplaceEmission,
+            entry?.result?.replacementEmission,
+            remainderRawAdjusted,
+            domesticTotalRaw,
+            gasRaw,
+            otherRaw
+          ]);
+        }
+        var factor = scale && Number.isFinite(scale.factor) ? scale.factor : 1;
+        var unitShort = scale && scale.unitShort ? scale.unitShort : getUnitAbbreviation(unit);
         var ecoScaled = scaleEmissionValue(entry.result.ecoEmission, factor);
         var fireplaceScaled = scaleEmissionValue(entry.result.fireplaceEmission, factor);
         var replacementScaled = scaleEmissionValue(entry.result.replacementEmission, factor);
+        var remainderScaled = scaleEmissionValue(remainderRawAdjusted, factor);
+        var gasScaled = Number.isFinite(gasRaw) ? scaleEmissionValue(gasRaw, factor) : NaN;
+        var otherScaled = Number.isFinite(otherRaw) ? scaleEmissionValue(otherRaw, factor) : NaN;
         var ecoSegment = Number.isFinite(ecoScaled) && ecoScaled > 0 ? ecoScaled : null;
         var fireplaceSegment = Number.isFinite(fireplaceScaled) && fireplaceScaled > 0 ? fireplaceScaled : null;
+        var remainderSegment = Number.isFinite(remainderScaled) && remainderScaled > 0 ? remainderScaled : null;
+        var gasSegment = Number.isFinite(gasScaled) && gasScaled > 0 ? gasScaled : null;
+        var otherSegment = Number.isFinite(otherScaled) && otherScaled > 0 ? otherScaled : null;
         if (ecoIncluded && Number.isFinite(fireplaceScaled)) {
           var fireplaceTotal = Math.max(0, fireplaceScaled);
           var ecoShare = ecoSegment ? Math.min(ecoSegment, fireplaceTotal) : null;
@@ -4389,26 +4681,67 @@
             var remainder = fireplaceTotal - (ecoShare || 0);
             fireplaceSegment = remainder > 0 ? remainder : null;
           }
-          var leftTotal = (ecoSegment || 0) + (fireplaceSegment || 0);
+          var leftTotal = (ecoSegment || 0) + (fireplaceSegment || 0) + (remainderSegment || 0);
+          if (isDomesticScope) {
+            leftTotal += (gasSegment || 0) + (otherSegment || 0);
+          }
           var leftAnnotationColor = BAR_COLORS.fireplace;
         var replacementValue = Number.isFinite(replacementScaled) && replacementScaled > 0 ? replacementScaled : null;
+        var replacementTotal = (replacementValue || 0) + (remainderSegment || 0);
+        if (isDomesticScope) {
+          replacementTotal += (gasSegment || 0) + (otherSegment || 0);
+        }
 
-        var miniYear = Number(state.selection.year) || DEFAULT_YEAR;
         var baselineLabel = String(miniYear);
         var replacementLabel = 'Replacement Scenario';
         var categoryTicks = [baselineLabel, replacementLabel];
-        var maxRawValue = Math.max(ecoSegment || 0, fireplaceSegment || 0, replacementValue || 0);
+        var maxRawValue = Math.max(
+          ecoSegment || 0,
+          fireplaceSegment || 0,
+          remainderSegment || 0,
+          replacementValue || 0,
+          gasSegment || 0,
+          otherSegment || 0
+        );
         var minDisplay = maxRawValue > 0 ? Math.max(maxRawValue * 0.005, 1e-4) : 0;
         var displayEco = isPositiveValue(ecoSegment) && ecoSegment < minDisplay ? minDisplay : ecoSegment;
         var displayFireplace = isPositiveValue(fireplaceSegment) && fireplaceSegment < minDisplay ? minDisplay : fireplaceSegment;
+        var displayRemainder = isPositiveValue(remainderSegment) && remainderSegment < minDisplay ? minDisplay : remainderSegment;
         var displayReplacement = isPositiveValue(replacementValue) && replacementValue < minDisplay ? minDisplay : replacementValue;
-        var leftDisplayTotal = (displayEco || 0) + (displayFireplace || 0);
-        var rows = [
-          buildStackedChartRow(baselineLabel, [displayEco, displayFireplace, null], leftDisplayTotal, leftAnnotationColor, unit, unitShort),
-          buildStackedChartRow(replacementLabel, [displayReplacement, null, null], displayReplacement, BAR_COLORS.eco, unit, unitShort)
-        ];
+        var displayGas = isPositiveValue(gasSegment) && gasSegment < minDisplay ? minDisplay : gasSegment;
+        var displayOther = isPositiveValue(otherSegment) && otherSegment < minDisplay ? minDisplay : otherSegment;
+        var leftDisplayTotal = (displayEco || 0) + (displayFireplace || 0) + (displayRemainder || 0);
+        var replacementDisplayTotal = (displayReplacement || 0) + (displayRemainder || 0);
+        var rows = [];
+        if (isDomesticScope) {
+          leftDisplayTotal += (displayGas || 0) + (displayOther || 0);
+          replacementDisplayTotal += (displayGas || 0) + (displayOther || 0);
+          rows = [
+            buildStackedChartRow(
+              baselineLabel,
+              [displayGas, displayOther, displayEco, displayFireplace, displayRemainder],
+              leftDisplayTotal,
+              leftAnnotationColor,
+              unit,
+              unitShort
+            ),
+            buildStackedChartRow(
+              replacementLabel,
+              [displayGas, displayOther, displayReplacement, null, displayRemainder],
+              replacementDisplayTotal,
+              BAR_COLORS.eco,
+              unit,
+              unitShort
+            )
+          ];
+        } else {
+          rows = [
+            buildStackedChartRow(baselineLabel, [displayEco, displayFireplace, displayRemainder], leftDisplayTotal, leftAnnotationColor, unit, unitShort),
+            buildStackedChartRow(replacementLabel, [displayReplacement, null, displayRemainder], replacementDisplayTotal, BAR_COLORS.eco, unit, unitShort)
+          ];
+        }
         rows[0].annotation = formatBarValue(leftTotal) + (unitShort ? ' ' + unitShort : '');
-        rows[1].annotation = formatBarValue(replacementValue) + (unitShort ? ' ' + unitShort : '');
+        rows[1].annotation = formatBarValue(replacementTotal) + (unitShort ? ' ' + unitShort : '');
 
         var maxValue = Math.max.apply(Math, rows.map(function (r) { return Number(r.value) || 0; }));
         var ticks = buildValueTicks(maxValue);
@@ -4429,7 +4762,9 @@
         mergeLegendVisibility({
           eco: isPositiveValue(displayEco) || isPositiveValue(displayReplacement),
           selected: isPositiveValue(displayFireplace),
-          remaining: false
+          remaining: isPositiveValue(displayRemainder),
+          gas: isDomesticScope && isPositiveValue(displayGas),
+          other: isDomesticScope && isPositiveValue(displayOther)
         });
         updateGlobalLegend();
 
@@ -4453,7 +4788,9 @@
             vAxisLabelColor: '#0f172a',
             vAxisGridColor: '#cbd5e1',
             vAxisMinorGridColor: '#e2e8f0',
-            seriesColors: [BAR_COLORS.eco, BAR_COLORS.fireplace, BAR_COLORS.replacement],
+            seriesColors: isDomesticScope
+              ? ['#2563eb', '#cbd5e1', BAR_COLORS.eco, BAR_COLORS.fireplace, BAR_COLORS.remaining]
+              : [BAR_COLORS.eco, BAR_COLORS.fireplace, BAR_COLORS.remaining],
             categoryTicks: categoryTicks,
             nativeAxisTicks: useExplicitAxis ? ticks : undefined,
             nativeAxisViewWindowMax: useExplicitAxis && Number.isFinite(tickMax) ? tickMax : undefined,
@@ -4571,17 +4908,82 @@
 
       function updatePmTooltipVisibility() {
         var isFireplaceScope = state.scope === SCOPE_FIREPLACE;
-        var otherRow = document.querySelector('[data-pm-row="other"]')?.parentElement;
-        var gasRow = document.querySelector('[data-pm-row="gas"]')?.parentElement;
-        [otherRow, gasRow].forEach(function (row) {
-          if (!row) {
+        var showAll = state.scope === SCOPE_DOMESTIC;
+        var remainingVisible = showAll || (state.colorUsage && state.colorUsage.remaining);
+        document.querySelectorAll('[data-pm-row="other"]').forEach(function (node) {
+          var row = node.parentElement;
+          if (row) {
+            row.classList.toggle('is-hidden', isFireplaceScope);
+          }
+        });
+        document.querySelectorAll('[data-pm-row="gas"]').forEach(function (node) {
+          var row = node.parentElement;
+          if (row) {
+            row.classList.toggle('is-hidden', isFireplaceScope);
+          }
+        });
+        document.querySelectorAll('[data-pm-row="remaining"]').forEach(function (node) {
+          var row = node.parentElement;
+          if (row) {
+            row.classList.toggle('is-hidden', !remainingVisible);
+          }
+        });
+        var selectedVisible = showAll || (state.colorUsage && state.colorUsage.selected);
+        document.querySelectorAll('[data-pm-row="selected"]').forEach(function (node) {
+          var row = node.parentElement;
+          if (row) {
+            row.classList.toggle('is-hidden', !selectedVisible);
+          }
+        });
+      }
+
+      function updatePmTooltipLegendLabels() {
+        var legendMap = {
+          remaining: 'remaining',
+          selected: 'selected',
+          eco: 'eco',
+          gas: 'gas',
+          other: 'other'
+        };
+        Object.keys(legendMap).forEach(function (rowKey) {
+          var chip = document.querySelector('[data-legend-color="' + legendMap[rowKey] + '"]');
+          if (!chip || chip.classList.contains('is-hidden')) {
             return;
           }
-          row.classList.toggle('is-hidden', isFireplaceScope);
+          var label = (chip.textContent || '').trim();
+          if (!label) {
+            return;
+          }
+          var nodes = document.querySelectorAll('[data-pm-row="' + rowKey + '"]');
+          nodes.forEach(function (node) {
+            node.textContent = label;
+          });
         });
       }
 
       function renderPmStackedChart() {
+        var chartContainer = document.getElementById('ecoPmChart');
+        if (!chartContainer || !chartContainer.isConnected) {
+          return;
+        }
+        var chartWidth = chartContainer.clientWidth || 0;
+        var chartHeight = chartContainer.clientHeight || 0;
+        if (!chartWidth || !chartHeight) {
+          queuePmChartRender(120);
+          return;
+        }
+        if (!googleChartsReady || !window.google || !window.google.visualization) {
+          queuePmChartRender(200);
+          return;
+        }
+        if (!state.timeseriesIndex) {
+          queuePmChartRender(200);
+          return;
+        }
+        if (!state.selection.fireplace && !(dom.fireplace && dom.fireplace.disabled)) {
+          queuePmChartRender(200);
+          return;
+        }
         var token = ++pmChartRenderToken;
         resetColorUsage();
         updatePmScopeLabel();
@@ -4620,26 +5022,49 @@
         var fireplacesAllRaw = coerceNonNegative(getTimeseriesValue(pmPollutantId, 27, year));
         var ecoRtbRaw = coerceNonNegative(getTimeseriesValue(pmPollutantId, 20, year));
         var otherRaw = Math.max(0, domesticCombustionRaw - (fireplacesAllRaw + gasBoilersRaw));
-        var fireplacesExceptEcoRaw = Math.max(0, fireplacesAllRaw - ecoRtbRaw);
+        var selectedCategoryId = state.selection.fireplace;
+        var selectedEmissionRaw = coerceNonNegative(getTimeseriesValue(pmPollutantId, selectedCategoryId, year));
+        var profile = state.latestEnergyProfile;
+        var inclusion = profile ? profile.inclusion : null;
+        var selectedIsAllFireplaces = Number(selectedCategoryId) === Number(FIREPLACES_ALL_CATEGORY_ID);
+        var subtractEco = (inclusion && inclusion.included === true) || selectedIsAllFireplaces;
+        var selectedNonEcoRaw = subtractEco ? Math.max(0, selectedEmissionRaw - ecoRtbRaw) : selectedEmissionRaw;
+        var remainderFireplacesRaw = Math.max(0, fireplacesAllRaw - (selectedEmissionRaw + (subtractEco ? 0 : ecoRtbRaw)));
 
         var activityId = state.activityPollutantId;
-        var ecoEnergy = Number.isFinite(activityId) ? getTimeseriesValue(activityId, 20, year) : NaN;
-        var fireplacesEnergy = Number.isFinite(activityId) ? getTimeseriesValue(activityId, 27, year) : NaN;
+        var ecoEnergy = Number.isFinite(activityId)
+          ? getTimeseriesValue(activityId, 20, year)
+          : NaN;
+        var fireplaceEnergy = Number.isFinite(activityId)
+          ? getTimeseriesValue(activityId, selectedCategoryId, year)
+          : NaN;
+        if (profile) {
+          if (Number.isFinite(profile.ecoEnergy)) {
+            ecoEnergy = profile.ecoEnergy;
+          }
+          if (Number.isFinite(profile.fireplaceEnergy)) {
+            fireplaceEnergy = profile.fireplaceEnergy;
+          }
+        }
         var ecoFactor = window.EcoReplacementUtils && typeof window.EcoReplacementUtils.calculateEmissionFactor === 'function'
           ? window.EcoReplacementUtils.calculateEmissionFactor({
             pollutantValue: ecoRtbRaw,
             actDataValue: ecoEnergy
           })
           : (Number.isFinite(ecoRtbRaw) && Number.isFinite(ecoEnergy) && ecoEnergy !== 0 ? ecoRtbRaw / ecoEnergy : NaN);
-        var replacementEco = Number.isFinite(ecoFactor) && Number.isFinite(fireplacesEnergy)
-          ? Math.max(0, ecoFactor * fireplacesEnergy)
+        var replacementEnergy = profile && Number.isFinite(profile.replacementEnergy)
+          ? profile.replacementEnergy
+          : (subtractEco ? fireplaceEnergy : (ecoEnergy + fireplaceEnergy));
+        var replacementEco = Number.isFinite(ecoFactor) && Number.isFinite(replacementEnergy)
+          ? Math.max(0, ecoFactor * replacementEnergy)
           : 0;
 
         var scaleInfo = computeUnitScale(unitLabel, [
           gasBoilersRaw,
           otherRaw,
           ecoRtbRaw,
-          fireplacesExceptEcoRaw,
+          selectedNonEcoRaw,
+          remainderFireplacesRaw,
           replacementEco
         ]);
         var factor = scaleInfo && Number.isFinite(scaleInfo.factor) ? scaleInfo.factor : 1;
@@ -4647,10 +5072,11 @@
         var gasBoilers = gasBoilersRaw > 0 ? gasBoilersRaw * factor : null;
         var other = otherRaw > 0 ? otherRaw * factor : null;
         var ecoRtb = ecoRtbRaw > 0 ? ecoRtbRaw * factor : null;
-        var fireplacesExceptEco = fireplacesExceptEcoRaw > 0 ? fireplacesExceptEcoRaw * factor : null;
+        var selectedNonEco = selectedNonEcoRaw > 0 ? selectedNonEcoRaw * factor : null;
+        var remainderFireplaces = remainderFireplacesRaw > 0 ? remainderFireplacesRaw * factor : null;
         var replacementEcoScaled = replacementEco > 0 ? replacementEco * factor : null;
-        var pmBaselineTotal = gasBoilersRaw + otherRaw + ecoRtbRaw + fireplacesExceptEcoRaw;
-        var pmReplacementTotal = gasBoilersRaw + otherRaw + replacementEco;
+        var pmBaselineTotal = gasBoilersRaw + otherRaw + ecoRtbRaw + selectedNonEcoRaw + remainderFireplacesRaw;
+        var pmReplacementTotal = gasBoilersRaw + otherRaw + replacementEco + remainderFireplacesRaw;
         var pmElectricTotal = gasBoilersRaw + otherRaw;
         var pmPercentReplacement = computeReplacementPercent({
           fireplaceEmission: pmBaselineTotal,
@@ -4668,18 +5094,27 @@
           fireplaceEmission: pmBaselineTotal,
           replacementEmission: pmElectricTotal
         });
-        var totalCurrentScaled = (gasBoilers || 0) + (other || 0) + (ecoRtb || 0) + (fireplacesExceptEco || 0);
-        var totalReplacementScaled = (gasBoilers || 0) + (other || 0) + (replacementEcoScaled || 0);
+        var totalCurrentScaled = (gasBoilers || 0) + (other || 0) + (ecoRtb || 0) + (selectedNonEco || 0) + (remainderFireplaces || 0);
+        var totalReplacementScaled = (gasBoilers || 0) + (other || 0) + (replacementEcoScaled || 0) + (remainderFireplaces || 0);
         var totalElectricScaled = (gasBoilers || 0) + (other || 0);
+        var gasBoilersTooltip = gasBoilersRaw > 0 ? gasBoilers : 0;
+        var otherTooltip = otherRaw > 0 ? other : 0;
+        var ecoTooltip = ecoRtbRaw > 0 ? ecoRtb : 0;
+        var selectedTooltip = selectedNonEcoRaw > 0 ? selectedNonEco : 0;
+        var remainingTooltip = remainderFireplacesRaw > 0 ? remainderFireplaces : 0;
+        var replacementEcoTooltip = replacementEco > 0 ? replacementEcoScaled : 0;
         var tooltipValues = {
-          'fireplace-current': fireplacesExceptEco,
+          'remaining-current': remainingTooltip,
+          'remaining-replacement': remainingTooltip,
+          'remaining-electric': 0,
+          'fireplace-current': selectedTooltip,
           'fireplace-replacement': 0,
           'fireplace-electric': 0,
-          'eco-current': ecoRtb,
-          'eco-replacement': replacementEcoScaled,
+          'eco-current': ecoTooltip,
+          'eco-replacement': replacementEcoTooltip,
           'eco-electric': 0,
-          'other-span': other,
-          'gas-span': gasBoilers,
+          'other-span': otherTooltip,
+          'gas-span': gasBoilersTooltip,
           'total-current': totalCurrentScaled,
           'total-replacement': totalReplacementScaled,
           'total-electric': totalElectricScaled
@@ -4703,12 +5138,12 @@
         data.addColumn('number', 'Gas boilers');
         data.addColumn('number', 'Other domestic combustion');
         data.addColumn('number', 'Ecodesign stoves (Ready to Burn)');
-        data.addColumn({ type: 'string', role: 'style' });
-        data.addColumn('number', 'Fireplaces, older stoves & non-RtB Ecodesign');
+        data.addColumn('number', 'Selected fireplaces & stoves (replaced)');
+        data.addColumn('number', 'Other fireplaces & stoves (not replaced)');
         data.addRows([
-          [String(year), gasBoilers, other, ecoRtb, 'color: ' + BAR_COLORS.eco, fireplacesExceptEco],
-          ['Replacement\nScenario', gasBoilers, other, replacementEcoScaled, 'color: ' + BAR_COLORS.eco, null],
-          ['Replaced with electric\nheating/heat pumps', gasBoilers, other, null, null, null]
+          [String(year), gasBoilers, other, ecoRtb, selectedNonEco, remainderFireplaces],
+          ['Replacement\nScenario', gasBoilers, other, replacementEcoScaled, null, remainderFireplaces],
+          ['All Fireplaces & Stoves\nreplaced by electric heating/heat pumps.', gasBoilers, other, null, null, null]
         ]);
 
         var totals = [
@@ -4731,8 +5166,8 @@
           gas: isPositiveValue(gasBoilers),
           other: isPositiveValue(other),
           eco: isPositiveValue(ecoRtb) || isPositiveValue(replacementEcoScaled),
-          selected: isPositiveValue(fireplacesExceptEco),
-          remaining: isPositiveValue(fireplacesExceptEco)
+          selected: isPositiveValue(selectedNonEco),
+          remaining: isPositiveValue(remainderFireplaces)
         });
 
         var options = {
@@ -4740,7 +5175,7 @@
           backgroundColor: 'transparent',
           isStacked: true,
           legend: { position: 'none' },
-          colors: ['#2563eb', '#cbd5e1', BAR_COLORS.eco, '#e11d48'],
+          colors: ['#2563eb', '#cbd5e1', BAR_COLORS.eco, BAR_COLORS.fireplace, BAR_COLORS.remaining],
           chartArea: { left: 44, right: 8, top: 20, height: '76%' },
           bar: { groupWidth: '34%' },
           vAxis: {
@@ -4778,6 +5213,7 @@
         });
         setTimeout(renderLabels, 400);
         updateGlobalLegend();
+        updatePmTooltipVisibility();
       }
 
       function renderPmStackedChartFireplace(renderToken) {
@@ -4836,6 +5272,7 @@
           var ecoRaw = Number(result.ecoEmission);
           var baselineFireplaceRaw = Number(result.baselineFireplaceEmission);
           var remainderRaw = Number(result.fireplaceRemainderEmission);
+          var ecoIncluded = result.energyProfile && result.energyProfile.inclusion && result.energyProfile.inclusion.included === true;
 
           var scaleInfo = computeUnitScale(unitLabel, [
             coerceNonNegative(baselineFireplaceRaw),
@@ -4852,14 +5289,17 @@
           var baselineFireplaceValue = coerceNonNegative(
             Number.isFinite(baselineFireplaceRaw) ? baselineFireplaceRaw : fireplaceRaw
           ) * factor;
+          var remainderRawAdjusted = Number.isFinite(baselineFireplaceRaw)
+            ? Math.max(0, baselineFireplaceRaw - (coerceNonNegative(fireplaceRaw) + (ecoIncluded ? 0 : coerceNonNegative(ecoRaw))))
+            : remainderRaw;
           var remainderValue = coerceNonNegative(
-            Number.isFinite(remainderRaw) ? remainderRaw : Math.max(0, baselineFireplaceValue - fireplaceValue)
+            Number.isFinite(remainderRawAdjusted) ? remainderRawAdjusted : Math.max(0, baselineFireplaceValue - fireplaceValue)
           ) * factor;
           var replacementValue = Number.isFinite(replacementRaw) && replacementRaw > 0 ? coerceNonNegative(replacementRaw) * factor : null;
           var ecoValue = Number.isFinite(ecoRaw) ? coerceNonNegative(ecoRaw) * factor : 0;
           var pmBaselineTotal = baselineFireplaceValue;
           var pmReplacementTotal = (Number.isFinite(replacementValue) ? replacementValue : 0) + remainderValue;
-          var pmElectricTotal = remainderValue;
+          var pmElectricTotal = 0;
           var pmPercentReplacement = computeReplacementPercent({
             fireplaceEmission: pmBaselineTotal,
             replacementEmission: pmReplacementTotal
@@ -4876,11 +5316,14 @@
             fireplaceEmission: pmBaselineTotal,
             replacementEmission: pmElectricTotal
           });
-          var fireplaceNonEco = Math.max(0, fireplaceValue - ecoValue);
+          var fireplaceNonEco = ecoIncluded ? Math.max(0, fireplaceValue - ecoValue) : fireplaceValue;
           var tooltipValues = {
+            'remaining-current': remainderValue,
+            'remaining-replacement': remainderValue,
+            'remaining-electric': 0,
             'fireplace-current': fireplaceNonEco,
-            'fireplace-replacement': remainderValue,
-            'fireplace-electric': remainderValue,
+            'fireplace-replacement': 0,
+            'fireplace-electric': 0,
             'eco-current': ecoValue,
             'eco-replacement': replacementValue,
             'eco-electric': 0,
@@ -4914,7 +5357,7 @@
         data.addRows([
             [String(year), ecoValue > 0 ? ecoValue : null, fireplaceNonEco > 0 ? fireplaceNonEco : null, remainderValue > 0 ? remainderValue : null],
             ['Replacement\nscenario', replacementValue > 0 ? replacementValue : null, null, remainderValue > 0 ? remainderValue : null],
-            ['Replaced with electric\nheating/heat pumps', null, null, remainderValue > 0 ? remainderValue : null]
+            ['All Fireplaces & Stoves\nreplaced by electric heating/heat pumps.', null, null, null]
         ]);
 
           var totals = [
@@ -4983,6 +5426,7 @@
           });
           setTimeout(renderLabels, 400);
           updateGlobalLegend();
+          updatePmTooltipVisibility();
         }).catch(function (error) {
           if (renderToken !== pmChartRenderToken) {
             return;
@@ -5262,6 +5706,10 @@
         var fireplaceLabel = state.selection.fireplace
           ? getCategoryLabel(state.selection.fireplace)
           : 'Fireplace / stove category';
+        var baselineEmission = Number(entry.result.baselineFireplaceEmission);
+        var fireplaceEmission = Number(entry.result.fireplaceEmission);
+        var ecoEmission = Number(entry.result.ecoEmission);
+        var remainderEmissionRaw = Number(entry.result.fireplaceRemainderEmission);
 
         var fireplaceFactor = NaN;
         if (window.EcoReplacementUtils && typeof window.EcoReplacementUtils.calculateEmissionFactor === 'function') {
@@ -5318,6 +5766,9 @@
         var replacementEnergy = profile ? profile.replacementEnergy : null;
         var emissionFactor = entry.result.ecoEmissionFactor;
         var replacementEmission = entry.result.replacementEmission;
+        var remainderEmissionAdjusted = Number.isFinite(baselineEmission)
+          ? Math.max(0, baselineEmission - (coerceNonNegative(fireplaceEmission) + (assessment.included ? 0 : coerceNonNegative(ecoEmission))))
+          : remainderEmissionRaw;
         var pollutionLines = [];
         if (Number.isFinite(replacementEnergy)
           && Number.isFinite(emissionFactor)
@@ -5332,10 +5783,22 @@
         if (!pollutionLines.length) {
           pollutionLines = ['Calculation unavailable for this selection'];
         }
+        var replacementTotalLines = [];
+        if (Number.isFinite(replacementEmission)
+          && Number.isFinite(remainderEmissionAdjusted)
+          && remainderEmissionAdjusted > 0) {
+          var replacementText = formatTooltipEmission(replacementEmission, unitShort, factor);
+          var remainderText = formatTooltipEmission(remainderEmissionAdjusted, unitShort, factor);
+          var totalText = formatTooltipEmission(replacementEmission + remainderEmissionAdjusted, unitShort, factor);
+          if (replacementText !== '—' && remainderText !== '—' && totalText !== '—') {
+            replacementTotalLines.push(replacementText + ' + ' + remainderText + ' = ' + totalText);
+          }
+        }
 
         var calcRows = [
           energyDetail.note ? buildMiniCalcNote(energyDetail.note) : buildMiniCalcRow('Energy', energyDetail.lines),
-          buildMiniCalcRow('Pollution estimate', pollutionLines)
+          buildMiniCalcRow('Pollution estimate', pollutionLines),
+          buildMiniCalcRow('Replacement scenario total', replacementTotalLines)
         ].filter(Boolean).join('');
 
         var tooltip = document.createElement('div');
@@ -5916,13 +6379,7 @@
       }
 
       function buildEnergyCalculationText(profile, fireplaceLabel) {
-        if (!profile) {
-          return ENERGY_NOTE_DEFAULT;
-        }
-        var scopeText = state.scope === SCOPE_FIREPLACE
-          ? 'Fireplaces & All Stoves'
-          : 'All Domestic Combustion';
-        return 'Total energy for ' + scopeText + '.';
+        return '';
       }
 
       function formatEmissionValue(value, unit) {

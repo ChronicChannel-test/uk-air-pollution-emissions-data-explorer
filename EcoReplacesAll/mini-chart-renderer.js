@@ -973,32 +973,8 @@
           var bbox = chart.getChartLayoutInterface && chart.getChartLayoutInterface().getChartAreaBoundingBox ? chart.getChartLayoutInterface().getChartAreaBoundingBox() : null;
           var axisNodes = svg ? Array.from(svg.querySelectorAll('text[text-anchor="end"]')) : [];
           var axisTexts = axisNodes.map(function (n) { return (n.textContent || '').trim(); }).filter(Boolean);
-          var info = {
-            label: debugLabel,
-            useNativeAxis: useNativeAxis,
-            nativeAxisAuto: nativeAxisAuto,
-            axisTicks: axisTicks,
-            axisViewWindow: { min: axisViewWindowMin, max: axisViewWindowMax },
-            gridlineCount: gridlineCount,
-            minorGridlineCount: minorGridlineCount,
-            chartArea: bbox,
-            axisTextCount: axisNodes.length,
-            axisTexts: axisTexts,
-            containerBox: config.container.getBoundingClientRect ? config.container.getBoundingClientRect().toJSON() : null,
-            svgBox: svg && svg.getBoundingClientRect ? svg.getBoundingClientRect().toJSON() : null,
-            svgHtmlLength: svg && typeof svg.outerHTML === 'string' ? svg.outerHTML.length : 0
-          };
-          if (global && global.console && typeof global.console.info === 'function') {
-            try {
-              console.info('[mini-axis-debug]', JSON.stringify(info));
-            } catch (stringifyError) {
-              console.info('[mini-axis-debug]', info);
-            }
-          }
         } catch (e) {
-          if (global && global.console && typeof global.console.warn === 'function') {
-            console.warn('[mini-axis-debug] failed', e);
-          }
+          // axis debug muted
         }
         if (config.forceAnnotationColors && !config.overlayAnnotations) {
           var svg = config.container.querySelector('svg');
