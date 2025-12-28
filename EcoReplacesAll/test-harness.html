@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>EcoReplacesAll Chart Render Harness</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      margin: 0;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 24px auto 56px;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      margin: 0 0 6px;
+    }
+
+    p {
+      margin: 0 0 8px;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    button.secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .results {
+      display: grid;
+      gap: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.9rem;
+    }
+
+    .result-line {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .result-line span {
+      display: inline-block;
+    }
+
+    .result-label {
+      min-width: 120px;
+      color: #64748b;
+    }
+
+    .result-status {
+      font-weight: 700;
+    }
+
+    .result-status.ok {
+      color: #0f9d58;
+    }
+
+    .result-status.fail {
+      color: #dc2626;
+    }
+
+    .frame-wrap {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    iframe {
+      width: 100%;
+      height: 820px;
+      border: 0;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <h1>EcoReplacesAll Chart Render Harness</h1>
+      <p>Checks that the Energy pie chart and PM middle chart render on first load and after a cache-busted refresh.</p>
+      <div class="actions">
+        <button id="runChecks">Run Scenario</button>
+        <button class="secondary" id="reloadFrame">Reload Frame</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="results" id="results"></div>
+    </div>
+
+    <div class="frame-wrap">
+      <iframe id="ecoFrame" title="EcoReplacesAll preview"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const frame = document.getElementById('ecoFrame');
+    const results = document.getElementById('results');
+    const runButton = document.getElementById('runChecks');
+    const reloadButton = document.getElementById('reloadFrame');
+    const baseUrl = './embed.html';
+    const maxWaitMs = 16000;
+    const pollMs = 250;
+
+    function normalizeHex(value) {
+      if (!value) return '';
+      const raw = String(value).trim().toLowerCase();
+      if (raw.startsWith('#')) {
+        if (raw.length === 4) {
+          return '#' + raw[1].repeat(2) + raw[2].repeat(2) + raw[3].repeat(2);
+        }
+        return raw;
+      }
+      const rgbMatch = raw.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      if (!rgbMatch) return raw;
+      const [r, g, b] = rgbMatch.slice(1).map(Number);
+      const toHex = (n) => n.toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
+    function validatePmChart(doc) {
+      const svg = doc.querySelector('#ecoPmChart svg');
+      if (!svg) {
+        return { ok: false, detail: 'PM chart SVG missing.' };
+      }
+      const rects = Array.from(svg.querySelectorAll('rect'))
+        .filter((rect) => {
+          const fill = (rect.getAttribute('fill') || '').trim().toLowerCase();
+          return fill && fill !== 'none' && fill !== '#ffffff' && fill !== '#fff';
+        });
+      const structural = new Set(['#e2e8f0', '#94a3b8', '#cbd5e1']);
+      const palette = new Set(
+        rects
+          .map((rect) => normalizeHex(rect.getAttribute('fill')))
+          .filter((color) => color && !structural.has(color))
+      );
+      const expected = ['#f58231', '#911eb4', '#e42020'];
+      if (!palette.size) {
+        return { ok: false, detail: 'PM chart bar fills missing.' };
+      }
+      const unexpected = Array.from(palette).filter((color) => !expected.includes(color));
+      if (unexpected.length) {
+        return {
+          ok: false,
+          detail: `PM chart uses unexpected colors ${unexpected.join(', ')}; expected palette ${expected.join(', ')}.`
+        };
+      }
+      const hasCorePalette = expected.slice(0, 2).every((color) => palette.has(color));
+      if (!hasCorePalette) {
+        return {
+          ok: false,
+          detail: `PM chart missing core palette colors ${expected.slice(0, 2).join(', ')}; saw ${Array.from(palette).join(', ')}.`
+        };
+      }
+      const missing = expected.filter((color) => !palette.has(color));
+      const detail = missing.length
+        ? `PM chart palette ok (missing ${missing.join(', ')}); saw ${Array.from(palette).join(', ')}.`
+        : 'Pie + PM chart detected with expected colors.';
+      return { ok: true, detail };
+    }
+
+    function clearResults() {
+      results.innerHTML = '';
+    }
+
+    function addResult(label, status, detail) {
+      const line = document.createElement('div');
+      line.className = 'result-line';
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'result-label';
+      labelSpan.textContent = label;
+      const statusSpan = document.createElement('span');
+      statusSpan.className = 'result-status ' + (status ? 'ok' : 'fail');
+      statusSpan.textContent = status ? 'PASS' : 'FAIL';
+      const detailSpan = document.createElement('span');
+      detailSpan.textContent = detail || '';
+      line.appendChild(labelSpan);
+      line.appendChild(statusSpan);
+      line.appendChild(detailSpan);
+      results.appendChild(line);
+    }
+
+    function loadFrame(src) {
+      return new Promise((resolve) => {
+        const handleLoad = () => {
+          frame.removeEventListener('load', handleLoad);
+          resolve();
+        };
+        frame.addEventListener('load', handleLoad);
+        frame.src = src;
+      });
+    }
+
+    function inspectCharts(doc) {
+      const pieHost = doc.getElementById('ecoEnergyPieChart');
+      const pmHost = doc.getElementById('ecoPmChart');
+      const pieReady = !!(pieHost && pieHost.querySelector('svg'));
+      const pmReady = !!(pmHost && pmHost.querySelector('svg'));
+      return { pieReady, pmReady };
+    }
+
+    async function waitForCharts(label) {
+      const start = Date.now();
+      while (Date.now() - start < maxWaitMs) {
+        try {
+          const doc = frame.contentDocument;
+          if (doc) {
+            const status = inspectCharts(doc);
+            if (status.pieReady && status.pmReady) {
+              const pmCheck = validatePmChart(doc);
+              addResult(label, pmCheck.ok, pmCheck.detail);
+              return;
+            }
+          }
+        } catch (err) {
+          addResult(label, false, 'Unable to read iframe contents.');
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, pollMs));
+      }
+      addResult(label, false, 'Timed out waiting for charts.');
+    }
+
+    async function runScenario() {
+      clearResults();
+      await loadFrame(baseUrl);
+      await waitForCharts('First load');
+      await loadFrame(`${baseUrl}?cacheBust=${Date.now()}`);
+      await waitForCharts('Cache-busted refresh');
+    }
+
+    runButton.addEventListener('click', runScenario);
+    reloadButton.addEventListener('click', () => {
+      frame.src = `${baseUrl}?manual=${Date.now()}`;
+    });
+
+    frame.src = baseUrl;
+  </script>
+</body>
+</html>

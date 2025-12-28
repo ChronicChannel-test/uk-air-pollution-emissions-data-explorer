@@ -3321,6 +3321,11 @@
         pm25PollutantId: null,
         lastPmPollutantId: null,
         scope: SCOPE_FIREPLACE,
+        lastPmScenario: null,
+        lastPmScenarioData: null,
+        lastPmDrawAttempt: null,
+        lastPmDrawHadSvg: null,
+        lastPmInnerHtml: '',
         colorUsage: {
           eco: false,
           selected: false,
@@ -3328,6 +3333,23 @@
           gas: false,
           other: false
         }
+      };
+
+      // Debug helper to inspect load state from the harness without leaking internals elsewhere.
+      window.__ecoDebug = function () {
+        return {
+          ready: state.ready,
+          selection: state.selection,
+          timeseriesReady: Boolean(state.timeseriesIndex),
+          googleReady: googleChartsReady,
+          renderToken: state.renderToken,
+          pmRenderToken: pmChartRenderToken,
+          lastPmScenario: state.lastPmScenario,
+          lastPmScenarioData: state.lastPmScenarioData,
+          lastPmDrawAttempt: state.lastPmDrawAttempt,
+          lastPmDrawHadSvg: state.lastPmDrawHadSvg,
+          lastPmInnerHtml: state.lastPmInnerHtml
+        };
       };
 
       function buildEnergyDomRefs() {
@@ -4036,6 +4058,10 @@
         };
       }
 
+      function isAllFireplacesSelection() {
+        return Number(state.selection && state.selection.fireplace) === Number(FIREPLACES_ALL_CATEGORY_ID);
+      }
+
       function isPositiveValue(value) {
         var num = Number(value);
         return Number.isFinite(num) && num > 1e-6;
@@ -4054,7 +4080,7 @@
 
       function updateGlobalLegend() {
         var chips = document.querySelectorAll('[data-legend-color]');
-        var showAll = state.scope === SCOPE_DOMESTIC;
+        var showAll = state.scope === SCOPE_DOMESTIC && !isAllFireplacesSelection();
         chips.forEach(function (chip) {
           var key = chip.getAttribute('data-legend-color');
           var visible = showAll || (state.colorUsage && state.colorUsage[key]);
@@ -4908,7 +4934,7 @@
 
       function updatePmTooltipVisibility() {
         var isFireplaceScope = state.scope === SCOPE_FIREPLACE;
-        var showAll = state.scope === SCOPE_DOMESTIC;
+        var showAll = state.scope === SCOPE_DOMESTIC && !isAllFireplacesSelection();
         var remainingVisible = showAll || (state.colorUsage && state.colorUsage.remaining);
         document.querySelectorAll('[data-pm-row="other"]').forEach(function (node) {
           var row = node.parentElement;
@@ -5101,7 +5127,7 @@
         var otherTooltip = otherRaw > 0 ? other : 0;
         var ecoTooltip = ecoRtbRaw > 0 ? ecoRtb : 0;
         var selectedTooltip = selectedNonEcoRaw > 0 ? selectedNonEco : 0;
-        var remainingTooltip = remainderFireplacesRaw > 0 ? remainderFireplaces : 0;
+        var remainingTooltip = selectedIsAllFireplaces ? null : (remainderFireplacesRaw > 0 ? remainderFireplaces : 0);
         var replacementEcoTooltip = replacementEco > 0 ? replacementEcoScaled : 0;
         var tooltipValues = {
           'remaining-current': remainingTooltip,
@@ -5151,6 +5177,12 @@
           totalReplacementScaled,
           totalElectricScaled
         ];
+        state.lastPmDrawAttempt = {
+          scope: 'domestic',
+          renderToken: renderToken,
+          totals: totals.slice(),
+          rows: data.getNumberOfRows()
+        };
         var maxValue = Math.max.apply(Math, totals.map(function (value) { return Number(value) || 0; }));
         var ticks = buildMiniStyleTicks(totals, maxValue);
         if (!ticks.length) {
@@ -5202,6 +5234,9 @@
         }
         pmChartInstance.draw(data, options);
         google.visualization.events.removeAllListeners(pmChartInstance);
+        google.visualization.events.addListener(pmChartInstance, 'error', function (err) {
+          console.warn('Eco PM chart error:', err && err.message ? err.message : err);
+        });
         var renderLabels = function () {
           renderPmStackedLabels(pmChartInstance, data, totals, unitShort);
         };
@@ -5212,6 +5247,9 @@
           renderLabels();
         });
         setTimeout(renderLabels, 400);
+        ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1);
+        state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
+        state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
         updateGlobalLegend();
         updatePmTooltipVisibility();
       }
@@ -5267,6 +5305,13 @@
             container.textContent = 'PM2.5 data unavailable.';
             return;
           }
+          state.lastPmScenario = {
+            scope: 'fireplace',
+            renderToken: renderToken,
+            hasResult: Boolean(result),
+            keys: result ? Object.keys(result) : []
+          };
+          state.lastPmScenarioData = result;
           var fireplaceRaw = Number(result.fireplaceEmission);
           var replacementRaw = Number(result.replacementEmission);
           var ecoRaw = Number(result.ecoEmission);
@@ -5365,6 +5410,12 @@
             pmReplacementTotal,
             pmElectricTotal
           ];
+          state.lastPmDrawAttempt = {
+            scope: 'fireplace',
+            renderToken: renderToken,
+            totals: totals.slice(),
+            rows: data.getNumberOfRows()
+          };
           var maxValue = Math.max.apply(Math, totals.map(function (value) { return Number(value) || 0; }));
           var ticks = buildMiniStyleTicks(totals, maxValue);
           if (!ticks.length) {
@@ -5415,6 +5466,9 @@
           }
           pmChartInstance.draw(data, options);
           google.visualization.events.removeAllListeners(pmChartInstance);
+          google.visualization.events.addListener(pmChartInstance, 'error', function (err) {
+            console.warn('Eco PM chart error:', err && err.message ? err.message : err);
+          });
           var renderLabels = function () {
             renderPmStackedLabels(pmChartInstance, data, totals, unitShort);
           };
@@ -5425,6 +5479,9 @@
             renderLabels();
           });
           setTimeout(renderLabels, 400);
+          ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1);
+          state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
+          state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
           updateGlobalLegend();
           updatePmTooltipVisibility();
         }).catch(function (error) {
@@ -5472,7 +5529,15 @@
           return;
         }
         container.innerHTML = '';
+        var host = document.getElementById('ecoPmChart');
+        var hasSvg = host && host.querySelector && host.querySelector('svg');
+        if (!hasSvg) {
+          return;
+        }
         var cli = chart.getChartLayoutInterface();
+        if (!cli || typeof cli.getXLocation !== 'function' || typeof cli.getYLocation !== 'function') {
+          return;
+        }
         var labelColors = state.scope === SCOPE_FIREPLACE
           ? [BAR_COLORS.fireplace, BAR_COLORS.eco, '#0f9c48']
           : [BAR_COLORS.fireplace, BAR_COLORS.eco, '#0f9c48'];
@@ -5483,34 +5548,99 @@
 
         for (var i = 0; i < data.getNumberOfRows(); i++) {
           var total = 0;
+          var hasValue = false;
           if (Array.isArray(totals) && Number.isFinite(totals[i])) {
             total = totals[i];
+            hasValue = total > 0;
           } else {
             for (var c = 1; c < data.getNumberOfColumns(); c++) {
-              total += Number(data.getValue(i, c)) || 0;
+              var cellValue = Number(data.getValue(i, c)) || 0;
+              if (cellValue > 0) {
+                hasValue = true;
+              }
+              total += cellValue;
             }
           }
-          var x = cli.getXLocation(i);
-          var y = cli.getYLocation(total);
-          var span = document.createElement('span');
-          span.className = 'eco-pm-label';
-          var unitSuffix = unitShort ? '\u00a0' + unitShort : '';
-          span.textContent = formatBarValue(total) + unitSuffix;
-          span.style.left = x + 'px';
-          span.style.top = y + 'px';
-          span.style.color = labelColors[i] || '#0f172a';
-          span.style.whiteSpace = 'nowrap';
-          container.appendChild(span);
-          if (i === data.getNumberOfRows() - 1 && containerBox && span.getBoundingClientRect) {
-            var spanBox = span.getBoundingClientRect();
-            var maxRight = (cardBox ? cardBox.right : containerBox.right) - edgePad;
-            if (spanBox.right > maxRight) {
-              var overflow = spanBox.right - maxRight;
-              var currentLeft = parseFloat(span.style.left) || x;
-              span.style.left = (currentLeft - overflow) + 'px';
+          if (!hasValue || !Number.isFinite(total) || total <= 0) {
+            continue;
+          }
+          try {
+            var x = cli.getXLocation(i);
+            var y = cli.getYLocation(total);
+            var span = document.createElement('span');
+            span.className = 'eco-pm-label';
+            var unitSuffix = unitShort ? '\u00a0' + unitShort : '';
+            span.textContent = formatBarValue(total) + unitSuffix;
+            span.style.left = x + 'px';
+            span.style.top = y + 'px';
+            span.style.color = labelColors[i] || '#0f172a';
+            span.style.whiteSpace = 'nowrap';
+            container.appendChild(span);
+            if (i === data.getNumberOfRows() - 1 && containerBox && span.getBoundingClientRect) {
+              var spanBox = span.getBoundingClientRect();
+              var maxRight = (cardBox ? cardBox.right : containerBox.right) - edgePad;
+              if (spanBox.right > maxRight) {
+                var overflow = spanBox.right - maxRight;
+                var currentLeft = parseFloat(span.style.left) || x;
+                span.style.left = (currentLeft - overflow) + 'px';
+              }
             }
+          } catch (error) {
+            console.warn('Eco PM label render skipped:', error && error.message ? error.message : error);
           }
         }
+      }
+
+      function ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, attempt) {
+        var attemptNum = Number(attempt) || 1;
+        if (!container || renderToken !== pmChartRenderToken || attemptNum > 3) {
+          return;
+        }
+        var hasSvg = container.querySelector && container.querySelector('svg');
+        if (hasSvg) {
+          state.lastPmDrawHadSvg = true;
+          state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
+          return;
+        }
+        try {
+          var redrawOptions = Object.assign({}, options, { animation: null });
+          if (!pmChartInstance) {
+            pmChartInstance = new google.visualization.ColumnChart(container);
+          }
+          pmChartInstance.draw(data, redrawOptions);
+          state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
+          state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
+          window.requestAnimationFrame(function () {
+            renderPmStackedLabels(pmChartInstance, data, totals, unitShort);
+          });
+        } catch (error) {
+          console.warn('Eco PM redraw skipped:', error && error.message ? error.message : error);
+          return;
+        }
+        var stillMissing = !(container.querySelector && container.querySelector('svg'));
+        if (stillMissing && attemptNum >= 3) {
+          try {
+            pmChartInstance = new google.visualization.ColumnChart(container);
+            var simpleOptions = Object.assign({}, options, {
+              animation: null,
+              isStacked: true,
+              legend: { position: 'none' },
+              backgroundColor: 'transparent',
+              colors: options && options.colors ? options.colors.slice() : undefined,
+              width: container.clientWidth || options && options.width || undefined,
+              height: container.clientHeight || options && options.height || undefined
+            });
+            pmChartInstance.draw(data, simpleOptions);
+            state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
+            state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
+          } catch (fallbackError) {
+            console.warn('Eco PM final fallback failed:', fallbackError && fallbackError.message ? fallbackError.message : fallbackError);
+          }
+          return;
+        }
+        setTimeout(function () {
+          ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, attemptNum + 1);
+        }, 320);
       }
 
       function buildChartRow(label, value, unit, color, unitShortOverride) {
