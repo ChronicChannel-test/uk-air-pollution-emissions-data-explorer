@@ -3666,6 +3666,39 @@
         return String(catKey) + '|' + String(yearKey);
       }
 
+      function buildPmScenarioCacheKey(pollutantId, year, fireplaceId, scope) {
+        var pollutantKey = Number.isFinite(Number(pollutantId)) ? Number(pollutantId) : 'na';
+        var yearKey = Number.isFinite(Number(year)) ? Number(year) : 'na';
+        var fireplaceKey = Number.isFinite(Number(fireplaceId)) ? Number(fireplaceId) : 'na';
+        return [
+          String(pollutantKey),
+          String(yearKey),
+          String(fireplaceKey),
+          String(scope || '')
+        ].join('|');
+      }
+
+      function getCachedPmScenarioData(cacheKey) {
+        if (!cacheKey || !state.lastPmScenarioData) {
+          return null;
+        }
+        if (state.lastPmScenarioData.key === cacheKey && state.lastPmScenarioData.result) {
+          return state.lastPmScenarioData.result;
+        }
+        return null;
+      }
+
+      function setCachedPmScenarioData(cacheKey, result) {
+        if (!cacheKey || !result) {
+          state.lastPmScenarioData = null;
+          return;
+        }
+        state.lastPmScenarioData = {
+          key: cacheKey,
+          result: result
+        };
+      }
+
       function collectDualTextRefs(id) {
         var root = document.getElementById(id);
         if (!root) {
@@ -5688,6 +5721,234 @@
         updatePmTooltipVisibility();
       }
 
+      function renderPmStackedChartFireplaceFromScenario(renderToken, result, context) {
+        var container = document.getElementById('ecoPmChart');
+        if (!container || renderToken !== pmChartRenderToken) {
+          return;
+        }
+        if (!result) {
+          setPmPlotLoading(false);
+          container.textContent = 'PM2.5 data unavailable.';
+          return;
+        }
+        var pmPollutantId = context && context.pmPollutantId ? context.pmPollutantId : state.lastPmPollutantId;
+        var year = context && Number.isFinite(context.year) ? Number(context.year) : (state.selection.year || DEFAULT_YEAR);
+        var pollutantMeta = state.pollutantMap ? state.pollutantMap.get(Number(pmPollutantId)) : null;
+        var unitLabel = context && context.unitLabel
+          ? context.unitLabel
+          : (pollutantMeta && pollutantMeta.emission_unit ? pollutantMeta.emission_unit : 'kilotonne');
+        if (context && context.cacheKey) {
+          setCachedPmScenarioData(context.cacheKey, result);
+        } else if (result) {
+          state.lastPmScenarioData = result;
+        }
+        state.lastPmScenario = {
+          scope: 'fireplace',
+          renderToken: renderToken,
+          hasResult: Boolean(result),
+          keys: result ? Object.keys(result) : [],
+          cacheKey: context && context.cacheKey ? context.cacheKey : undefined
+        };
+        var fireplaceRaw = Number(result.fireplaceEmission);
+        var replacementRaw = Number(result.replacementEmission);
+        var ecoRaw = Number(result.ecoEmission);
+        var baselineFireplaceRaw = Number(result.baselineFireplaceEmission);
+        var remainderRaw = Number(result.fireplaceRemainderEmission);
+        var ecoIncluded = result.energyProfile && result.energyProfile.inclusion && result.energyProfile.inclusion.included === true;
+
+        var scaleInfo = computeUnitScale(unitLabel, [
+          coerceNonNegative(baselineFireplaceRaw),
+          Number.isFinite(replacementRaw) ? coerceNonNegative(replacementRaw) : 0,
+          Number.isFinite(ecoRaw) ? coerceNonNegative(ecoRaw) : 0
+        ]);
+        var factor = scaleInfo && Number.isFinite(scaleInfo.factor) ? scaleInfo.factor : 1;
+        var unitShort = scaleInfo && scaleInfo.unitShort ? scaleInfo.unitShort : getUnitAbbreviation(unitLabel);
+        if (!Number.isFinite(fireplaceRaw)) {
+          container.textContent = 'PM2.5 data unavailable for this category.';
+          return;
+        }
+        var fireplaceValue = coerceNonNegative(fireplaceRaw) * factor;
+        var baselineFireplaceValue = coerceNonNegative(
+          Number.isFinite(baselineFireplaceRaw) ? baselineFireplaceRaw : fireplaceRaw
+        ) * factor;
+        var remainderRawAdjusted = Number.isFinite(baselineFireplaceRaw)
+          ? Math.max(0, baselineFireplaceRaw - (coerceNonNegative(fireplaceRaw) + (ecoIncluded ? 0 : coerceNonNegative(ecoRaw))))
+          : remainderRaw;
+        var remainderValue = coerceNonNegative(
+          Number.isFinite(remainderRawAdjusted) ? remainderRawAdjusted : Math.max(0, baselineFireplaceValue - fireplaceValue)
+        ) * factor;
+        var replacementValue = Number.isFinite(replacementRaw) && replacementRaw > 0 ? coerceNonNegative(replacementRaw) * factor : null;
+        var ecoValue = Number.isFinite(ecoRaw) ? coerceNonNegative(ecoRaw) * factor : 0;
+        var pmBaselineTotal = baselineFireplaceValue;
+        var pmReplacementTotal = (Number.isFinite(replacementValue) ? replacementValue : 0) + remainderValue;
+        var pmElectricTotal = 0;
+        var pmPercentReplacement = computeReplacementPercent({
+          fireplaceEmission: pmBaselineTotal,
+          replacementEmission: pmReplacementTotal
+        });
+        var pmRangeReplacement = analyzeScenarioDelta({
+          fireplaceEmission: pmBaselineTotal,
+          replacementEmission: pmReplacementTotal
+        });
+        var pmPercentElectric = computeReplacementPercent({
+          fireplaceEmission: pmBaselineTotal,
+          replacementEmission: pmElectricTotal
+        });
+        var pmRangeElectric = analyzeScenarioDelta({
+          fireplaceEmission: pmBaselineTotal,
+          replacementEmission: pmElectricTotal
+        });
+        var fireplaceNonEco = ecoIncluded ? Math.max(0, fireplaceValue - ecoValue) : fireplaceValue;
+        var tooltipValues = {
+          'remaining-current': remainderValue,
+          'remaining-replacement': remainderValue,
+          'remaining-electric': 0,
+          'fireplace-current': fireplaceNonEco,
+          'fireplace-replacement': 0,
+          'fireplace-electric': 0,
+          'eco-current': ecoValue,
+          'eco-replacement': replacementValue,
+          'eco-electric': 0,
+          'other-span': null,
+          'gas-span': null,
+          'total-current': pmBaselineTotal,
+          'total-replacement': pmReplacementTotal,
+          'total-electric': pmElectricTotal
+        };
+        var pollutantName = pollutantMeta && pollutantMeta.pollutant ? pollutantMeta.pollutant : 'PM2.5';
+        updatePmCalcTooltipDisplay({
+          year: year,
+          pollutantName: pollutantName,
+          unitShort: unitShort,
+          values: tooltipValues,
+          percentDeltaReplacement: pmPercentReplacement,
+          deltaRangeReplacement: pmRangeReplacement,
+          percentDeltaElectric: pmPercentElectric,
+          deltaRangeElectric: pmRangeElectric
+        });
+        updatePmCardTitle(pmPollutantId, scaleInfo);
+
+        var fireplaceStackLabel = 'Selected fireplace / stove category';
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Scenario');
+        data.addColumn('number', 'Ecodesign - Ready To Burn');
+        data.addColumn('number', fireplaceStackLabel);
+        data.addColumn('number', 'Remaining FPS-All');
+        data.addRows([
+            [String(year), ecoValue > 0 ? ecoValue : null, fireplaceNonEco > 0 ? fireplaceNonEco : null, remainderValue > 0 ? remainderValue : null],
+            ['Replacement', replacementValue > 0 ? replacementValue : null, null, remainderValue > 0 ? remainderValue : null],
+            ['All Fireplaces\n& Stoves\nreplaced by\nelectric heating\n/ heat pumps', null, null, null]
+        ]);
+
+        var axisLabels = [
+          String(year),
+          'Replacement\nscenario',
+          'All Fireplaces & Stoves replaced by electric heating / heat pumps'
+        ];
+
+        var totals = [
+          pmBaselineTotal,
+          pmReplacementTotal,
+          pmElectricTotal
+        ];
+        state.lastPmDrawAttempt = {
+          scope: 'fireplace',
+          renderToken: renderToken,
+          totals: totals.slice(),
+          rows: data.getNumberOfRows()
+        };
+        var maxValue = Math.max.apply(Math, totals.map(function (value) { return Number(value) || 0; }));
+        var ticks = buildMiniStyleTicks(totals, maxValue);
+        if (!ticks.length) {
+          ticks = buildValueTicks(maxValue);
+        }
+        var tickMax = ticks.length ? ticks[ticks.length - 1] : null;
+        var axisTicks = ticks.length ? ticks.map(function (tick) {
+          return { v: tick, f: formatAxisTick(tick) };
+        }) : undefined;
+        var gridlineCount = ticks.length ? Math.max(2, ticks.length - 1) : undefined;
+
+        var hasFireplaceNonEco = isPositiveValue(fireplaceNonEco);
+        var hasRemainder = isPositiveValue(remainderValue);
+        mergeLegendVisibility({
+          eco: isPositiveValue(ecoValue) || isPositiveValue(replacementValue),
+          selected: hasFireplaceNonEco,
+          remaining: hasRemainder
+        });
+        var options = {
+          height: 240,
+          backgroundColor: 'transparent',
+          isStacked: true,
+          legend: { position: 'none' },
+          colors: [BAR_COLORS.eco, '#911EB4', '#E42020'],
+          chartArea: { left: 36, right: 6, top: 20, height: '70%' },
+          bar: { groupWidth: '36%' },
+          vAxis: {
+            ticks: axisTicks || undefined,
+            viewWindow: tickMax ? { min: 0, max: tickMax } : undefined,
+            textStyle: { color: '#111827', fontSize: 12, bold: true },
+            gridlines: { color: '#e2e8f0', count: gridlineCount },
+            baselineColor: '#94a3b8'
+          },
+          hAxis: {
+            textStyle: { color: '#111827', fontSize: 11, bold: true },
+            slantedText: false,
+            maxTextLines: 5,
+            minTextSpacing: 0,
+            textPosition: 'none'
+          },
+          annotations: {
+            textStyle: { color: '#0f172a', fontSize: 11, bold: true }
+          },
+          tooltip: { trigger: 'none' },
+          enableInteractivity: false
+        };
+        var animateResize = !!state.pmAnimateNextDraw;
+        state.pmAnimateNextDraw = false;
+        if (animateResize) {
+          options.animation = { startup: true, duration: 320, easing: 'out' };
+        } else {
+          options.animation = { startup: true, duration: 320, easing: 'out' };
+        }
+
+        if (!pmChartInstance) {
+          pmChartInstance = new google.visualization.ColumnChart(container);
+        }
+        pmChartInstance.draw(data, options);
+        google.visualization.events.removeAllListeners(pmChartInstance);
+        google.visualization.events.addListener(pmChartInstance, 'error', function (err) {
+          console.warn('Eco PM chart error:', err && err.message ? err.message : err);
+        });
+        var renderLabels = function () {
+          renderPmStackedLabels(pmChartInstance, data, totals, unitShort, axisLabels);
+        };
+        if (animateResize) {
+          google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
+            renderLabels();
+            markPmChartReady();
+          });
+          setTimeout(function () {
+            renderLabels();
+            markPmChartReady();
+          }, 500);
+        } else {
+          google.visualization.events.addListener(pmChartInstance, 'ready', function () {
+            window.requestAnimationFrame(renderLabels);
+            markPmChartReady();
+          });
+          google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
+            renderLabels();
+            markPmChartReady();
+          });
+          setTimeout(renderLabels, 400);
+        }
+        ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1, axisLabels);
+        state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
+        state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
+        updateGlobalLegend();
+        updatePmTooltipVisibility();
+      }
+
       function renderPmStackedChartFireplace(renderToken) {
         var container = document.getElementById('ecoPmChart');
         if (!container) {
@@ -5732,7 +5993,19 @@
           })
           : Promise.resolve(null);
 
-        container.textContent = 'Loading fireplace & stove view…';
+        var cacheKey = buildPmScenarioCacheKey(pmPollutantId, year, state.selection.fireplace, state.scope);
+        var cachedScenario = getCachedPmScenarioData(cacheKey);
+        var shouldUseCache = !!(state.pmAnimateNextDraw && cachedScenario);
+        if (shouldUseCache) {
+          renderPmStackedChartFireplaceFromScenario(renderToken, cachedScenario, {
+            cacheKey: cacheKey,
+            pmPollutantId: pmPollutantId,
+            unitLabel: unitLabel,
+            year: year
+          });
+        } else {
+          container.textContent = 'Loading fireplace & stove view…';
+        }
 
         scenarioPromise.then(function (result) {
           if (renderToken !== pmChartRenderToken) {
@@ -5740,215 +6013,17 @@
           }
           if (!result) {
             setPmPlotLoading(false);
+            setCachedPmScenarioData(cacheKey, null);
             container.textContent = 'PM2.5 data unavailable.';
             return;
           }
-          state.lastPmScenario = {
-            scope: 'fireplace',
-            renderToken: renderToken,
-            hasResult: Boolean(result),
-            keys: result ? Object.keys(result) : []
-          };
-          state.lastPmScenarioData = result;
-          var fireplaceRaw = Number(result.fireplaceEmission);
-          var replacementRaw = Number(result.replacementEmission);
-          var ecoRaw = Number(result.ecoEmission);
-          var baselineFireplaceRaw = Number(result.baselineFireplaceEmission);
-          var remainderRaw = Number(result.fireplaceRemainderEmission);
-          var ecoIncluded = result.energyProfile && result.energyProfile.inclusion && result.energyProfile.inclusion.included === true;
-
-          var scaleInfo = computeUnitScale(unitLabel, [
-            coerceNonNegative(baselineFireplaceRaw),
-            Number.isFinite(replacementRaw) ? coerceNonNegative(replacementRaw) : 0,
-            Number.isFinite(ecoRaw) ? coerceNonNegative(ecoRaw) : 0
-          ]);
-          var factor = scaleInfo && Number.isFinite(scaleInfo.factor) ? scaleInfo.factor : 1;
-          var unitShort = scaleInfo && scaleInfo.unitShort ? scaleInfo.unitShort : getUnitAbbreviation(unitLabel);
-          if (!Number.isFinite(fireplaceRaw)) {
-            container.textContent = 'PM2.5 data unavailable for this category.';
-            return;
-          }
-          var fireplaceValue = coerceNonNegative(fireplaceRaw) * factor;
-          var baselineFireplaceValue = coerceNonNegative(
-            Number.isFinite(baselineFireplaceRaw) ? baselineFireplaceRaw : fireplaceRaw
-          ) * factor;
-          var remainderRawAdjusted = Number.isFinite(baselineFireplaceRaw)
-            ? Math.max(0, baselineFireplaceRaw - (coerceNonNegative(fireplaceRaw) + (ecoIncluded ? 0 : coerceNonNegative(ecoRaw))))
-            : remainderRaw;
-          var remainderValue = coerceNonNegative(
-            Number.isFinite(remainderRawAdjusted) ? remainderRawAdjusted : Math.max(0, baselineFireplaceValue - fireplaceValue)
-          ) * factor;
-          var replacementValue = Number.isFinite(replacementRaw) && replacementRaw > 0 ? coerceNonNegative(replacementRaw) * factor : null;
-          var ecoValue = Number.isFinite(ecoRaw) ? coerceNonNegative(ecoRaw) * factor : 0;
-          var pmBaselineTotal = baselineFireplaceValue;
-          var pmReplacementTotal = (Number.isFinite(replacementValue) ? replacementValue : 0) + remainderValue;
-          var pmElectricTotal = 0;
-          var pmPercentReplacement = computeReplacementPercent({
-            fireplaceEmission: pmBaselineTotal,
-            replacementEmission: pmReplacementTotal
+          setCachedPmScenarioData(cacheKey, result);
+          renderPmStackedChartFireplaceFromScenario(renderToken, result, {
+            cacheKey: cacheKey,
+            pmPollutantId: pmPollutantId,
+            unitLabel: unitLabel,
+            year: year
           });
-          var pmRangeReplacement = analyzeScenarioDelta({
-            fireplaceEmission: pmBaselineTotal,
-            replacementEmission: pmReplacementTotal
-          });
-          var pmPercentElectric = computeReplacementPercent({
-            fireplaceEmission: pmBaselineTotal,
-            replacementEmission: pmElectricTotal
-          });
-          var pmRangeElectric = analyzeScenarioDelta({
-            fireplaceEmission: pmBaselineTotal,
-            replacementEmission: pmElectricTotal
-          });
-          var fireplaceNonEco = ecoIncluded ? Math.max(0, fireplaceValue - ecoValue) : fireplaceValue;
-          var tooltipValues = {
-            'remaining-current': remainderValue,
-            'remaining-replacement': remainderValue,
-            'remaining-electric': 0,
-            'fireplace-current': fireplaceNonEco,
-            'fireplace-replacement': 0,
-            'fireplace-electric': 0,
-            'eco-current': ecoValue,
-            'eco-replacement': replacementValue,
-            'eco-electric': 0,
-            'other-span': null,
-            'gas-span': null,
-            'total-current': pmBaselineTotal,
-            'total-replacement': pmReplacementTotal,
-            'total-electric': pmElectricTotal
-          };
-          var pollutantName = pollutantMeta && pollutantMeta.pollutant ? pollutantMeta.pollutant : 'PM2.5';
-          updatePmCalcTooltipDisplay({
-            year: year,
-            pollutantName: pollutantName,
-            unitShort: unitShort,
-            values: tooltipValues,
-            percentDeltaReplacement: pmPercentReplacement,
-            deltaRangeReplacement: pmRangeReplacement,
-            percentDeltaElectric: pmPercentElectric,
-            deltaRangeElectric: pmRangeElectric
-          });
-          updatePmCardTitle(pmPollutantId, scaleInfo);
-
-          var categoryLabel = state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : 'Selected fireplace / stove';
-        var fireplaceStackLabel = 'Selected fireplace / stove category';
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Scenario');
-        data.addColumn('number', 'Ecodesign - Ready To Burn');
-        data.addColumn('number', fireplaceStackLabel);
-        data.addColumn('number', 'Remaining FPS-All');
-        data.addRows([
-            [String(year), ecoValue > 0 ? ecoValue : null, fireplaceNonEco > 0 ? fireplaceNonEco : null, remainderValue > 0 ? remainderValue : null],
-            ['Replacement', replacementValue > 0 ? replacementValue : null, null, remainderValue > 0 ? remainderValue : null],
-            ['All Fireplaces\n& Stoves\nreplaced by\nelectric heating\n/ heat pumps', null, null, null]
-        ]);
-
-          var axisLabels = [
-            String(year),
-            'Replacement\nscenario',
-            'All Fireplaces & Stoves replaced by electric heating / heat pumps'
-          ];
-
-          var totals = [
-            pmBaselineTotal,
-            pmReplacementTotal,
-            pmElectricTotal
-          ];
-          state.lastPmDrawAttempt = {
-            scope: 'fireplace',
-            renderToken: renderToken,
-            totals: totals.slice(),
-            rows: data.getNumberOfRows()
-          };
-          var maxValue = Math.max.apply(Math, totals.map(function (value) { return Number(value) || 0; }));
-          var ticks = buildMiniStyleTicks(totals, maxValue);
-          if (!ticks.length) {
-            ticks = buildValueTicks(maxValue);
-          }
-          var tickMax = ticks.length ? ticks[ticks.length - 1] : null;
-          var axisTicks = ticks.length ? ticks.map(function (tick) {
-            return { v: tick, f: formatAxisTick(tick) };
-          }) : undefined;
-          var gridlineCount = ticks.length ? Math.max(2, ticks.length - 1) : undefined;
-
-        var hasFireplaceNonEco = isPositiveValue(fireplaceNonEco);
-        var hasRemainder = isPositiveValue(remainderValue);
-        mergeLegendVisibility({
-          eco: isPositiveValue(ecoValue) || isPositiveValue(replacementValue),
-          selected: hasFireplaceNonEco,
-          remaining: hasRemainder
-        });
-          var options = {
-            height: 240,
-            backgroundColor: 'transparent',
-            isStacked: true,
-            legend: { position: 'none' },
-            colors: [BAR_COLORS.eco, '#911EB4', '#E42020'],
-            chartArea: { left: 36, right: 6, top: 20, height: '70%' },
-            bar: { groupWidth: '36%' },
-            vAxis: {
-              ticks: axisTicks || undefined,
-              viewWindow: tickMax ? { min: 0, max: tickMax } : undefined,
-              textStyle: { color: '#111827', fontSize: 12, bold: true },
-              gridlines: { color: '#e2e8f0', count: gridlineCount },
-              baselineColor: '#94a3b8'
-            },
-            hAxis: {
-              textStyle: { color: '#111827', fontSize: 11, bold: true },
-              slantedText: false,
-              maxTextLines: 5,
-              minTextSpacing: 0,
-              textPosition: 'none'
-            },
-            annotations: {
-              textStyle: { color: '#0f172a', fontSize: 11, bold: true }
-            },
-            tooltip: { trigger: 'none' },
-            enableInteractivity: false
-          };
-          var animateResize = !!state.pmAnimateNextDraw;
-          state.pmAnimateNextDraw = false;
-          if (animateResize) {
-            options.animation = { startup: true, duration: 320, easing: 'out' };
-          } else {
-            options.animation = { startup: true, duration: 320, easing: 'out' };
-          }
-
-          if (!pmChartInstance) {
-            pmChartInstance = new google.visualization.ColumnChart(container);
-          }
-          pmChartInstance.draw(data, options);
-          google.visualization.events.removeAllListeners(pmChartInstance);
-          google.visualization.events.addListener(pmChartInstance, 'error', function (err) {
-            console.warn('Eco PM chart error:', err && err.message ? err.message : err);
-          });
-          var renderLabels = function () {
-            renderPmStackedLabels(pmChartInstance, data, totals, unitShort, axisLabels);
-          };
-          if (animateResize) {
-            google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
-              renderLabels();
-              markPmChartReady();
-            });
-            setTimeout(function () {
-              renderLabels();
-              markPmChartReady();
-            }, 500);
-          } else {
-            google.visualization.events.addListener(pmChartInstance, 'ready', function () {
-              window.requestAnimationFrame(renderLabels);
-              markPmChartReady();
-            });
-            google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
-              renderLabels();
-              markPmChartReady();
-            });
-            setTimeout(renderLabels, 400);
-          }
-          ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1, axisLabels);
-          state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
-          state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
-          updateGlobalLegend();
-          updatePmTooltipVisibility();
         }).catch(function (error) {
           if (renderToken !== pmChartRenderToken) {
             return;
