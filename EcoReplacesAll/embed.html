@@ -3807,13 +3807,13 @@
             var onResize = debounce(function () {
               state.isWindowResizing = false;
               measureEcoCardWidths();
-              scheduleEnergyPieRender(state.latestEnergyProfile);
               state.suppressEnergyPieObserver = true;
               if (state.suppressEnergyPieTimer) {
                 clearTimeout(state.suppressEnergyPieTimer);
               }
               state.suppressEnergyPieTimer = setTimeout(function () {
                 state.suppressEnergyPieObserver = false;
+                scheduleEnergyPieRender(state.latestEnergyProfile);
               }, 600);
               state.pmAnimateNextDraw = true;
               queuePmChartRender(0);
