@@ -164,6 +164,13 @@
       if (!svg) {
         return { ok: false, detail: 'PM chart SVG missing.' };
       }
+      const labelTexts = Array.from(svg.querySelectorAll('text'))
+        .map((node) => (node.textContent || '').trim())
+        .filter(Boolean);
+      const truncated = labelTexts.filter((text) => text.includes('...') || text.includes('…'));
+      if (truncated.length) {
+        return { ok: false, detail: `PM chart labels truncated: ${truncated.join(', ')}` };
+      }
       const rects = Array.from(svg.querySelectorAll('rect'))
         .filter((rect) => {
           const fill = (rect.getAttribute('fill') || '').trim().toLowerCase();

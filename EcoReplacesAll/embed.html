@@ -211,6 +211,7 @@
       font-size: clamp(0.95rem, calc(var(--eco-card-width, 320px) / 14), 1.25rem);
       line-height: 1.1;
       white-space: nowrap;
+      text-align: left;
       text-shadow:
         1px 1px 0 #ffffff,
         -1px -1px 0 #ffffff,
@@ -224,10 +225,10 @@
     }
 
     .eco-energy-pie-value--outlined {
-      display: inline-block;
+      display: block;
       position: relative;
       transform: scale(0.92);
-      transform-origin: center;
+      transform-origin: left center;
       text-shadow:
         0.5px 0 0 #111827,
         -0.5px 0 0 #111827,
@@ -374,6 +375,8 @@
       background: #ffffff;
       border: 1px solid rgba(15, 23, 42, 0.12);
       box-shadow: 0 25px 55px rgba(15, 23, 42, 0.08);
+      position: relative;
+      z-index: 5;
     }
 
     .eco-pm-card .eco-energy-label {
@@ -395,6 +398,7 @@
 
     .eco-pm-plot {
       position: relative;
+      transition: opacity 0.2s ease;
     }
 
     .eco-pm-chart {
@@ -416,6 +420,9 @@
 
     .eco-pm-plot * {
       cursor: inherit;
+    }
+
+    .eco-pm-plot.is-loading {
     }
 
     .eco-mini-tooltip.eco-pm-calc-tooltip::after {
@@ -442,6 +449,12 @@
       margin-left: 6px;
       font-weight: 700;
       display: inline-block;
+    }
+
+    .eco-pm-tooltip-subheading {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: #1f2937;
     }
 
     .eco-pm-tooltip-unit-line {
@@ -714,6 +727,28 @@
         1px 0 0 #ffffff,
         -1px 0 0 #ffffff,
         0 0 3px rgba(255, 255, 255, 0.9);
+    }
+
+    .eco-pm-axis-labels {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    .eco-pm-axis-label {
+      position: absolute;
+      transform: translate(-50%, 0);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1.25;
+      text-align: center;
+      white-space: pre-line;
+      padding: 0 4px;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .eco-outcome-summary {
@@ -1039,13 +1074,13 @@
     }
 
     .eco-pm-scope-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 6px 12px;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 14px;
       margin: -4px 0 6px;
-      background: #e11d48;
+      background: #000000;
       color: #ffffff;
       border-radius: 12px;
       border: none;
@@ -1053,15 +1088,22 @@
       font-size: 0.9rem;
       letter-spacing: 0.01em;
       text-transform: none;
-      width: fit-content;
+      width: 100%;
       position: relative;
       overflow: hidden;
+      box-sizing: border-box;
     }
 
     .eco-pm-pill-text-wrap {
       position: relative;
-      display: inline-block;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      flex: 1;
+      min-width: 0;
       line-height: 1.1;
+      text-align: left;
+      font-size: 0.82rem;
     }
 
     .eco-pm-pill-text,
@@ -1072,6 +1114,7 @@
       letter-spacing: 0.01em;
       margin: 0;
       padding: 0;
+      text-align: left;
     }
 
     .eco-pm-pill-text {
@@ -1091,9 +1134,29 @@
       width: 100%;
     }
 
+    .eco-pm-pill-line {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .eco-pm-pill-energy-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex: 0 0 auto;
+      min-width: 0;
+      text-align: right;
+      white-space: nowrap;
+    }
+
     .eco-pm-pill-energy {
       font-weight: 800;
       font-size: 1rem;
+      line-height: 1;
+      text-align: right;
+      white-space: nowrap;
+      letter-spacing: 0;
     }
 
     .eco-pm-pill-break {
@@ -1564,6 +1627,108 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       margin-bottom: 10px;
+    }
+
+    .eco-mini-tooltip__table {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, 0.9fr));
+      gap: 6px 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .eco-mini-tooltip__row {
+      display: contents;
+    }
+
+    .eco-mini-tooltip__cell {
+      font-size: 0.82rem;
+      color: #111827;
+    }
+
+    .eco-mini-tooltip__cell--label {
+      font-weight: 600;
+    }
+
+    .eco-mini-tooltip__cell--header {
+      font-size: 0.82rem;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 700;
+      color: #111827;
+      text-align: center;
+    }
+
+    .eco-mini-tooltip__cell--header.eco-mini-tooltip__cell--label {
+      text-align: left;
+    }
+
+    .eco-mini-tooltip__cell--value {
+      display: flex;
+      align-items: center;
+    }
+
+    .eco-mini-tooltip__cell--span {
+      grid-column: 2 / span 2;
+    }
+
+    .eco-mini-tooltip__value {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 4px 6px;
+      border-radius: 0;
+      font-weight: 800;
+      color: #ffffff;
+      text-align: center;
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+      font-size: 0.95rem;
+      line-height: 1.1;
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+      text-shadow:
+        0 0 1px rgba(0, 0, 0, 0.7),
+        0 0 2px rgba(0, 0, 0, 0.7),
+        0 1px 2px rgba(0, 0, 0, 0.6);
+    }
+
+    .eco-mini-tooltip__value--red {
+      background: #e42020;
+    }
+
+    .eco-mini-tooltip__value--purple {
+      background: #911eb4;
+    }
+
+    .eco-mini-tooltip__value--orange {
+      background: #f58231;
+    }
+
+    .eco-mini-tooltip__value--grey {
+      background: #cbd5e1;
+    }
+
+    .eco-mini-tooltip__value--blue {
+      background: #2563eb;
+    }
+
+    .eco-mini-tooltip__total-value {
+      width: 100%;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+
+    .eco-mini-tooltip__total-value--purple {
+      color: #911eb4;
+    }
+
+    .eco-mini-tooltip__total-value--orange {
+      color: #f58231;
     }
 
     .eco-mini-tooltip-panel .eco-mini-tooltip__grid {
@@ -2044,30 +2209,40 @@
             </div>
           </article>
           <article class="eco-energy-card eco-pm-card" id="ecoPmCard">
-            <p class="eco-energy-label"><span id="ecoPmPollutantLabel">PM2.5</span> POLLUTION EMISSIONS <span class="eco-pm-label-lower" id="ecoPmUnitLabel">(kilotonnes)</span><br>FROM <span id="ecoPmScopeLabel">FIREPLACES &amp; ALL STOVES</span> <span class="eco-pm-label-lower" id="ecoPmScopeCategory"></span>&nbsp;<span class="eco-pm-label-lower">(point of use)</span></p>
+            <p class="eco-energy-label"><span id="ecoPmPollutantLabel">PM2.5</span> POLLUTION EMISSIONS <span class="eco-pm-label-lower" id="ecoPmUnitLabel"></span><br><span id="ecoPmScopeLabel">FIREPLACES &amp; ALL STOVES</span> <span class="eco-pm-label-lower" id="ecoPmScopeCategory"></span><span class="eco-pm-label-lower"> (point of use)</span></p>
             <div class="eco-pm-scope-pill" id="ecoPmScopePill" aria-label="Scenario energy note">
               <span class="eco-pm-pill-text-wrap">
                 <span class="eco-pm-pill-text eco-pm-pill-text--stroke" aria-hidden="true">
-                  All scenarios use the same <span class="eco-pm-pill-year">2023</span> Fireplaces &amp; Stoves energy input (NAEI TJ net);<br class="eco-pm-pill-break">only emission factors change. <span class="eco-pm-pill-energy">—</span>
+                  <span class="eco-pm-pill-line">All scenarios use the same energy input</span>
+                  <span class="eco-pm-pill-line">Only emission factors change</span>
                 </span>
                 <span class="eco-pm-pill-text">
-                  All scenarios use the same <span class="eco-pm-pill-year">2023</span> Fireplaces &amp; Stoves energy input (NAEI TJ net);<br class="eco-pm-pill-break">only emission factors change. <span class="eco-pm-pill-energy">—</span>
+                  <span class="eco-pm-pill-line">All scenarios use the same energy input</span>
+                  <span class="eco-pm-pill-line">Only emission factors change</span>
+                </span>
+              </span>
+              <span class="eco-pm-pill-energy-wrap">
+                <span class="eco-dual-text eco-pm-pill-energy" id="ecoPmPillEnergy" style="--eco-dual-outline:#000000; --eco-dual-fill:#ffffff;">
+                  <span class="eco-dual-text__outline" aria-hidden="true">—</span>
+                  <span class="eco-dual-text__fill">—</span>
                 </span>
               </span>
             </div>
             <div class="eco-pm-plot eco-mini-tooltip-target" id="ecoPmPlot">
               <div class="eco-pm-chart" id="ecoPmChart" role="img" aria-label="Stacked columns comparing PM2.5 scenarios for current fireplaces and stoves, Ecodesign replacement, and electric heating."></div>
               <div class="eco-pm-labels" id="ecoPmLabels" aria-hidden="true"></div>
+              <div class="eco-pm-axis-labels" id="ecoPmAxisLabels" aria-hidden="true"></div>
               <div class="eco-mini-tooltip eco-pm-calc-tooltip is-hidden" id="ecoPmCalcTooltip" role="tooltip">
                 <div class="eco-pm-tooltip-header">
-                  <div class="eco-mini-tooltip__heading">Scenario Breakdown <span class="eco-pm-tooltip-heading-unit" id="ecoPmCalcHeadingUnit"></span></div>
+                  <div class="eco-mini-tooltip__heading">Replacement Scenario Breakdown <span class="eco-pm-tooltip-heading-unit" id="ecoPmCalcHeadingUnit"></span></div>
+                  <div class="eco-pm-tooltip-subheading" id="ecoPmCalcSubheading">PM2.5 emissions</div>
                 </div>
                 <div class="eco-pm-tooltip-grid" role="presentation">
                   <div class="eco-pm-tooltip-row eco-pm-tooltip-row--header">
-                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label eco-pm-tooltip-cell--pollutant" id="ecoPmCalcPollutant">PM2.5 Pollution</div>
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label"></div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoPmCalcYear">2023</div>
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header">Replacement scenario</div>
-                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoPmCalcElectricHeader">All Fireplaces &amp; Stoves replaced by electric heating/heat pumps.</div>
+                    <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoPmCalcElectricHeader">All Fireplaces &amp; Stoves replaced by electric heating/heat pumps</div>
                   </div>
                   <div class="eco-pm-tooltip-row">
                     <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label" data-pm-row="remaining">Other Fireplaces &amp; Stoves (Not Replaced)</div>
@@ -2125,7 +2300,7 @@
               <p class="eco-outcome-summary-inline" id="ecoPollutantCardInlineNote" hidden>16PAH is excluded from the total because it combines 16 pollutants already counted</p>
               <p class="eco-outcome-summary-note" id="ecoPollutantCardNote">Counting pollutants…</p>
             </div>
-            <p class="eco-outcome-label eco-outcome-label--context" id="ecoOutcomeYearLabel">Replacement scenario vs 2023</p>
+            <p class="eco-outcome-label eco-outcome-label--context" id="ecoOutcomeYearLabel">Replacement Scenario vs 2023</p>
             <div class="eco-outcome-main">
               <div class="eco-outcome-column">
                 <p class="eco-outcome-label">Lower</p>
@@ -2189,11 +2364,12 @@
           <article class="eco-energy-card eco-outcome-calc-card is-hidden" id="ecoOutcomeCalcCard">
             <div class="eco-mini-tooltip-panel eco-pm-calc-panel" id="ecoOutcomeCalcPanel">
               <div class="eco-pm-tooltip-header">
-                <div class="eco-mini-tooltip__heading">Scenario Breakdown</div>
+                <div class="eco-mini-tooltip__heading">Replacement Scenario Breakdown</div>
+                <div class="eco-pm-tooltip-subheading" id="ecoOutcomeCalcSubheading">Pollution emissions</div>
               </div>
               <div class="eco-pm-tooltip-grid" role="presentation">
                 <div class="eco-pm-tooltip-row eco-pm-tooltip-row--header">
-                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label eco-pm-tooltip-cell--pollutant" id="ecoOutcomeCalcPollutant">Pollution<span class="eco-pm-tooltip-unit-line" id="ecoOutcomeCalcUnit"></span></div>
+                  <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--label"></div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoOutcomeCalcYear">2023</div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header">Replacement scenario</div>
                   <div class="eco-pm-tooltip-cell eco-pm-tooltip-cell--header" id="ecoOutcomeCalcElectricHeader">All Fireplaces &amp; Stoves replaced by electric heating/heat pumps.</div>
@@ -2442,6 +2618,7 @@
         if (dom && dom.energyCard && dom.energyCard.pieValues) {
           sizeEnergyPieValues(dom.energyCard.pieValues);
         }
+        sizePmPillEnergy();
 
         // Outcome tiles (use widest tile to size all)
         var tiles = document.querySelectorAll('.eco-outcome-bucket');
@@ -3011,6 +3188,13 @@
         }
         return;
       }
+      var drawKey = String(state.selection.fireplace || 'na') + '|' + String(state.selection.year || DEFAULT_YEAR) + '|' + String(state.scope || '');
+      if (state.energyPieDrawState
+        && state.energyPieDrawState.key === drawKey
+        && state.energyPieDrawState.width === pieWidth
+        && state.energyPieDrawState.height === pieHeight) {
+        return;
+      }
       var pieSize = Math.min(pieWidth, pieHeight);
       var chartLeft = Math.max(0, (pieWidth - pieSize) / 2);
       var chartTop = Math.max(0, (pieHeight - pieSize) / 2);
@@ -3042,6 +3226,63 @@
         });
       }
       dom.energyCard.pieChart.draw(data, options);
+      state.energyPieDrawState = { key: drawKey, width: pieWidth, height: pieHeight };
+    }
+
+    var energyPieScheduleId = null;
+    var energyPieScheduleToken = 0;
+    var energyPieResizePending = false;
+    function scheduleEnergyPieRender(profile) {
+      if (!dom.energyCard || !dom.energyCard.pie) {
+        renderEnergyPie(profile);
+        return;
+      }
+      if (state.isWindowResizing || energyPieResizePending) {
+        return;
+      }
+      energyPieScheduleToken += 1;
+      var token = energyPieScheduleToken;
+      var lastSize = null;
+      var stableCount = 0;
+      if (energyPieScheduleId) {
+        window.cancelAnimationFrame(energyPieScheduleId);
+      }
+      function tick() {
+        if (token !== energyPieScheduleToken) {
+          return;
+        }
+        var pieChartEl = dom.energyCard.pieChartEl || dom.energyCard.pie;
+        var width = pieChartEl ? pieChartEl.clientWidth || 0 : 0;
+        var height = pieChartEl ? pieChartEl.clientHeight || 0 : 0;
+        if (!width || !height) {
+          energyPieScheduleId = window.requestAnimationFrame(tick);
+          return;
+        }
+        if (lastSize && lastSize.width === width && lastSize.height === height) {
+          stableCount += 1;
+        } else {
+          stableCount = 0;
+          lastSize = { width: width, height: height };
+        }
+        if (stableCount >= 1) {
+          energyPieScheduleId = null;
+          renderEnergyPie(profile);
+          return;
+        }
+        energyPieScheduleId = window.requestAnimationFrame(tick);
+      }
+      energyPieScheduleId = window.requestAnimationFrame(tick);
+    }
+
+    function scheduleEnergyPieAfterResize(profile) {
+      if (energyPieResizePending) {
+        return;
+      }
+      energyPieResizePending = true;
+      window.requestAnimationFrame(function () {
+        energyPieResizePending = false;
+        scheduleEnergyPieRender(profile);
+      });
     }
 
     function debounce(fn, delay) {
@@ -3059,7 +3300,9 @@
 
       var card = document.querySelector('.eco-energy-card');
       var pmChart = document.getElementById('ecoPmChart');
+      var pmPill = document.getElementById('ecoPmScopePill');
       var tiles = document.querySelectorAll('.eco-outcome-bucket');
+      var pieChart = dom.energyCard && (dom.energyCard.pieChartEl || dom.energyCard.pie);
 
       var observer = new ResizeObserver(function(entries) {
         entries.forEach(function(entry) {
@@ -3069,16 +3312,35 @@
           }
           var width = entry.contentRect && entry.contentRect.width ? entry.contentRect.width : target.getBoundingClientRect().width;
           if (target.classList.contains('eco-energy-card')) {
-            target.style.setProperty('--eco-card-width', width + 'px');
+            if (!state.isWindowResizing) {
+              target.style.setProperty('--eco-card-width', width + 'px');
+            }
           }
           if (target.classList.contains('eco-outcome-bucket')) {
             target.style.setProperty('--eco-tile-width', width + 'px');
           }
           if (target.classList.contains('eco-energy-pie-values')) {
-            sizeEnergyPieValues(target);
+            if (state.suppressEnergyPieObserver) {
+              return;
+            }
+            if (!state.isWindowResizing) {
+              sizeEnergyPieValues(target);
+              scheduleEnergyPieRender(state.latestEnergyProfile);
+            }
+          }
+          if (target.classList.contains('eco-energy-pie-chart') || target.classList.contains('eco-energy-pie')) {
+            if (state.suppressEnergyPieObserver) {
+              return;
+            }
+            if (!state.isWindowResizing) {
+              scheduleEnergyPieRender(state.latestEnergyProfile);
+            }
+          }
+          if (target.id === 'ecoPmScopePill') {
+            sizePmPillEnergy();
           }
           if (target.id === 'ecoPmChart') {
-            queuePmChartRender(0);
+            return;
           }
         });
       });
@@ -3089,6 +3351,9 @@
       if (pmChart) {
         observer.observe(pmChart);
       }
+      if (pmPill) {
+        observer.observe(pmPill);
+      }
       if (tiles && tiles.length) {
         tiles.forEach(function(tile) {
           observer.observe(tile);
@@ -3096,6 +3361,9 @@
       }
       if (dom.energyCard && dom.energyCard.pieValues) {
         observer.observe(dom.energyCard.pieValues);
+      }
+      if (pieChart) {
+        observer.observe(pieChart);
       }
     }
 
@@ -3264,8 +3532,7 @@
         outcomeCalcCard: {
           container: document.getElementById('ecoOutcomeCalcCard'),
           panel: document.getElementById('ecoOutcomeCalcPanel'),
-          pollutantLabel: document.getElementById('ecoOutcomeCalcPollutant'),
-          unitLabel: document.getElementById('ecoOutcomeCalcUnit'),
+          subheading: document.getElementById('ecoOutcomeCalcSubheading'),
           yearLabel: document.getElementById('ecoOutcomeCalcYear'),
           percentTileReplacement: document.getElementById('ecoOutcomeCalcPercentReplacement'),
           percentTileElectric: document.getElementById('ecoOutcomeCalcPercentElectric'),
@@ -3275,7 +3542,7 @@
           container: document.getElementById('ecoPmCalcTooltip'),
           plot: document.getElementById('ecoPmPlot'),
           headingUnit: document.getElementById('ecoPmCalcHeadingUnit'),
-          pollutantLabel: document.getElementById('ecoPmCalcPollutant'),
+          subheading: document.getElementById('ecoPmCalcSubheading'),
           yearLabel: document.getElementById('ecoPmCalcYear'),
           percentTileReplacement: document.getElementById('ecoPmCalcPercentReplacement'),
           percentTileElectric: document.getElementById('ecoPmCalcPercentElectric'),
@@ -3318,6 +3585,7 @@
         latestEnergyProfile: null,
         latestEnergyProfileKey: null,
         lastChartItems: [],
+        isWindowResizing: false,
         pm25PollutantId: null,
         lastPmPollutantId: null,
         scope: SCOPE_FIREPLACE,
@@ -3326,6 +3594,10 @@
         lastPmDrawAttempt: null,
         lastPmDrawHadSvg: null,
         lastPmInnerHtml: '',
+        pmChartReadyOnce: false,
+        pmAnimateNextDraw: false,
+        suppressEnergyPieObserver: false,
+        suppressEnergyPieTimer: null,
         colorUsage: {
           eco: false,
           selected: false,
@@ -3424,6 +3696,41 @@
         }
       }
 
+      function setDualTextText(target, textValue) {
+        if (!target) {
+          return;
+        }
+        var text = textValue ? String(textValue) : '—';
+        if (target.outline) {
+          target.outline.textContent = text;
+        }
+        if (target.fill) {
+          target.fill.textContent = text;
+        }
+        if (target.root) {
+          target.root.setAttribute('data-value', text);
+          target.root.setAttribute('data-empty', text === '—' ? 'true' : 'false');
+        }
+      }
+
+      function setPmPlotLoading(isLoading) {
+        var plot = dom && dom.pmCalcTooltip ? dom.pmCalcTooltip.plot : null;
+        if (!plot) {
+          plot = document.getElementById('ecoPmPlot');
+        }
+        if (!plot) {
+          return;
+        }
+        plot.classList.toggle('is-loading', !!isLoading);
+      }
+
+      function markPmChartReady() {
+        if (!state.pmChartReadyOnce) {
+          state.pmChartReadyOnce = true;
+        }
+        setPmPlotLoading(false);
+      }
+
       var googleChartsReady = false;
       var googleChartsPromise = loadGoogleCharts();
       googleChartsPromise.then(function () {
@@ -3442,9 +3749,6 @@
           renderPmStackedChart();
         }, wait);
       }
-      window.addEventListener('resize', function () {
-        queuePmChartRender(200);
-      });
       window.addEventListener('load', function () {
         queuePmChartRender(0);
       });
@@ -3479,7 +3783,24 @@
             queuePmChartRender(0);
             measureEcoCardWidths();
             startEcoResizeObservers();
-            window.addEventListener('resize', debounce(measureEcoCardWidths, 150));
+            var onResize = debounce(function () {
+              state.isWindowResizing = false;
+              measureEcoCardWidths();
+              scheduleEnergyPieAfterResize(state.latestEnergyProfile);
+              state.suppressEnergyPieObserver = true;
+              if (state.suppressEnergyPieTimer) {
+                clearTimeout(state.suppressEnergyPieTimer);
+              }
+              state.suppressEnergyPieTimer = setTimeout(function () {
+                state.suppressEnergyPieObserver = false;
+              }, 600);
+              state.pmAnimateNextDraw = true;
+              queuePmChartRender(0);
+            }, 200);
+            window.addEventListener('resize', function () {
+              state.isWindowResizing = true;
+              onResize();
+            });
             startEcoMeasureTick();
           })
           .catch(function (error) {
@@ -3676,7 +3997,7 @@
                 return;
               }
               queuePmChartRender(0);
-              renderEnergyPie(state.latestEnergyProfile);
+              scheduleEnergyPieRender(state.latestEnergyProfile);
             });
           }).catch(function (error) {
             console.warn('Eco replacements scenario failed:', error);
@@ -3735,7 +4056,7 @@
           energyDom.container.classList.toggle('is-idle', !ready);
         }
         measureEcoCardWidths();
-        renderEnergyPie(profile);
+        scheduleEnergyPieRender(profile);
         updatePmScopePill(profile);
       }
 
@@ -3879,7 +4200,7 @@
         }
         if (dom.outcomeCard.yearLabel) {
           var outcomeYear = Number(state.selection.year) || DEFAULT_YEAR;
-          dom.outcomeCard.yearLabel.textContent = 'Replacement scenario vs ' + outcomeYear;
+          dom.outcomeCard.yearLabel.textContent = 'Replacement Scenario vs ' + outcomeYear;
         }
         var scenarios = Array.isArray(items) ? items : [];
         var summary = summarizeScenarioOutcomes(scenarios);
@@ -4170,7 +4491,7 @@
         }
         if (state.latestEnergyProfile) {
           window.requestAnimationFrame(function () {
-            renderEnergyPie(state.latestEnergyProfile);
+            scheduleEnergyPieRender(state.latestEnergyProfile);
           });
         }
         queuePmChartRender(0);
@@ -4182,18 +4503,77 @@
 
       function updatePmScopePill(profile) {
         var year = Number(state.selection.year) || DEFAULT_YEAR;
-        var pillYears = document.querySelectorAll('.eco-pm-pill-year');
-        pillYears.forEach(function (node) {
-          node.textContent = year;
-        });
-        var energyDisplay = '—';
-        if (profile && Number.isFinite(profile.replacementEnergy)) {
-          energyDisplay = formatActivityValue(profile.replacementEnergy);
+        var scopeTotal = getScopeTotalEnergy(year);
+        var energyDisplay = Number.isFinite(scopeTotal) ? formatActivityValueWhole(scopeTotal) : '—';
+        var energyRoot = document.getElementById('ecoPmPillEnergy');
+        if (energyRoot) {
+          var energyTarget = {
+            root: energyRoot,
+            outline: energyRoot.querySelector('.eco-dual-text__outline'),
+            fill: energyRoot.querySelector('.eco-dual-text__fill')
+          };
+          setDualTextText(energyTarget, energyDisplay);
         }
-        var energyNodes = document.querySelectorAll('.eco-pm-pill-energy');
-        energyNodes.forEach(function (node) {
-          node.textContent = energyDisplay;
-        });
+        window.requestAnimationFrame(sizePmPillEnergy);
+        setTimeout(sizePmPillEnergy, 120);
+      }
+
+      function sizePmPillEnergy() {
+        var pill = document.getElementById('ecoPmScopePill');
+        if (!pill) {
+          return;
+        }
+        var energyWrap = pill.querySelector('.eco-pm-pill-energy-wrap');
+        var energyText = pill.querySelector('.eco-pm-pill-energy');
+        var textWrap = pill.querySelector('.eco-pm-pill-text-wrap');
+        if (!energyWrap || !energyText) {
+          return;
+        }
+        var pillRect = pill.getBoundingClientRect();
+        if (!pillRect.width || !pillRect.height) {
+          return;
+        }
+        var style = getComputedStyle(pill);
+        var padL = parseFloat(style.paddingLeft) || 0;
+        var padR = parseFloat(style.paddingRight) || 0;
+        var padT = parseFloat(style.paddingTop) || 0;
+        var padB = parseFloat(style.paddingBottom) || 0;
+        var gap = parseFloat(style.columnGap || style.gap) || 0;
+        var availableWidth = Math.max(0, pillRect.width - padL - padR);
+        var availableHeight = Math.max(0, pillRect.height - padT - padB);
+        var textWidth = 0;
+        if (textWrap) {
+          var textNode = textWrap.querySelector('.eco-pm-pill-text');
+          if (textNode) {
+            var textStyle = getComputedStyle(textNode);
+            var textFont = (textStyle ? textStyle.fontWeight : '700') + ' ' + (textStyle ? textStyle.fontSize : '14px') + ' ' + (textStyle ? textStyle.fontFamily : 'Arial, sans-serif');
+            var lines = (textNode.innerText || '').split('\n').map(function (line) {
+              return line.trim();
+            }).filter(Boolean);
+            textWidth = lines.reduce(function (max, line) {
+              return Math.max(max, measureTextWidth(line, textFont));
+            }, 0);
+          } else {
+            textWidth = textWrap.getBoundingClientRect().width;
+          }
+        }
+        var minEnergyWidth = availableWidth * 0.34;
+        var energyWidth = Math.max(minEnergyWidth, availableWidth - textWidth - gap);
+        if (!Number.isFinite(energyWidth) || energyWidth <= 0) {
+          energyWidth = minEnergyWidth;
+        }
+        var fillNode = energyText.querySelector('.eco-dual-text__fill');
+        var sampleText = (fillNode ? fillNode.textContent : energyText.getAttribute('data-value') || energyText.textContent || '0').trim() || '0';
+        var energyStyle = getComputedStyle(energyText);
+        var fontFamily = energyStyle ? energyStyle.fontFamily : 'Arial, sans-serif';
+        var fontWeight = energyStyle ? energyStyle.fontWeight : '800';
+        var widthSize = computeFontSizeForWidth(sampleText, energyWidth, fontFamily, fontWeight);
+        var heightSize = availableHeight * 0.98;
+        var fontSize = Math.max(12, Math.min(widthSize, heightSize));
+        energyWrap.style.maxWidth = Math.floor(energyWidth) + 'px';
+        energyWrap.style.flexBasis = Math.floor(energyWidth) + 'px';
+        energyText.style.fontSize = fontSize + 'px';
+        energyText.style.lineHeight = '1';
       }
 
       function renderChartGrid(items) {
@@ -4859,13 +5239,21 @@
           var unitShort = config && config.unitShort ? config.unitShort : '';
           var unitSuffix = '';
           if (target.headingUnit) {
-            target.headingUnit.textContent = unitShort ? '(' + unitShort + ')' : '';
+            target.headingUnit.textContent = '';
           }
-          if (target.unitLabel) {
-            target.unitLabel.textContent = unitShort ? '(' + unitShort + ')' : '';
-          }
-          if (target.pollutantLabel) {
-            target.pollutantLabel.textContent = config && config.pollutantLabel ? config.pollutantLabel : 'Pollution';
+          if (target.subheading) {
+            var pollutantName = config && config.pollutantName ? config.pollutantName : '';
+            if (!pollutantName && config && config.pollutantLabel) {
+              pollutantName = config.pollutantLabel;
+            }
+            if (pollutantName) {
+              pollutantName = pollutantName.replace(/\s+Pollution$/i, '');
+            }
+            var subheadingText = (pollutantName ? pollutantName + ' emissions' : 'Emissions');
+            if (unitShort) {
+              subheadingText += ' (' + unitShort + ')';
+            }
+            target.subheading.textContent = subheadingText;
           }
           if (target.yearLabel) {
             target.yearLabel.textContent = config && Number.isFinite(config.year) ? String(config.year) : '';
@@ -4992,6 +5380,10 @@
         if (!chartContainer || !chartContainer.isConnected) {
           return;
         }
+        var labelContainer = document.getElementById('ecoPmLabels');
+        if (!state.pmChartReadyOnce) {
+          setPmPlotLoading(true);
+        }
         var chartWidth = chartContainer.clientWidth || 0;
         var chartHeight = chartContainer.clientHeight || 0;
         if (!chartWidth || !chartHeight) {
@@ -5026,16 +5418,19 @@
           return;
         }
         if (!googleChartsReady || !window.google || !window.google.visualization) {
+          setPmPlotLoading(false);
           container.textContent = 'Charts are still loading…';
           return;
         }
         if (!state.timeseriesIndex) {
+          setPmPlotLoading(false);
           container.textContent = 'Loading PM2.5 data…';
           return;
         }
         var selectionValue = state.selection && state.selection.pollutant;
         var pmPollutantId = resolvePmPollutantId(selectionValue);
         if (!Number.isFinite(pmPollutantId)) {
+          setPmPlotLoading(false);
           container.textContent = 'PM2.5 data unavailable.';
           return;
         }
@@ -5146,10 +5541,9 @@
           'total-electric': totalElectricScaled
         };
         var pollutantName = pollutantMeta && pollutantMeta.pollutant ? pollutantMeta.pollutant : 'PM2.5';
-        var pollutantLabel = pollutantName ? pollutantName + ' Pollution' : 'Pollution';
         updatePmCalcTooltipDisplay({
           year: year,
-          pollutantLabel: pollutantLabel,
+          pollutantName: pollutantName,
           unitShort: unitShort,
           values: tooltipValues,
           percentDeltaReplacement: pmPercentReplacement,
@@ -5168,9 +5562,15 @@
         data.addColumn('number', 'Other fireplaces & stoves (not replaced)');
         data.addRows([
           [String(year), gasBoilers, other, ecoRtb, selectedNonEco, remainderFireplaces],
-          ['Replacement\nScenario', gasBoilers, other, replacementEcoScaled, null, remainderFireplaces],
-          ['All Fireplaces & Stoves\nreplaced by electric heating/heat pumps.', gasBoilers, other, null, null, null]
+          ['Replacement', gasBoilers, other, replacementEcoScaled, null, remainderFireplaces],
+          ['All Fireplaces\n& Stoves\nreplaced by\nelectric heating\n/ heat pumps', gasBoilers, other, null, null, null]
         ]);
+
+        var axisLabels = [
+          String(year),
+          'Replacement\nscenario',
+          'All Fireplaces & Stoves replaced by electric heating / heat pumps'
+        ];
 
         var totals = [
           totalCurrentScaled,
@@ -5208,7 +5608,7 @@
           isStacked: true,
           legend: { position: 'none' },
           colors: ['#2563eb', '#cbd5e1', BAR_COLORS.eco, BAR_COLORS.fireplace, BAR_COLORS.remaining],
-          chartArea: { left: 44, right: 8, top: 20, height: '76%' },
+          chartArea: { left: 36, right: 6, top: 20, height: '70%' },
           bar: { groupWidth: '34%' },
           vAxis: {
             ticks: axisTicks || undefined,
@@ -5218,16 +5618,25 @@
             baselineColor: '#94a3b8'
           },
           hAxis: {
-            textStyle: { color: '#111827', fontSize: 13, bold: true },
-            slantedText: false
+            textStyle: { color: '#111827', fontSize: 11, bold: true },
+            slantedText: false,
+            maxTextLines: 5,
+            minTextSpacing: 0,
+            textPosition: 'none'
           },
           annotations: {
             textStyle: { color: '#0f172a', fontSize: 11, bold: true }
           },
           tooltip: { trigger: 'none' },
-          enableInteractivity: false,
-          animation: { startup: true, duration: 320, easing: 'out' }
+          enableInteractivity: false
         };
+        var animateResize = !!state.pmAnimateNextDraw;
+        state.pmAnimateNextDraw = false;
+        if (animateResize) {
+          options.animation = { startup: true, duration: 320, easing: 'out' };
+        } else {
+          options.animation = { startup: true, duration: 320, easing: 'out' };
+        }
 
         if (!pmChartInstance) {
           pmChartInstance = new google.visualization.ColumnChart(container);
@@ -5238,16 +5647,41 @@
           console.warn('Eco PM chart error:', err && err.message ? err.message : err);
         });
         var renderLabels = function () {
-          renderPmStackedLabels(pmChartInstance, data, totals, unitShort);
+          renderPmStackedLabels(pmChartInstance, data, totals, unitShort, axisLabels);
         };
-        google.visualization.events.addListener(pmChartInstance, 'ready', function () {
-          window.requestAnimationFrame(renderLabels);
-        });
-        google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
-          renderLabels();
-        });
-        setTimeout(renderLabels, 400);
-        ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1);
+        if (animateResize) {
+          google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
+            renderLabels();
+            markPmChartReady();
+          });
+          setTimeout(function () {
+            renderLabels();
+            markPmChartReady();
+          }, 500);
+        } else {
+          google.visualization.events.addListener(pmChartInstance, 'ready', function () {
+            window.requestAnimationFrame(renderLabels);
+            markPmChartReady();
+          });
+          google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
+            renderLabels();
+            markPmChartReady();
+          });
+          setTimeout(renderLabels, 400);
+        }
+        if (animateResize) {
+          setTimeout(function () {
+            ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1, axisLabels);
+          }, 360);
+        } else {
+          if (animateResize) {
+            setTimeout(function () {
+              ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1, axisLabels);
+            }, 360);
+          } else {
+            ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1, axisLabels);
+          }
+        }
         state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
         state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
         updateGlobalLegend();
@@ -5260,16 +5694,19 @@
           return;
         }
         if (!googleChartsReady || !window.google || !window.google.visualization) {
+          setPmPlotLoading(false);
           container.textContent = 'Charts are still loading…';
           return;
         }
         if (!state.timeseriesIndex || !state.selection.fireplace) {
+          setPmPlotLoading(false);
           container.textContent = 'Select a fireplace / stove category to see this chart.';
           return;
         }
         var selectionValue = state.selection && state.selection.pollutant;
         var pmPollutantId = resolvePmPollutantId(selectionValue);
         if (!Number.isFinite(pmPollutantId)) {
+          setPmPlotLoading(false);
           container.textContent = 'PM2.5 data unavailable.';
           return;
         }
@@ -5302,6 +5739,7 @@
             return;
           }
           if (!result) {
+            setPmPlotLoading(false);
             container.textContent = 'PM2.5 data unavailable.';
             return;
           }
@@ -5379,10 +5817,9 @@
             'total-electric': pmElectricTotal
           };
           var pollutantName = pollutantMeta && pollutantMeta.pollutant ? pollutantMeta.pollutant : 'PM2.5';
-          var pollutantLabel = pollutantName ? pollutantName + ' Pollution' : 'Pollution';
           updatePmCalcTooltipDisplay({
             year: year,
-            pollutantLabel: pollutantLabel,
+            pollutantName: pollutantName,
             unitShort: unitShort,
             values: tooltipValues,
             percentDeltaReplacement: pmPercentReplacement,
@@ -5401,9 +5838,15 @@
         data.addColumn('number', 'Remaining FPS-All');
         data.addRows([
             [String(year), ecoValue > 0 ? ecoValue : null, fireplaceNonEco > 0 ? fireplaceNonEco : null, remainderValue > 0 ? remainderValue : null],
-            ['Replacement\nscenario', replacementValue > 0 ? replacementValue : null, null, remainderValue > 0 ? remainderValue : null],
-            ['All Fireplaces & Stoves\nreplaced by electric heating/heat pumps.', null, null, null]
+            ['Replacement', replacementValue > 0 ? replacementValue : null, null, remainderValue > 0 ? remainderValue : null],
+            ['All Fireplaces\n& Stoves\nreplaced by\nelectric heating\n/ heat pumps', null, null, null]
         ]);
+
+          var axisLabels = [
+            String(year),
+            'Replacement\nscenario',
+            'All Fireplaces & Stoves replaced by electric heating / heat pumps'
+          ];
 
           var totals = [
             pmBaselineTotal,
@@ -5440,7 +5883,7 @@
             isStacked: true,
             legend: { position: 'none' },
             colors: [BAR_COLORS.eco, '#911EB4', '#E42020'],
-            chartArea: { left: 48, right: 8, top: 20, height: '76%' },
+            chartArea: { left: 36, right: 6, top: 20, height: '70%' },
             bar: { groupWidth: '36%' },
             vAxis: {
               ticks: axisTicks || undefined,
@@ -5450,16 +5893,25 @@
               baselineColor: '#94a3b8'
             },
             hAxis: {
-              textStyle: { color: '#111827', fontSize: 13, bold: true },
-              slantedText: false
+              textStyle: { color: '#111827', fontSize: 11, bold: true },
+              slantedText: false,
+              maxTextLines: 5,
+              minTextSpacing: 0,
+              textPosition: 'none'
             },
             annotations: {
               textStyle: { color: '#0f172a', fontSize: 11, bold: true }
             },
             tooltip: { trigger: 'none' },
-            enableInteractivity: false,
-            animation: { startup: true, duration: 320, easing: 'out' }
+            enableInteractivity: false
           };
+          var animateResize = !!state.pmAnimateNextDraw;
+          state.pmAnimateNextDraw = false;
+          if (animateResize) {
+            options.animation = { startup: true, duration: 320, easing: 'out' };
+          } else {
+            options.animation = { startup: true, duration: 320, easing: 'out' };
+          }
 
           if (!pmChartInstance) {
             pmChartInstance = new google.visualization.ColumnChart(container);
@@ -5470,16 +5922,29 @@
             console.warn('Eco PM chart error:', err && err.message ? err.message : err);
           });
           var renderLabels = function () {
-            renderPmStackedLabels(pmChartInstance, data, totals, unitShort);
+            renderPmStackedLabels(pmChartInstance, data, totals, unitShort, axisLabels);
           };
-          google.visualization.events.addListener(pmChartInstance, 'ready', function () {
-            window.requestAnimationFrame(renderLabels);
-          });
-          google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
-            renderLabels();
-          });
-          setTimeout(renderLabels, 400);
-          ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1);
+          if (animateResize) {
+            google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
+              renderLabels();
+              markPmChartReady();
+            });
+            setTimeout(function () {
+              renderLabels();
+              markPmChartReady();
+            }, 500);
+          } else {
+            google.visualization.events.addListener(pmChartInstance, 'ready', function () {
+              window.requestAnimationFrame(renderLabels);
+              markPmChartReady();
+            });
+            google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
+              renderLabels();
+              markPmChartReady();
+            });
+            setTimeout(renderLabels, 400);
+          }
+          ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, 1, axisLabels);
           state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
           state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
           updateGlobalLegend();
@@ -5488,6 +5953,7 @@
           if (renderToken !== pmChartRenderToken) {
             return;
           }
+          setPmPlotLoading(false);
           console.warn('Fireplace PM chart failed:', error);
           container.textContent = 'Unable to load fireplace / stove chart.';
         });
@@ -5505,17 +5971,11 @@
           titleNode.textContent = pollutantName;
         }
         if (unitNode) {
-          var unitLabel = '';
-          if (scaleInfo && scaleInfo.unitLabel) {
-            unitLabel = scaleInfo.unitLabel;
-          } else if (pollutantMeta) {
-            unitLabel = getPluralUnitLabel(pollutantMeta.emission_unit);
-          }
-          unitNode.textContent = unitLabel ? '(' + unitLabel + ')' : '';
+          unitNode.textContent = '';
         }
         var chart = document.getElementById('ecoPmChart');
         if (chart) {
-          var unitSuffix = unitNode && unitNode.textContent ? ' ' + unitNode.textContent : '';
+          var unitSuffix = '';
           var scopeText = state.scope === SCOPE_FIREPLACE
             ? ' from fireplaces and stoves'
             : ' from all domestic combustion';
@@ -5523,7 +5983,7 @@
         }
       }
 
-      function renderPmStackedLabels(chart, data, totals, unitShort) {
+      function renderPmStackedLabels(chart, data, totals, unitShort, axisLabels) {
         var container = document.getElementById('ecoPmLabels');
         if (!container || !chart || !data) {
           return;
@@ -5549,6 +6009,7 @@
         for (var i = 0; i < data.getNumberOfRows(); i++) {
           var total = 0;
           var hasValue = false;
+          var allowZero = state.scope === SCOPE_FIREPLACE && i === data.getNumberOfRows() - 1;
           if (Array.isArray(totals) && Number.isFinite(totals[i])) {
             total = totals[i];
             hasValue = total > 0;
@@ -5561,7 +6022,11 @@
               total += cellValue;
             }
           }
-          if (!hasValue || !Number.isFinite(total) || total <= 0) {
+          if (allowZero && Number.isFinite(total) && total <= 0) {
+            hasValue = true;
+            total = 0;
+          }
+          if ((!hasValue || !Number.isFinite(total) || total <= 0) && !allowZero) {
             continue;
           }
           try {
@@ -5589,9 +6054,55 @@
             console.warn('Eco PM label render skipped:', error && error.message ? error.message : error);
           }
         }
+        var resolvedAxisLabels = Array.isArray(axisLabels) && axisLabels.length
+          ? axisLabels
+          : Array.from({ length: data.getNumberOfRows() }, function (_, index) {
+              return String(data.getValue(index, 0) || '');
+            });
+        renderPmAxisLabels(cli, resolvedAxisLabels);
       }
 
-      function ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, attempt) {
+      function renderPmAxisLabels(cli, labels) {
+        var container = document.getElementById('ecoPmAxisLabels');
+        var host = document.getElementById('ecoPmChart');
+        if (!container || !cli || !host || !Array.isArray(labels) || !labels.length) {
+          return;
+        }
+        container.innerHTML = '';
+        var box = cli.getChartAreaBoundingBox ? cli.getChartAreaBoundingBox() : null;
+        var baseY = box ? (box.top + box.height) : (host.clientHeight || 0);
+        var availableWidth = box ? box.width : (host.clientWidth || 0);
+        var slots = Math.max(1, labels.length);
+        var slotWidth = availableWidth && slots ? (availableWidth / slots) : (host.clientWidth || 0) / slots;
+        var baseMaxWidth = Math.max(180, Math.min(260, Math.floor(slotWidth - 6)));
+        var thirdBoost = 40;
+        labels.forEach(function (label, index) {
+          if (!label) {
+            return;
+          }
+          var x = cli.getXLocation(index);
+          if (!Number.isFinite(x)) {
+            return;
+          }
+          var maxWidth = baseMaxWidth;
+          var widthPx = Math.min(baseMaxWidth, slotWidth);
+          if (index === labels.length - 1) {
+            maxWidth = Math.min(slotWidth + thirdBoost, baseMaxWidth + thirdBoost);
+            maxWidth = Math.max(maxWidth, baseMaxWidth);
+            widthPx = Math.min(maxWidth, slotWidth + thirdBoost);
+          }
+          var node = document.createElement('div');
+          node.className = 'eco-pm-axis-label';
+          node.textContent = label;
+          node.style.left = x + 'px';
+          node.style.top = (baseY + 10) + 'px';
+          node.style.maxWidth = maxWidth + 'px';
+          node.style.width = widthPx + 'px';
+          container.appendChild(node);
+        });
+      }
+
+      function ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, attempt, axisLabels) {
         var attemptNum = Number(attempt) || 1;
         if (!container || renderToken !== pmChartRenderToken || attemptNum > 3) {
           return;
@@ -5611,7 +6122,7 @@
           state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
           state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
           window.requestAnimationFrame(function () {
-            renderPmStackedLabels(pmChartInstance, data, totals, unitShort);
+            renderPmStackedLabels(pmChartInstance, data, totals, unitShort, axisLabels);
           });
         } catch (error) {
           console.warn('Eco PM redraw skipped:', error && error.message ? error.message : error);
@@ -5633,13 +6144,14 @@
             pmChartInstance.draw(data, simpleOptions);
             state.lastPmDrawHadSvg = !!(container.querySelector && container.querySelector('svg'));
             state.lastPmInnerHtml = container.innerHTML ? String(container.innerHTML).slice(0, 200) : '';
+            renderPmStackedLabels(pmChartInstance, data, totals, unitShort, axisLabels);
           } catch (fallbackError) {
             console.warn('Eco PM final fallback failed:', fallbackError && fallbackError.message ? fallbackError.message : fallbackError);
           }
           return;
         }
         setTimeout(function () {
-          ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, attemptNum + 1);
+          ensurePmChartHasSvg(container, data, options, totals, unitShort, renderToken, attemptNum + 1, axisLabels);
         }, 320);
       }
 
@@ -5762,7 +6274,7 @@
 
       function formatActivityValueForCalcLine(value) {
         var unitLabel = getCalcEnergyUnitLabel();
-        var formatter = state.energyFormatter || state.numberFormatter;
+        var formatter = state.energyWholeFormatter || state.numberFormatter;
         if (!Number.isFinite(value) || value < 0) {
           return '—';
         }
@@ -5825,10 +6337,9 @@
           return null;
         }
         var profile = entry.result.energyProfile || state.latestEnergyProfile;
-        var pollutantName = entry.meta?.pollutant || 'Pollutant';
-        var pollutantLabel = pollutantName ? pollutantName + ' pollution' : 'Pollution';
         var factor = scaleInfo && Number.isFinite(scaleInfo.factor) ? scaleInfo.factor : 1;
         var unitShort = scaleInfo && scaleInfo.unitShort ? scaleInfo.unitShort : getUnitAbbreviation(unit);
+        var year = Number(state.selection.year) || DEFAULT_YEAR;
         var ecoLabel = getCategoryLabel(state.ecoCategoryId);
         if (!ecoLabel || ecoLabel.indexOf('Select a fireplace') === 0) {
           ecoLabel = 'Ecodesign - Ready To Burn';
@@ -5840,104 +6351,187 @@
         var fireplaceEmission = Number(entry.result.fireplaceEmission);
         var ecoEmission = Number(entry.result.ecoEmission);
         var remainderEmissionRaw = Number(entry.result.fireplaceRemainderEmission);
-
-        var fireplaceFactor = NaN;
-        if (window.EcoReplacementUtils && typeof window.EcoReplacementUtils.calculateEmissionFactor === 'function') {
-          fireplaceFactor = window.EcoReplacementUtils.calculateEmissionFactor({
-            pollutantValue: entry.result.fireplaceEmission,
-            actDataValue: profile && profile.fireplaceEnergy
-          });
-        } else if (Number.isFinite(entry.result.fireplaceEmission) && Number.isFinite(profile && profile.fireplaceEnergy) && profile.fireplaceEnergy !== 0) {
-          fireplaceFactor = entry.result.fireplaceEmission / profile.fireplaceEnergy;
-        }
-
-        var gridHtml = [
-          buildMiniTooltipEntry(
-            ecoLabel,
-            pollutantLabel,
-            entry.result.ecoEmission,
-            profile && profile.ecoEnergy,
-            entry.result.ecoEmissionFactor,
-            unitShort,
-            factor,
-            unit
-          ),
-          buildMiniTooltipEntry(
-            fireplaceLabel,
-            pollutantLabel,
-            entry.result.fireplaceEmission,
-            profile && profile.fireplaceEnergy,
-            fireplaceFactor,
-            unitShort,
-            factor,
-            unit
-          )
-        ].join('');
-
-        var energyDetail = { lines: [], note: '' };
         var assessment = profile ? (profile.inclusion || {}) : {};
-        if (!profile) {
-          energyDetail.note = ENERGY_NOTE_DEFAULT;
-        } else if (assessment.included === null || typeof assessment.included === 'undefined') {
-          energyDetail.note = 'Checking whether Ready To Burn energy overlaps with ' + fireplaceLabel + '.';
-        } else if (assessment.included) {
-          energyDetail.note = 'Ecodesign - Ready To Burn is included in ' + fireplaceLabel + '.';
-        } else {
-          var ecoValue = formatActivityValueForCalcLine(profile.ecoEnergy);
-          var fireplaceValue = formatActivityValueForCalcLine(profile.fireplaceEnergy);
-          var totalValue = formatActivityValueForCalcLine(profile.replacementEnergy);
-          if (ecoValue === '—' || fireplaceValue === '—' || totalValue === '—') {
-            energyDetail.note = 'Waiting for energy totals…';
-          } else {
-            energyDetail.lines = [ecoValue + ' + ' + fireplaceValue + ' = ' + totalValue];
-          }
-        }
-
-        var replacementEnergy = profile ? profile.replacementEnergy : null;
-        var emissionFactor = entry.result.ecoEmissionFactor;
-        var replacementEmission = entry.result.replacementEmission;
+        var ecoIncluded = assessment.included === true;
         var remainderEmissionAdjusted = Number.isFinite(baselineEmission)
-          ? Math.max(0, baselineEmission - (coerceNonNegative(fireplaceEmission) + (assessment.included ? 0 : coerceNonNegative(ecoEmission))))
+          ? Math.max(0, baselineEmission - (coerceNonNegative(fireplaceEmission) + (ecoIncluded ? 0 : coerceNonNegative(ecoEmission))))
           : remainderEmissionRaw;
-        var pollutionLines = [];
-        if (Number.isFinite(replacementEnergy)
-          && Number.isFinite(emissionFactor)
-          && Number.isFinite(replacementEmission)) {
-          var energyText = formatActivityValueForCalcLine(replacementEnergy);
-          var factorText = formatEmissionFactorDetailed(emissionFactor, unit);
-          var emissionText = formatTooltipEmission(replacementEmission, unitShort, factor);
-          if (energyText !== '—' && factorText !== '—' && emissionText !== '—') {
-            pollutionLines.push(energyText + ' x ' + factorText + ' = ' + emissionText);
-          }
-        }
-        if (!pollutionLines.length) {
-          pollutionLines = ['Calculation unavailable for this selection'];
-        }
-        var replacementTotalLines = [];
-        if (Number.isFinite(replacementEmission)
-          && Number.isFinite(remainderEmissionAdjusted)
-          && remainderEmissionAdjusted > 0) {
-          var replacementText = formatTooltipEmission(replacementEmission, unitShort, factor);
-          var remainderText = formatTooltipEmission(remainderEmissionAdjusted, unitShort, factor);
-          var totalText = formatTooltipEmission(replacementEmission + remainderEmissionAdjusted, unitShort, factor);
-          if (replacementText !== '—' && remainderText !== '—' && totalText !== '—') {
-            replacementTotalLines.push(replacementText + ' + ' + remainderText + ' = ' + totalText);
-          }
+        var selectedEmissionAdjusted = ecoIncluded
+          ? Math.max(0, coerceNonNegative(fireplaceEmission) - coerceNonNegative(ecoEmission))
+          : fireplaceEmission;
+        var replacementEmission = Number(entry.result.replacementEmission);
+        var ecoEnergyValue = profile && Number.isFinite(profile.ecoEnergy) ? profile.ecoEnergy : NaN;
+        var fireplaceEnergyValue = profile && Number.isFinite(profile.fireplaceEnergy) ? profile.fireplaceEnergy : NaN;
+        var ecoEmissionFactor = entry.result && Number.isFinite(entry.result.ecoEmissionFactor)
+          ? entry.result.ecoEmissionFactor
+          : NaN;
+        if (!Number.isFinite(ecoEmissionFactor)) {
+          ecoEmissionFactor = window.EcoReplacementUtils && typeof window.EcoReplacementUtils.calculateEmissionFactor === 'function'
+            ? window.EcoReplacementUtils.calculateEmissionFactor({
+              pollutantValue: ecoEmission,
+              actDataValue: ecoEnergyValue
+            })
+            : (Number.isFinite(ecoEmission) && Number.isFinite(ecoEnergyValue) && ecoEnergyValue !== 0
+              ? ecoEmission / ecoEnergyValue
+              : NaN);
         }
 
+        var pollutantId = Number(entry?.result?.pollutantId ?? entry?.meta?.id ?? entry?.pollutantId);
+        var isDomesticScope = state.scope === SCOPE_DOMESTIC;
+        var gasRaw = NaN;
+        var otherRaw = NaN;
+        if (isDomesticScope && state.timeseriesIndex && Number.isFinite(pollutantId)) {
+          var domesticTotalRaw = coerceNonNegative(getTimeseriesValue(pollutantId, 13, year));
+          gasRaw = coerceNonNegative(getTimeseriesValue(pollutantId, 37, year));
+          var fireplacesTotalRaw = coerceNonNegative(getTimeseriesValue(pollutantId, FIREPLACES_ALL_CATEGORY_ID, year));
+          otherRaw = Math.max(0, domesticTotalRaw - (gasRaw + fireplacesTotalRaw));
+        }
+
+        function formatMiniValue(value) {
+          var scaled = scaleEmissionValue(value, factor);
+          if (!Number.isFinite(scaled)) {
+            return '—';
+          }
+          return formatBarValue(scaled);
+        }
+
+        function formatEmissionForCalc(value) {
+          return formatEmissionValue(value, unitShort);
+        }
+
+      function formatEmissionFactorForCalc(value) {
+        var converted = convertEmissionFactorToGramsPerGJ(value, unit);
+        if (!Number.isFinite(converted)) {
+          return '—';
+        }
+        var formatted = formatDynamicNumber(converted);
+        return formatted ? formatted + ' g/GJ' : '—';
+      }
+
+        function buildValueCell(value, color, span) {
+          var cellClass = 'eco-mini-tooltip__cell eco-mini-tooltip__cell--value';
+          if (span) {
+            cellClass += ' eco-mini-tooltip__cell--span';
+          }
+          return [
+            '<div class="' + cellClass + '">',
+            '<span class="eco-mini-tooltip__value eco-mini-tooltip__value--' + color + '">' + escapeHtml(formatMiniValue(value)) + '</span>',
+            '</div>'
+          ].join('');
+        }
+
+        function buildRow(label, color, currentValue, replacementValue) {
+          return [
+            '<div class="eco-mini-tooltip__row">',
+            '<div class="eco-mini-tooltip__cell eco-mini-tooltip__cell--label">' + escapeHtml(label) + '</div>',
+            buildValueCell(currentValue, color, false),
+            buildValueCell(replacementValue, color, false),
+            '</div>'
+          ].join('');
+        }
+
+        function buildSpanRow(label, color, value) {
+          return [
+            '<div class="eco-mini-tooltip__row">',
+            '<div class="eco-mini-tooltip__cell eco-mini-tooltip__cell--label">' + escapeHtml(label) + '</div>',
+            buildValueCell(value, color, true),
+            '</div>'
+          ].join('');
+        }
+
+        function buildTotalRow(label, currentValue, replacementValue) {
+          return [
+            '<div class="eco-mini-tooltip__row">',
+            '<div class="eco-mini-tooltip__cell eco-mini-tooltip__cell--label">' + escapeHtml(label) + '</div>',
+            '<div class="eco-mini-tooltip__cell eco-mini-tooltip__cell--value">',
+            '<span class="eco-mini-tooltip__total-value eco-mini-tooltip__total-value--purple">' + escapeHtml(formatMiniValue(currentValue)) + '</span>',
+            '</div>',
+            '<div class="eco-mini-tooltip__cell eco-mini-tooltip__cell--value">',
+            '<span class="eco-mini-tooltip__total-value eco-mini-tooltip__total-value--orange">' + escapeHtml(formatMiniValue(replacementValue)) + '</span>',
+            '</div>',
+            '</div>'
+          ].join('');
+        }
+
+        var showRemaining = Number(state.selection.fireplace) !== Number(FIREPLACES_ALL_CATEGORY_ID);
+        var showOtherGas = isDomesticScope;
+
+        var rows = [
+          '<div class="eco-mini-tooltip__row eco-mini-tooltip__row--header">',
+          '<div class="eco-mini-tooltip__cell eco-mini-tooltip__cell--header eco-mini-tooltip__cell--label"></div>',
+          '<div class="eco-mini-tooltip__cell eco-mini-tooltip__cell--header">' + escapeHtml(String(year)) + '</div>',
+          '<div class="eco-mini-tooltip__cell eco-mini-tooltip__cell--header">Replacement<br>Scenario</div>',
+          '</div>'
+        ];
+
+        if (showRemaining) {
+          rows.push(buildSpanRow('Other Fireplaces & Stoves (Not Replaced)', 'red', remainderEmissionAdjusted));
+        }
+        rows.push(buildRow(fireplaceLabel + ' (Replaced)', 'purple', selectedEmissionAdjusted, 0));
+        rows.push(buildRow(ecoLabel, 'orange', ecoEmission, replacementEmission));
+        if (showOtherGas) {
+          rows.push(buildSpanRow('Other', 'grey', otherRaw));
+          rows.push(buildSpanRow('Gas Boilers', 'blue', gasRaw));
+        }
+        var totalCurrent = coerceNonNegative(selectedEmissionAdjusted)
+          + coerceNonNegative(ecoEmission)
+          + coerceNonNegative(remainderEmissionAdjusted)
+          + (showOtherGas ? coerceNonNegative(otherRaw) + coerceNonNegative(gasRaw) : 0);
+        var totalReplacement = coerceNonNegative(replacementEmission)
+          + coerceNonNegative(remainderEmissionAdjusted)
+          + (showOtherGas ? coerceNonNegative(otherRaw) + coerceNonNegative(gasRaw) : 0);
+        rows.push(buildTotalRow('Total', totalCurrent, totalReplacement));
+
+        var tableHtml = '<div class="eco-mini-tooltip__table">' + rows.join('') + '</div>';
+
+        var noteHtml = '';
+        if (!profile) {
+          noteHtml = buildMiniCalcNote(ENERGY_NOTE_DEFAULT);
+        } else if (assessment.included === null || typeof assessment.included === 'undefined') {
+          noteHtml = buildMiniCalcNote('Checking whether Ready To Burn energy overlaps with ' + fireplaceLabel + '.');
+        } else if (assessment.included) {
+          noteHtml = buildMiniCalcNote('Ecodesign - Ready To Burn is included in ' + fireplaceLabel + '.');
+        }
+
+        var ecoIncludedInSelection = ecoIncluded || Number(state.selection.fireplace) === Number(FIREPLACES_ALL_CATEGORY_ID);
+        var ecoEmissionText = formatEmissionForCalc(ecoEmission);
+        var ecoEnergyText = formatActivityValueForCalcLine(ecoEnergyValue);
+        var ecoFactorText = formatEmissionFactorForCalc(ecoEmissionFactor);
+        var emissionFactorCalc = ecoEmissionText + '/' + ecoEnergyText + '= ' + ecoFactorText;
+        var fireplaceEnergyText = formatActivityValueForCalcLine(fireplaceEnergyValue);
+        var replacementEmissionText = formatEmissionForCalc(replacementEmission);
+        var replacementEnergyText = ecoIncludedInSelection
+          ? fireplaceEnergyText
+          : '(' + ecoEnergyText + ' + ' + fireplaceEnergyText + ')';
+        var replacementCalc = replacementEnergyText + ' x ' + ecoFactorText + '= ' + replacementEmissionText;
         var calcRows = [
-          energyDetail.note ? buildMiniCalcNote(energyDetail.note) : buildMiniCalcRow('Energy', energyDetail.lines),
-          buildMiniCalcRow('Pollution estimate', pollutionLines),
-          buildMiniCalcRow('Replacement scenario total', replacementTotalLines)
-        ].filter(Boolean).join('');
+          buildMiniCalcRow('Ecodesign - Ready To Burn Emission Factor', [emissionFactorCalc]),
+          buildMiniCalcRow('Replacement emissions', [replacementCalc])
+        ].join('');
 
         var tooltip = document.createElement('div');
         tooltip.className = 'eco-mini-tooltip';
         tooltip.setAttribute('role', 'tooltip');
+        var pollutantName = entry && entry.meta && entry.meta.pollutant ? entry.meta.pollutant : '';
+        if (pollutantName) {
+          pollutantName = pollutantName.replace(/\s+Pollution$/i, '');
+        }
+        var subheadingText = pollutantName ? pollutantName + ' emissions' : 'Emissions';
+        if (unitShort) {
+          subheadingText += ' (' + unitShort + ')';
+        }
+        var calcContent = '';
+        if (noteHtml) {
+          calcContent += noteHtml;
+        }
+        if (calcRows) {
+          calcContent += calcRows;
+        }
         tooltip.innerHTML = [
-          '<div class="eco-mini-tooltip__heading">Replacement calculation</div>',
-          '<div class="eco-mini-tooltip__grid">' + gridHtml + '</div>',
-          calcRows ? '<div class="eco-mini-tooltip__calc">' + calcRows + '</div>' : ''
+          '<div class="eco-mini-tooltip__heading">Replacement Scenario Breakdown</div>',
+          '<div class="eco-pm-tooltip-subheading">' + escapeHtml(subheadingText) + '</div>',
+          tableHtml,
+          calcContent ? '<div class="eco-mini-tooltip__calc">' + calcContent + '</div>' : ''
         ].join('');
         return tooltip;
       }
