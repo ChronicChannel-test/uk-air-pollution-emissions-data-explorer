@@ -3231,13 +3231,12 @@
 
     var energyPieScheduleId = null;
     var energyPieScheduleToken = 0;
-    var energyPieResizePending = false;
     function scheduleEnergyPieRender(profile) {
       if (!dom.energyCard || !dom.energyCard.pie) {
         renderEnergyPie(profile);
         return;
       }
-      if (state.isWindowResizing || energyPieResizePending) {
+      if (state.isWindowResizing) {
         return;
       }
       energyPieScheduleToken += 1;
@@ -3272,17 +3271,6 @@
         energyPieScheduleId = window.requestAnimationFrame(tick);
       }
       energyPieScheduleId = window.requestAnimationFrame(tick);
-    }
-
-    function scheduleEnergyPieAfterResize(profile) {
-      if (energyPieResizePending) {
-        return;
-      }
-      energyPieResizePending = true;
-      window.requestAnimationFrame(function () {
-        energyPieResizePending = false;
-        scheduleEnergyPieRender(profile);
-      });
     }
 
     function debounce(fn, delay) {
@@ -3819,7 +3807,7 @@
             var onResize = debounce(function () {
               state.isWindowResizing = false;
               measureEcoCardWidths();
-              scheduleEnergyPieAfterResize(state.latestEnergyProfile);
+              scheduleEnergyPieRender(state.latestEnergyProfile);
               state.suppressEnergyPieObserver = true;
               if (state.suppressEnergyPieTimer) {
                 clearTimeout(state.suppressEnergyPieTimer);
