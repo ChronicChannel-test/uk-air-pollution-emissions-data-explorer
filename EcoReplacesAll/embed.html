@@ -3208,6 +3208,7 @@
           width: pieSize,
           height: pieSize
         },
+        animation: { startup: false, duration: 0, easing: 'out' },
         legend: { position: 'none' },
         tooltip: { trigger: 'none' },
         enableInteractivity: false,
@@ -3234,6 +3235,10 @@
     function scheduleEnergyPieRender(profile) {
       if (!dom.energyCard || !dom.energyCard.pie) {
         renderEnergyPie(profile);
+        return;
+      }
+      if (!state.pmLayoutReadyForPie) {
+        state.pendingEnergyPieProfile = profile;
         return;
       }
       if (state.isWindowResizing) {
@@ -3574,6 +3579,10 @@
         latestEnergyProfileKey: null,
         lastChartItems: [],
         isWindowResizing: false,
+        pmLayoutReadyForPie: true,
+        pmLayoutToken: 0,
+        pmLayoutAwaitingPieToken: null,
+        pendingEnergyPieProfile: null,
         pm25PollutantId: null,
         lastPmPollutantId: null,
         scope: SCOPE_FIREPLACE,
@@ -3752,6 +3761,19 @@
         setPmPlotLoading(false);
       }
 
+      function markPmLayoutReady(token) {
+        if (typeof token === 'number' && state.pmLayoutAwaitingPieToken !== null && token !== state.pmLayoutAwaitingPieToken) {
+          return;
+        }
+        state.pmLayoutReadyForPie = true;
+        state.pmLayoutAwaitingPieToken = null;
+        if (state.pendingEnergyPieProfile) {
+          var pending = state.pendingEnergyPieProfile;
+          state.pendingEnergyPieProfile = null;
+          scheduleEnergyPieRender(pending);
+        }
+      }
+
       var googleChartsReady = false;
       var googleChartsPromise = loadGoogleCharts();
       googleChartsPromise.then(function () {
@@ -3765,6 +3787,7 @@
       function queuePmChartRender(delay) {
         var wait = Number.isFinite(delay) ? delay : 0;
         clearTimeout(pmChartResizeTimer);
+        state.pmLayoutReadyForPie = false;
         pmChartResizeTimer = setTimeout(function () {
           pmChartResizeTimer = null;
           renderPmStackedChart();
@@ -5399,6 +5422,7 @@
       function renderPmStackedChart() {
         var chartContainer = document.getElementById('ecoPmChart');
         if (!chartContainer || !chartContainer.isConnected) {
+          markPmLayoutReady();
           return;
         }
         var labelContainer = document.getElementById('ecoPmLabels');
@@ -5408,44 +5432,54 @@
         var chartWidth = chartContainer.clientWidth || 0;
         var chartHeight = chartContainer.clientHeight || 0;
         if (!chartWidth || !chartHeight) {
+          markPmLayoutReady();
           queuePmChartRender(120);
           return;
         }
         if (!googleChartsReady || !window.google || !window.google.visualization) {
+          markPmLayoutReady();
           queuePmChartRender(200);
           return;
         }
         if (!state.timeseriesIndex) {
+          markPmLayoutReady();
           queuePmChartRender(200);
           return;
         }
         if (!state.selection.fireplace && !(dom.fireplace && dom.fireplace.disabled)) {
+          markPmLayoutReady();
           queuePmChartRender(200);
           return;
         }
         var token = ++pmChartRenderToken;
+        var pmLayoutToken = ++state.pmLayoutToken;
+        state.pmLayoutReadyForPie = false;
+        state.pmLayoutAwaitingPieToken = pmLayoutToken;
         resetColorUsage();
         updatePmScopeLabel();
         updatePmLegend();
         if (state.scope === SCOPE_FIREPLACE) {
-          return renderPmStackedChartFireplace(token);
+          return renderPmStackedChartFireplace(token, pmLayoutToken);
         }
-        return renderPmStackedChartDomestic(token);
+        return renderPmStackedChartDomestic(token, pmLayoutToken);
       }
 
-      function renderPmStackedChartDomestic(renderToken) {
+      function renderPmStackedChartDomestic(renderToken, pmLayoutToken) {
         var container = document.getElementById('ecoPmChart');
         if (!container) {
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         if (!googleChartsReady || !window.google || !window.google.visualization) {
           setPmPlotLoading(false);
           container.textContent = 'Charts are still loading…';
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         if (!state.timeseriesIndex) {
           setPmPlotLoading(false);
           container.textContent = 'Loading PM2.5 data…';
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         var selectionValue = state.selection && state.selection.pollutant;
@@ -5453,6 +5487,7 @@
         if (!Number.isFinite(pmPollutantId)) {
           setPmPlotLoading(false);
           container.textContent = 'PM2.5 data unavailable.';
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         state.lastPmPollutantId = pmPollutantId;
@@ -5666,6 +5701,7 @@
         google.visualization.events.removeAllListeners(pmChartInstance);
         google.visualization.events.addListener(pmChartInstance, 'error', function (err) {
           console.warn('Eco PM chart error:', err && err.message ? err.message : err);
+          markPmLayoutReady(pmLayoutToken);
         });
         var renderLabels = function () {
           renderPmStackedLabels(pmChartInstance, data, totals, unitShort, axisLabels);
@@ -5674,19 +5710,23 @@
           google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
             renderLabels();
             markPmChartReady();
+            markPmLayoutReady(pmLayoutToken);
           });
           setTimeout(function () {
             renderLabels();
             markPmChartReady();
+            markPmLayoutReady(pmLayoutToken);
           }, 500);
         } else {
           google.visualization.events.addListener(pmChartInstance, 'ready', function () {
             window.requestAnimationFrame(renderLabels);
             markPmChartReady();
+            markPmLayoutReady(pmLayoutToken);
           });
           google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
             renderLabels();
             markPmChartReady();
+            markPmLayoutReady(pmLayoutToken);
           });
           setTimeout(renderLabels, 400);
         }
@@ -5709,14 +5749,16 @@
         updatePmTooltipVisibility();
       }
 
-      function renderPmStackedChartFireplaceFromScenario(renderToken, result, context) {
+      function renderPmStackedChartFireplaceFromScenario(renderToken, result, context, pmLayoutToken) {
         var container = document.getElementById('ecoPmChart');
         if (!container || renderToken !== pmChartRenderToken) {
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         if (!result) {
           setPmPlotLoading(false);
           container.textContent = 'PM2.5 data unavailable.';
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         var pmPollutantId = context && context.pmPollutantId ? context.pmPollutantId : state.lastPmPollutantId;
@@ -5753,6 +5795,7 @@
         var unitShort = scaleInfo && scaleInfo.unitShort ? scaleInfo.unitShort : getUnitAbbreviation(unitLabel);
         if (!Number.isFinite(fireplaceRaw)) {
           container.textContent = 'PM2.5 data unavailable for this category.';
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         var fireplaceValue = coerceNonNegative(fireplaceRaw) * factor;
@@ -5906,6 +5949,7 @@
         google.visualization.events.removeAllListeners(pmChartInstance);
         google.visualization.events.addListener(pmChartInstance, 'error', function (err) {
           console.warn('Eco PM chart error:', err && err.message ? err.message : err);
+          markPmLayoutReady(pmLayoutToken);
         });
         var renderLabels = function () {
           renderPmStackedLabels(pmChartInstance, data, totals, unitShort, axisLabels);
@@ -5914,19 +5958,23 @@
           google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
             renderLabels();
             markPmChartReady();
+            markPmLayoutReady(pmLayoutToken);
           });
           setTimeout(function () {
             renderLabels();
             markPmChartReady();
+            markPmLayoutReady(pmLayoutToken);
           }, 500);
         } else {
           google.visualization.events.addListener(pmChartInstance, 'ready', function () {
             window.requestAnimationFrame(renderLabels);
             markPmChartReady();
+            markPmLayoutReady(pmLayoutToken);
           });
           google.visualization.events.addListener(pmChartInstance, 'animationfinish', function () {
             renderLabels();
             markPmChartReady();
+            markPmLayoutReady(pmLayoutToken);
           });
           setTimeout(renderLabels, 400);
         }
@@ -5937,19 +5985,22 @@
         updatePmTooltipVisibility();
       }
 
-      function renderPmStackedChartFireplace(renderToken) {
+      function renderPmStackedChartFireplace(renderToken, pmLayoutToken) {
         var container = document.getElementById('ecoPmChart');
         if (!container) {
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         if (!googleChartsReady || !window.google || !window.google.visualization) {
           setPmPlotLoading(false);
           container.textContent = 'Charts are still loading…';
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         if (!state.timeseriesIndex || !state.selection.fireplace) {
           setPmPlotLoading(false);
           container.textContent = 'Select a fireplace / stove category to see this chart.';
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         var selectionValue = state.selection && state.selection.pollutant;
@@ -5957,6 +6008,7 @@
         if (!Number.isFinite(pmPollutantId)) {
           setPmPlotLoading(false);
           container.textContent = 'PM2.5 data unavailable.';
+          markPmLayoutReady(pmLayoutToken);
           return;
         }
         state.lastPmPollutantId = pmPollutantId;
@@ -5990,7 +6042,7 @@
             pmPollutantId: pmPollutantId,
             unitLabel: unitLabel,
             year: year
-          });
+          }, pmLayoutToken);
         } else {
           container.textContent = 'Loading fireplace & stove view…';
         }
@@ -6003,6 +6055,7 @@
             setPmPlotLoading(false);
             setCachedPmScenarioData(cacheKey, null);
             container.textContent = 'PM2.5 data unavailable.';
+            markPmLayoutReady(pmLayoutToken);
             return;
           }
           setCachedPmScenarioData(cacheKey, result);
@@ -6011,7 +6064,7 @@
             pmPollutantId: pmPollutantId,
             unitLabel: unitLabel,
             year: year
-          });
+          }, pmLayoutToken);
         }).catch(function (error) {
           if (renderToken !== pmChartRenderToken) {
             return;
@@ -6019,6 +6072,7 @@
           setPmPlotLoading(false);
           console.warn('Fireplace PM chart failed:', error);
           container.textContent = 'Unable to load fireplace / stove chart.';
+          markPmLayoutReady(pmLayoutToken);
         });
       }
 
