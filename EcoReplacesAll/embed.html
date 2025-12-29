@@ -3232,22 +3232,26 @@
 
     var energyPieScheduleId = null;
     var energyPieScheduleToken = 0;
-    function scheduleEnergyPieRender(profile) {
+    function scheduleEnergyPieRender(profile, force) {
       if (!dom.energyCard || !dom.energyCard.pie) {
         renderEnergyPie(profile);
         return;
       }
-      if (!state.pmLayoutReadyForPie) {
+      if (!force && !state.pmLayoutReadyForPie) {
         state.pendingEnergyPieProfile = profile;
         return;
       }
       if (state.isWindowResizing) {
         return;
       }
+      if (force) {
+        state.pendingEnergyPieProfile = null;
+      }
       energyPieScheduleToken += 1;
       var token = energyPieScheduleToken;
       var lastSize = null;
       var stableCount = 0;
+      var requiredStable = force ? 0 : 1;
       if (energyPieScheduleId) {
         window.cancelAnimationFrame(energyPieScheduleId);
       }
@@ -3268,7 +3272,7 @@
           stableCount = 0;
           lastSize = { width: width, height: height };
         }
-        if (stableCount >= 1) {
+        if (stableCount >= requiredStable) {
           energyPieScheduleId = null;
           renderEnergyPie(profile);
           return;
@@ -3830,13 +3834,13 @@
             var onResize = debounce(function () {
               state.isWindowResizing = false;
               measureEcoCardWidths();
+              scheduleEnergyPieRender(state.latestEnergyProfile, true);
               state.suppressEnergyPieObserver = true;
               if (state.suppressEnergyPieTimer) {
                 clearTimeout(state.suppressEnergyPieTimer);
               }
               state.suppressEnergyPieTimer = setTimeout(function () {
                 state.suppressEnergyPieObserver = false;
-                scheduleEnergyPieRender(state.latestEnergyProfile);
               }, 600);
               state.pmAnimateNextDraw = true;
               queuePmChartRender(0);
