@@ -257,17 +257,26 @@ async function openEcoPage(page, baseUrl, pagePath) {
 }
 
 async function runScenario(page, dataset, scenario) {
-  const expected = computeExpectedScenario(dataset, scenario);
-  if (!expected || !expected.ready) {
+  const preflight = computeExpectedScenario(dataset, scenario);
+  if (!preflight || !preflight.ready) {
     return {
       scenario,
       status: 'skipped',
-      reason: expected?.reason || 'Missing data'
+      reason: preflight?.reason || 'Missing data'
     };
   }
 
   try {
     await applySelection(page, scenario);
+    const inclusionAssessment = await resolveInclusionAssessment(page, dataset, scenario);
+    const expected = computeExpectedScenario(dataset, scenario, inclusionAssessment);
+    if (!expected || !expected.ready) {
+      return {
+        scenario,
+        status: 'skipped',
+        reason: expected?.reason || 'Missing data'
+      };
+    }
     const actual = await extractCardData(page, scenario.pollutantName);
     if (!actual) {
       return {
@@ -355,6 +364,38 @@ async function extractCardData(page, pollutantName) {
   }, pollutantName);
 }
 
+async function resolveInclusionAssessment(page, dataset, scenario) {
+  const ecoCategoryId = Number(dataset?.ecoCategoryId);
+  const fireplaceCategoryId = Number(scenario?.fireplaceId);
+  if (!Number.isFinite(ecoCategoryId) || !Number.isFinite(fireplaceCategoryId)) {
+    return { included: null, reason: 'invalid-id' };
+  }
+  if (!page) {
+    return { included: null, reason: 'unchecked' };
+  }
+  try {
+    const result = await page.evaluate(async ({ ecoCategoryId, fireplaceCategoryId }) => {
+      const utils = window.EcoReplacementUtils;
+      if (!utils || typeof utils.assessCategoryInclusion !== 'function') {
+        return { included: null, reason: 'missing-utils' };
+      }
+      try {
+        const options = window.SharedDataLoader ? { sharedLoader: window.SharedDataLoader } : undefined;
+        const assessment = await utils.assessCategoryInclusion(ecoCategoryId, fireplaceCategoryId, options);
+        if (assessment && typeof assessment === 'object') {
+          return assessment;
+        }
+        return { included: null, reason: 'missing-result' };
+      } catch (error) {
+        return { included: null, reason: 'error' };
+      }
+    }, { ecoCategoryId, fireplaceCategoryId });
+    return result || { included: null, reason: 'missing-result' };
+  } catch (error) {
+    return { included: null, reason: 'error' };
+  }
+}
+
 function compareScenario(expected, actual) {
   const mismatches = [];
   const parsed = parseTooltip(actual.rows);
@@ -421,7 +462,7 @@ function compareScenario(expected, actual) {
   return mismatches;
 }
 
-function computeExpectedScenario(dataset, scenario) {
+function computeExpectedScenario(dataset, scenario, inclusionAssessment = { included: null, reason: 'unchecked' }) {
   const index = dataset.timeseriesIndex;
   const activityId = dataset.activityPollutantId;
   if (!index || !Number.isFinite(activityId) || !Number.isFinite(dataset.ecoCategoryId)) {
@@ -440,7 +481,7 @@ function computeExpectedScenario(dataset, scenario) {
     fireplaceCategoryId: scenario.fireplaceId,
     activityPollutantId: activityId,
     year: scenario.year,
-    inclusionAssessment: { included: null, reason: 'unchecked' }
+    inclusionAssessment
   });
   const scenarioResult = computeReplacementScenario({
     pollutantId: scenario.pollutantId,
