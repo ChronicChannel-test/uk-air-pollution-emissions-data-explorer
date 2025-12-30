@@ -1431,6 +1431,14 @@
       font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
     }
 
+    .eco-mini-tooltip--wide {
+      width: min(440px, 96vw);
+    }
+
+    .eco-mini-tooltip--wide .eco-mini-tooltip__table {
+      grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+    }
+
     .eco-pm-calc-tooltip {
       width: 100%;
       max-width: 100%;
@@ -1827,6 +1835,10 @@
     @media (max-width: 640px) {
       .eco-mini-tooltip {
         width: min(320px, 96vw);
+      }
+
+      .eco-mini-tooltip--wide {
+        width: min(360px, 96vw);
       }
 
       .eco-mini-tooltip__grid {
@@ -6400,9 +6412,9 @@
           return '—';
         }
         if (value === 0) {
-          return '0 ' + unitLabel;
+          return '0\u00a0' + unitLabel;
         }
-        return formatter.format(value) + ' ' + unitLabel;
+        return formatter.format(value) + '\u00a0' + unitLabel;
       }
 
       function buildMiniTooltipEntry(name, pollutantLabel, emissionValue, energyValue, emissionFactor, unitShort, factor, pollutantUnit) {
@@ -6517,7 +6529,9 @@
         }
 
         function formatEmissionForCalc(value) {
-          return formatEmissionValue(value, unitShort);
+          var scaled = scaleEmissionValue(value, factor);
+          var formatted = formatEmissionValue(scaled, unitShort);
+          return formatted.replace(' ', '\u00a0');
         }
 
       function formatEmissionFactorForCalc(value) {
@@ -6526,7 +6540,7 @@
           return '—';
         }
         var formatted = formatDynamicNumber(converted);
-        return formatted ? formatted + ' g/GJ' : '—';
+        return formatted ? formatted + '\u00a0g/GJ' : '—';
       }
 
         function buildValueCell(value, color, span) {
@@ -6603,6 +6617,20 @@
           + (showOtherGas ? coerceNonNegative(otherRaw) + coerceNonNegative(gasRaw) : 0);
         rows.push(buildTotalRow('Total', totalCurrent, totalReplacement));
 
+        var needsWideTooltip = [
+          selectedEmissionAdjusted,
+          ecoEmission,
+          replacementEmission,
+          remainderEmissionAdjusted,
+          otherRaw,
+          gasRaw,
+          totalCurrent,
+          totalReplacement
+        ].some(function (value) {
+          var text = formatMiniValue(value);
+          return text !== '—' && text.length >= 9;
+        });
+
         var tableHtml = '<div class="eco-mini-tooltip__table">' + rows.join('') + '</div>';
 
         var noteHtml = '';
@@ -6633,6 +6661,9 @@
         var tooltip = document.createElement('div');
         tooltip.className = 'eco-mini-tooltip';
         tooltip.setAttribute('role', 'tooltip');
+        if (needsWideTooltip) {
+          tooltip.classList.add('eco-mini-tooltip--wide');
+        }
         var pollutantName = entry && entry.meta && entry.meta.pollutant ? entry.meta.pollutant : '';
         if (pollutantName) {
           pollutantName = pollutantName.replace(/\s+Pollution$/i, '');
