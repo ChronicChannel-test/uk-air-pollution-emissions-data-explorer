@@ -78,13 +78,15 @@
     }
 
     .eco-controls {
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 16px clamp(16px, 2vw, 28px);
-      box-shadow: 0 24px 52px rgba(15, 23, 42, 0.1);
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 6px;
+      margin-top: 8px;
+      width: 100%;
     }
 
     .eco-controls .button-row {
@@ -1010,7 +1012,7 @@
     }
 
     .eco-results {
-      background: #fff6c2;
+      background: #ffffff;
       border-radius: 28px;
       padding: 32px clamp(22px, 3vw, 48px) 40px;
       color: #111827;
@@ -2127,6 +2129,12 @@
       }
     }
 
+    @media (min-width: 620px) {
+      .eco-shell {
+        padding-right: 140px;
+      }
+    }
+
     @media (max-width: 1260px) {
       .eco-class-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2164,27 +2172,6 @@
       </section>
     </div>
 
-    <section class="eco-controls is-loading" aria-label="Eco replacements controls">
-      <div class="button-row">
-        <label for="ecoPollutantSelect">Pollutant:</label>
-        <select id="ecoPollutantSelect" name="ecoPollutantSelect" disabled>
-          <option value="">Loading pollutant list…</option>
-        </select>
-      </div>
-      <div class="button-row">
-        <label for="ecoFireplaceSelect">Fireplace/Stove Category:</label>
-        <select id="ecoFireplaceSelect" name="ecoFireplaceSelect" disabled>
-          <option value="">Loading fireplace & stove categories…</option>
-        </select>
-      </div>
-      <div class="button-row">
-        <label for="ecoYearSelect">Year:</label>
-        <select id="ecoYearSelect" name="ecoYearSelect" disabled>
-          <option value="">Loading year options…</option>
-        </select>
-      </div>
-    </section>
-
     <section class="eco-results" aria-labelledby="ecoResultsTitle">
       <div class="eco-results-header">
         <div class="eco-results-heading-row">
@@ -2205,6 +2192,26 @@
             </div>
           </div>
         </div>
+        <section class="eco-controls is-loading" aria-label="Eco replacements controls">
+          <div class="button-row">
+            <label for="ecoPollutantSelect">Pollutant:</label>
+            <select id="ecoPollutantSelect" name="ecoPollutantSelect" disabled>
+              <option value="">Loading pollutant list…</option>
+            </select>
+          </div>
+          <div class="button-row">
+            <label for="ecoFireplaceSelect">Fireplace/Stove Category:</label>
+            <select id="ecoFireplaceSelect" name="ecoFireplaceSelect" disabled>
+              <option value="">Loading fireplace & stove categories…</option>
+            </select>
+          </div>
+          <div class="button-row">
+            <label for="ecoYearSelect">Year:</label>
+            <select id="ecoYearSelect" name="ecoYearSelect" disabled>
+              <option value="">Loading year options…</option>
+            </select>
+          </div>
+        </section>
         <section class="eco-energy-summary" aria-live="polite">
           <article class="eco-energy-card eco-energy-card--comparison is-idle" id="ecoEnergyCard">
             <p class="eco-energy-label"><span id="ecoEnergyYearLabel">ENERGY - 2023</span><span class="eco-energy-label-line" id="ecoEnergyScopeLabel">FIREPLACES &amp; ALL STOVES</span></p>
@@ -7435,16 +7442,69 @@
       var MIN_HEIGHT_DELTA = 8;
       var MIN_HEIGHT = 320;
 
+      function getElementBottom(el) {
+        if (!el) {
+          return 0;
+        }
+        var rect = el.getBoundingClientRect();
+        var scrollOffset = window.scrollY || window.pageYOffset || 0;
+        return Math.max(0, Math.round((rect.bottom || 0) + scrollOffset));
+      }
+
+      function getPaddingBottom(el) {
+        if (!el || !window.getComputedStyle) {
+          return 0;
+        }
+        var style = window.getComputedStyle(el);
+        var value = style ? parseFloat(style.paddingBottom) : 0;
+        return Number.isFinite(value) ? value : 0;
+      }
+
       function measureHeight() {
         var body = document.body;
         var html = document.documentElement;
-        var height = Math.max(
+        var documentHeight = Math.max(
           body ? body.scrollHeight : 0,
           body ? body.offsetHeight : 0,
           html ? html.scrollHeight : 0,
           html ? html.offsetHeight : 0
         );
-        return Math.max(Math.ceil(height), MIN_HEIGHT);
+
+        var shell = document.getElementById('ecoReplacesAllShell');
+        var results = document.querySelector('.eco-results');
+        var chartGrid = document.getElementById('ecoChartGrid');
+        var controls = document.querySelector('.eco-controls');
+        var hero = document.querySelector('.eco-hero-head');
+
+        var candidates = [
+          getElementBottom(results),
+          getElementBottom(chartGrid),
+          getElementBottom(controls),
+          getElementBottom(hero)
+        ].filter(function (value) {
+          return Number.isFinite(value) && value > 0;
+        });
+
+        var measured = 0;
+        candidates.forEach(function (value) {
+          if (value > measured) {
+            measured = value;
+          }
+        });
+
+        if (measured && shell) {
+          measured += getPaddingBottom(shell);
+        }
+
+        if (!measured && documentHeight) {
+          measured = documentHeight;
+        }
+
+        if (!measured) {
+          measured = MIN_HEIGHT;
+        }
+
+        return Math.max(Math.ceil(measured), MIN_HEIGHT);
       }
 
       function postHeight(force) {
@@ -7515,12 +7575,32 @@
       }
 
       if (window.ResizeObserver) {
-        var target = document.body || document.documentElement;
-        if (target) {
+        var targets = [];
+        var shell = document.getElementById('ecoReplacesAllShell');
+        var results = document.querySelector('.eco-results');
+        var chartGrid = document.getElementById('ecoChartGrid');
+        if (shell) {
+          targets.push(shell);
+        }
+        if (results) {
+          targets.push(results);
+        }
+        if (chartGrid) {
+          targets.push(chartGrid);
+        }
+        if (!targets.length) {
+          var fallback = document.body || document.documentElement;
+          if (fallback) {
+            targets.push(fallback);
+          }
+        }
+        if (targets.length) {
           var resizeObserver = new ResizeObserver(function() {
             scheduleHeightUpdate(40, false);
           });
-          resizeObserver.observe(target);
+          targets.forEach(function (target) {
+            resizeObserver.observe(target);
+          });
         }
       } else {
         window.addEventListener('resize', function() {
