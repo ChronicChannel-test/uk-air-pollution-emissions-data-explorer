@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Loading Bubble Chart…</title>
+  <meta http-equiv="refresh" content="0; url=../?page=bubblechart">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" sizes="64x64" href="../SharedResources/images/favicon.png">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f5f5;
+      color: #1f2933;
+    }
+    main {
+      text-align: center;
+      padding: 32px 24px;
+      max-width: 460px;
+    }
+    a {
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Opening the full explorer…</h1>
+    <p>If you are not redirected automatically, <a id="bubblechart-redirect" href="../?page=bubblechart">continue to the Bubble Chart tab</a>.</p>
+  </main>
+  <script>
+    (function redirectBubblechart() {
+      try {
+        var target = new URL('../?page=bubblechart', window.location.href);
+        document.getElementById('bubblechart-redirect').setAttribute('href', target.toString());
+        window.location.replace(target.toString());
+      } catch (error) {
+        console.warn('Bubble chart redirect failed', error);
+      }
+    })();
+  </script>
+</body>
+</html>

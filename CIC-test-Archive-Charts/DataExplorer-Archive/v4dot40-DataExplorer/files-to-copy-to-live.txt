@@ -1,0 +1,16 @@
+PROJECT_SUMMARY.md
+README.md
+dist/
+SharedResources/
+bubblechart/
+category-info/
+index.html
+linechart/
+package-lock.json
+package.json
+resources/
+scripts/
+system_docs/
+supabase/
+user-guide/
+.githooks/pre-commit

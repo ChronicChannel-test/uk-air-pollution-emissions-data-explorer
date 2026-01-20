@@ -2448,15 +2448,15 @@
   </main>
 
   <script src="https://www.gstatic.com/charts/loader.js"></script>
-  <script src="../SharedResources/analytics.js?v=v4-40-CIC-testdb"></script>
+  <script src="../SharedResources/analytics.js?v=v5-0-CIC-testdb"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="../SharedResources/supabase-env.js?v=v4-40-CIC-testdb"></script>
-  <script src="../SharedResources/supabase-config.js?v=v4-40-CIC-testdb"></script>
-  <script src="../SharedResources/emission-units.js?v=v4-40-CIC-testdb"></script>
-  <script src="../SharedResources/shared-data-loader.js?v=v4-40-CIC-testdb"></script>
-  <script src="../SharedResources/colors.js?v=v4-40-CIC-testdb"></script>
-  <script src="../SharedResources/eco-replacement-utils.js?v=v4-40-CIC-testdb"></script>
-  <script src="./mini-chart-renderer.js?v=v4-40-CIC-testdb"></script>
+  <script src="../SharedResources/supabase-env.js?v=v5-0-CIC-testdb"></script>
+  <script src="../SharedResources/supabase-config.js?v=v5-0-CIC-testdb"></script>
+  <script src="../SharedResources/emission-units.js?v=v5-0-CIC-testdb"></script>
+  <script src="../SharedResources/shared-data-loader.js?v=v5-0-CIC-testdb"></script>
+  <script src="../SharedResources/colors.js?v=v5-0-CIC-testdb"></script>
+  <script src="../SharedResources/eco-replacement-utils.js?v=v5-0-CIC-testdb"></script>
+  <script src="./mini-chart-renderer.js?v=v5-0-CIC-testdb"></script>
   <script>
     (function initializeEcoReplacementsExperience() {
     var ECO_AXIS_LOG_VERSION = 'axis6';
@@ -3641,10 +3641,10 @@
         return {
           container: document.getElementById('ecoEnergyCard'),
           replacement: document.getElementById('ecoEnergyReplacementValue'),
-          fireplace: document.getElementById('ecoEnergyFireplaceValue'),
-          eco: document.getElementById('ecoEnergyEcoValue'),
+          // fireplace: document.getElementById('ecoEnergyFireplaceValue'),
+          // eco: document.getElementById('ecoEnergyEcoValue'),
           calculation: document.getElementById('ecoEnergyCalculation'),
-          fireplaceLabel: document.getElementById('ecoEnergyFireplaceLabel'),
+          // fireplaceLabel: document.getElementById('ecoEnergyFireplaceLabel'),
           yearLabel: document.getElementById('ecoEnergyYearLabel'),
           scopeLabel: document.getElementById('ecoEnergyScopeLabel'),
           pie: document.getElementById('ecoEnergyPie'),
@@ -4091,9 +4091,9 @@
         }
         var hasProfile = Boolean(profile);
         var fireplaceLabel = state.selection.fireplace ? getCategoryLabel(state.selection.fireplace) : 'Fireplace / stove category';
-        if (energyDom.fireplaceLabel) {
-          energyDom.fireplaceLabel.textContent = fireplaceLabel;
-        }
+        // if (energyDom.fireplaceLabel) {
+        //   energyDom.fireplaceLabel.textContent = fireplaceLabel;
+        // }
         if (energyDom.yearLabel) {
           var yearText = Number(state.selection.year) || DEFAULT_YEAR;
           energyDom.yearLabel.textContent = 'ENERGY - ' + yearText;
@@ -4102,12 +4102,12 @@
         if (energyDom.replacement) {
           energyDom.replacement.textContent = hasProfile ? formatActivityValueWhole(scopeTotal) : '—';
         }
-        if (energyDom.fireplace) {
-          energyDom.fireplace.textContent = hasProfile ? formatActivityValue(profile.fireplaceEnergy) : '—';
-        }
-        if (energyDom.eco) {
-          energyDom.eco.textContent = hasProfile ? formatActivityValue(profile.ecoEnergy) : '—';
-        }
+        // if (energyDom.fireplace) {
+        //   energyDom.fireplace.textContent = hasProfile ? formatActivityValue(profile.fireplaceEnergy) : '—';
+        // }
+        // if (energyDom.eco) {
+        //   energyDom.eco.textContent = hasProfile ? formatActivityValue(profile.ecoEnergy) : '—';
+        // }
         if (energyDom.calculation) {
           energyDom.calculation.textContent = buildEnergyCalculationText(profile, fireplaceLabel);
         }
@@ -7421,6 +7421,114 @@
           trackSeen();
         }
       });
+    })();
+  </script>
+  <script>
+    (function setupEcoReplacesEmbedMessaging() {
+      var chartId = 'eco-replaces-all';
+      var isEmbedded = window.parent && window.parent !== window;
+      if (!isEmbedded) {
+        return;
+      }
+
+      var readySent = false;
+      var lastHeight = 0;
+      var heightTimer = null;
+      var MIN_HEIGHT_DELTA = 8;
+      var MIN_HEIGHT = 320;
+
+      function measureHeight() {
+        var body = document.body;
+        var html = document.documentElement;
+        var height = Math.max(
+          body ? body.scrollHeight : 0,
+          body ? body.offsetHeight : 0,
+          html ? html.scrollHeight : 0,
+          html ? html.offsetHeight : 0
+        );
+        return Math.max(Math.ceil(height), MIN_HEIGHT);
+      }
+
+      function postHeight(force) {
+        try {
+          var height = measureHeight();
+          if (!force && lastHeight && Math.abs(height - lastHeight) < MIN_HEIGHT_DELTA) {
+            return;
+          }
+          lastHeight = height;
+          window.parent.postMessage({
+            type: 'contentHeight',
+            chart: chartId,
+            height: height
+          }, '*');
+        } catch (error) {
+          console.warn('Unable to send Eco Replaces height to parent:', error);
+        }
+      }
+
+      function scheduleHeightUpdate(delay, force) {
+        if (heightTimer) {
+          clearTimeout(heightTimer);
+        }
+        heightTimer = setTimeout(function() {
+          heightTimer = null;
+          requestAnimationFrame(function() {
+            postHeight(force);
+          });
+        }, delay);
+      }
+
+      function notifyReady() {
+        if (readySent) {
+          return;
+        }
+        readySent = true;
+        try {
+          window.parent.postMessage({
+            type: 'chartReady',
+            chart: chartId
+          }, '*');
+        } catch (error) {
+          console.warn('Unable to notify parent that Eco Replaces is ready:', error);
+        }
+      }
+
+      window.addEventListener('message', function(event) {
+        if (event && event.data && event.data.type === 'requestHeight') {
+          scheduleHeightUpdate(0, true);
+        }
+      });
+
+      document.addEventListener('DOMContentLoaded', function() {
+        notifyReady();
+        scheduleHeightUpdate(50, true);
+      });
+
+      window.addEventListener('load', function() {
+        scheduleHeightUpdate(50, true);
+      });
+
+      if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+        document.fonts.ready.then(function() {
+          scheduleHeightUpdate(40, true);
+        }).catch(function() {
+          scheduleHeightUpdate(40, true);
+        });
+      }
+
+      if (window.ResizeObserver) {
+        var target = document.body || document.documentElement;
+        if (target) {
+          var resizeObserver = new ResizeObserver(function() {
+            scheduleHeightUpdate(40, false);
+          });
+          resizeObserver.observe(target);
+        }
+      } else {
+        window.addEventListener('resize', function() {
+          scheduleHeightUpdate(40, false);
+        });
+      }
     })();
   </script>
 </body>
