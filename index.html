@@ -307,6 +307,10 @@
       padding-right: 0;
     }
 
+    .tab-bar-shell {
+      max-width: 90rem;
+    }
+
     .tab-bar {
       position: relative;
       padding-right: 130px;
@@ -751,7 +755,7 @@
   <div id="chart-interface" style="opacity: 0; margin: 0;">
     <!-- Tab Navigation -->
     <div class="bg-white">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 tab-bar-shell">
         <div class="tab-bar">
           <nav class="tab-nav -mb-px flex flex-wrap items-center gap-6" role="tablist" aria-label="Chart views">
             <button type="button" id="tab-bubblechart" data-chart="bubblechart" onclick="switchChart('bubblechart')" role="tab" aria-controls="chart-bubblechart" aria-selected="true" tabindex="0" class="py-4 px-2 border-b-2 font-semibold text-[21px] transition-colors flex items-center gap-2">
