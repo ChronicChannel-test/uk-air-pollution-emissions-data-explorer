@@ -10,7 +10,6 @@ linechart/
 package-lock.json
 package.json
 resources/
-robots.txt
 scripts/
 system_docs/
 supabase/
