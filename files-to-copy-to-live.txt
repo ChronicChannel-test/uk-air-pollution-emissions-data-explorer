@@ -1,5 +1,10 @@
+404.html
+Bubble-chart-explainer.md
+EcoReplacesAll/
 PROJECT_SUMMARY.md
 README.md
+SUGGESTIONS.md
+data-fetch-benchmark.html
 dist/
 SharedResources/
 bubblechart/
@@ -8,9 +13,14 @@ index.html
 linechart/
 package-lock.json
 package.json
+postcss.config.js
 resources/
+robots.txt
 scripts/
 system_docs/
 supabase/
+tailwind.config.js
+tailwind.input.css
+update_short_group_title.sql
 user-guide/
 .githooks/pre-commit

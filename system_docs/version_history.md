@@ -1,5 +1,10 @@
 # Version History
 
+## v5.0
+- GH Test: 2026-01-20
+- GH Live: Not yet deployed
+- Notes: Added EcodesignReplacesAll view; Fireplace/Stove category selection is disabled and fixed to Fireplaces and All Stoves - All Fuels.
+
 ## v4.40
 - GH Test: 2025-12-19
 - GH Live: Not yet deployed
