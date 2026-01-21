@@ -77,16 +77,37 @@
       font-size: clamp(1.2rem, 2.5vw, 1.45rem);
     }
 
+    .eco-highlight-link,
+    .eco-highlight-link:visited {
+      color: #f58231;
+      font-weight: 700;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 2px;
+    }
+
     .eco-controls {
-      background: transparent;
-      border-radius: 0;
-      padding: 0;
-      box-shadow: none;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 16px 18px;
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
+      border: 1px solid rgba(15, 23, 42, 0.12);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
       margin-top: 8px;
       width: 100%;
+      box-sizing: border-box;
+    }
+
+    .eco-controls .eco-scope-toggle {
+      align-self: flex-start;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      min-height: 0;
     }
 
     .eco-controls .button-row {
@@ -1236,6 +1257,7 @@
       border-radius: 12px;
       background: #ffffff;
       position: relative;
+      box-sizing: border-box;
     }
 
     .eco-legend-chip {
@@ -2165,10 +2187,10 @@
       </div>
       <section class="eco-subtitle" aria-label="Ecodesign stove replacement context">
       <p><strong>Upgrading stoves can change emissions, but it does not automatically guarantee cleaner air.</strong></p>
-      <p>Although the <strong>Stove Industry Association (SIA)</strong> and its members suggest that replacing fireplaces and older stoves with modern Ecodesign models will improve air quality, evidence does not always support this. Some claims about reductions in pollutants like PM2.5 and PAHs are overstated. Not all stove replacements lead to meaningful emission reductions, and <strong>the promotion of Ready to Burn wood and new stoves will not, in all cases, deliver the air quality improvements the industry claims.</strong> Consumers and policymakers need to consider all relevant factors, including stove efficiency, maintenance, and usage, when assessing environmental impact.</p>
-      <p>This page shows how emissions can change when different types of fireplaces and stoves are replaced with <strong>Ecodesign-compliant stoves using Ready to Burn certified wood.</strong></p>
-      <p>Different stove types produce different emission profiles for various pollutants. While Ecodesign stoves meet regulatory limits for some pollutants under test conditions, <strong>this does not mean emissions are lower for every pollutant in every case.</strong> Real-world emissions from <strong>Ecodesign stoves are typically higher than laboratory test results</strong> and vary with fuel and use conditions. Emission factors for Ecodesign stoves using Ready to Burn wood can vary from year to year depending on the mix of wood fuels burned.</p>
-      <p>By selecting a <strong>fireplace/stove category</strong>, you can compare its emissions with an <strong>Ecodesign stove burning Ready to Burn wood.</strong> In some cases, emissions may decrease; in others, they may stay the same or increase for some pollutants, such as PAHs or PM2.5.</p>
+      <p><strong>The Stove Industry Association (SIA)</strong> and its members suggest that replacing fireplaces and older stoves with modern Ecodesign models will improve air quality, yet evidence does not always support this. Some claims about reductions in pollutants like PM2.5 and PAHs are overstated. Not all stove replacements lead to meaningful emission reductions, and <strong>the promotion of Ready To Burn wood and new stoves will not, in all cases, deliver the air quality improvements the industry claims.</strong> Consumers and policymakers need to consider all relevant factors, including stove efficiency, maintenance, and usage, when assessing environmental impact.</p>
+      <p>This page shows how emissions can change under the replacement scenario shown, comparing the baseline with <strong>Ecodesign stoves using Ready To Burn certified wood.</strong></p>
+      <p>While Ecodesign stoves meet regulatory limits for some pollutants under test conditions, <strong>this does not mean emissions are lower for every pollutant in every case.</strong> <a class="eco-highlight-link" href="https://www.dsawsp.org/sources/certified-wood-stoves" target="_blank" rel="noopener noreferrer">Real-world emissions from Ecodesign stoves are typically higher than laboratory test results</a> and vary with fuel and use conditions. Emission factors for Ecodesign stoves using Ready To Burn wood can vary from year to year depending on the mix of wood fuel types used.</p>
+      <p>Use the pollutant controls to switch between Air Pollutants, Greenhouse Gases, Heavy Metals and Particulate Matter, or pick an individual pollutant, then select a year to compare the estimates. In some cases, pollutants may decrease; in others, they may stay the same or increase, such as PAHs or methane.</p>
       </section>
     </div>
 
@@ -2181,9 +2203,11 @@
                 Ecodesign burning Ready To Burn wood
                 <span class="eco-results-title-note">(dry wood, seasoned wood & wood briquettes)</span>
               </span>
-              <span class="eco-results-title-line" id="ecoResultsSubtitle">Select a fireplace / stove category to compare</span>
+              <span class="eco-results-title-line" id="ecoResultsSubtitle">replacing Fireplace &amp; All Stoves - All fuels</span>
             </h3>
           </div>
+        </div>
+        <section class="eco-controls is-loading" aria-label="Eco replacements controls">
           <div class="eco-scope-toggle" id="ecoScopeToggle" role="group" aria-label="Scope">
             <span class="eco-scope-label">Scope:</span>
             <div class="eco-scope-buttons">
@@ -2191,15 +2215,13 @@
               <button type="button" class="eco-scope-button" data-eco-scope="domestic" aria-pressed="false">All Domestic Combustion</button>
             </div>
           </div>
-        </div>
-        <section class="eco-controls is-loading" aria-label="Eco replacements controls">
           <div class="button-row">
             <label for="ecoPollutantSelect">Pollutant:</label>
             <select id="ecoPollutantSelect" name="ecoPollutantSelect" disabled>
               <option value="">Loading pollutant list…</option>
             </select>
           </div>
-          <div class="button-row">
+          <div class="button-row" id="ecoFireplaceRow">
             <label for="ecoFireplaceSelect">Fireplace/Stove Category:</label>
             <select id="ecoFireplaceSelect" name="ecoFireplaceSelect" disabled>
               <option value="">Loading fireplace & stove categories…</option>
@@ -3396,6 +3418,9 @@
       var DEFAULT_YEAR = 2023;
       var MIN_ECO_YEAR = 2017;
       var DEFAULT_FIREPLACE_ID = 27;
+      var DEFAULT_FIREPLACE_LABEL = 'Fireplace & All Stoves - All fuels';
+      var SHOW_FIREPLACE_SELECT = false;
+      var FIXED_FIREPLACE_ID = DEFAULT_FIREPLACE_ID;
       var ECO_READY_CATEGORY_ID = 20;
       var EXCLUDED_FIREPLACE_CATEGORY_IDS = [20, 65];
       var SCOPE_DOMESTIC = 'domestic';
@@ -3531,6 +3556,7 @@
         controls: document.querySelector('.eco-controls'),
         pollutant: document.getElementById('ecoPollutantSelect'),
         fireplace: document.getElementById('ecoFireplaceSelect'),
+        fireplaceRow: document.getElementById('ecoFireplaceRow'),
         year: document.getElementById('ecoYearSelect'),
         status: document.getElementById('ecoControlsStatus'),
         chartGrid: document.getElementById('ecoChartGrid'),
@@ -3585,7 +3611,7 @@
         activityPollutantId: null,
         selection: {
           pollutant: POLLUTANT_PRESETS[0].value,
-          fireplace: null,
+          fireplace: DEFAULT_FIREPLACE_ID,
           year: DEFAULT_YEAR
         },
         renderToken: 0,
@@ -3624,6 +3650,10 @@
           other: false
         }
       };
+
+      if (dom.fireplaceRow) {
+        dom.fireplaceRow.classList.toggle('is-hidden', !SHOW_FIREPLACE_SELECT);
+      }
 
       // Debug helper to inspect load state from the harness without leaking internals elsewhere.
       window.__ecoDebug = function () {
@@ -3939,6 +3969,28 @@
         var preferredCategoryId = matches.some(function (category) {
           return Number(category.id) === Number(DEFAULT_FIREPLACE_ID);
         }) ? Number(DEFAULT_FIREPLACE_ID) : Number(matches[0].id);
+        if (!SHOW_FIREPLACE_SELECT) {
+          var fixedId = Number.isFinite(Number(FIXED_FIREPLACE_ID)) ? Number(FIXED_FIREPLACE_ID) : preferredCategoryId;
+          var fixedCategoryId = matches.some(function (category) {
+            return Number(category.id) === Number(fixedId);
+          }) ? fixedId : preferredCategoryId;
+          var fixedCategory = matches.find(function (category) {
+            return Number(category.id) === Number(fixedCategoryId);
+          });
+          var fixedLabel = fixedCategory ? (fixedCategory.category_title || fixedCategory.group_name) : getCategoryLabel(fixedCategoryId);
+          dom.fireplace.appendChild(buildOption(String(fixedCategoryId), fixedLabel));
+          state.selection.fireplace = fixedCategoryId;
+          dom.fireplace.value = String(fixedCategoryId);
+          dom.fireplace.disabled = true;
+          if (dom.fireplaceRow) {
+            dom.fireplaceRow.classList.add('is-hidden');
+          }
+          updateResultsTitle();
+          return;
+        }
+        if (dom.fireplaceRow) {
+          dom.fireplaceRow.classList.remove('is-hidden');
+        }
         matches.forEach(function (category) {
           var label = category.category_title || category.group_name;
           if (!label) {
@@ -4413,6 +4465,9 @@
         }
         var category = state.categoryMap ? state.categoryMap.get(Number(categoryId)) : null;
         if (!category) {
+          if (Number(categoryId) === Number(DEFAULT_FIREPLACE_ID)) {
+            return DEFAULT_FIREPLACE_LABEL;
+          }
           return 'Select a fireplace / stove category';
         }
         return category.category_title || category.group_name || 'Select a fireplace / stove category';
@@ -5634,7 +5689,7 @@
         data.addColumn('string', 'Scenario');
         data.addColumn('number', 'Gas boilers');
         data.addColumn('number', 'Other domestic combustion');
-        data.addColumn('number', 'Ecodesign stoves (Ready to Burn)');
+        data.addColumn('number', 'Ecodesign stoves (Ready To Burn)');
         data.addColumn('number', 'Selected fireplaces & stoves (replaced)');
         data.addColumn('number', 'Other fireplaces & stoves (not replaced)');
         data.addRows([

@@ -24,6 +24,9 @@ You can also make any changes needed in the testing harness.
 
 Never try an overlay fallback for the mini chart gridlines.
 
+Planning Requests
+When proposing plans, offer more than one option when possible, list pros/cons for each, and recommend which to pick with a brief rationale.
+
 ## Abbreviations used in this workspace
 - FPS-All: Fireplaces & All Stoves
 - AllDomComb: All Domestic Combustion
